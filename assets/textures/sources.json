@@ -1,0 +1,22 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://docs.ambientcg.com/license/",
+  "assets": [
+    {
+      "id": "Grass005",
+      "source": "https://ambientcg.com/a/Grass005",
+      "download": "https://ambientcg.com/get?file=Grass005_1K-JPG.zip"
+    },
+    {
+      "id": "Ground112",
+      "source": "https://ambientcg.com/a/Ground112",
+      "download": "https://ambientcg.com/get?file=Ground112_1K-JPG.zip"
+    },
+    {
+      "id": "Wood096",
+      "source": "https://ambientcg.com/a/Wood096",
+      "download": "https://ambientcg.com/get?file=Wood096_1K-JPG.zip"
+    }
+  ],
+  "processing": "Original 1K-JPG color and OpenGL normal maps resized to 512px and JPEG-compressed for browser delivery"
+}

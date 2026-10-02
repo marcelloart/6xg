@@ -1,6 +1,6 @@
 'use strict';
 const F=BaraFarm,$=id=>document.getElementById(id),gate=new AccountGate('6xg-farm:');
-const camera=new MapCamera(),renderer=new FarmRenderer($('worldCanvas'),camera);
+const {camera,renderer}=typeof Farm3D!=='undefined'?Farm3D.create($('worldCanvas')):(()=>{const camera=new MapCamera();$('rotateLeft').hidden=true;$('rotateRight').hidden=true;$('cameraPosition').textContent='TAMPILAN 2D';return{camera,renderer:new FarmRenderer($('worldCanvas'),camera)};})();
 let farm=new F.Farm(),activeSaveKey=null,entered=false,selectedCrop='carrot',selectedPlot=null,pendingBuild=null,panel=null,shop='seeds',toastTimer=null,uiSignature='';
 const format=n=>new Intl.NumberFormat('id-ID').format(n);
 const duration=m=>m<60?m+' menit':m===1440?'1 hari':m/60+' jam';
@@ -20,7 +20,7 @@ function refreshGate(){
  $('welcomeCopy').innerHTML=gate.canPlay?'Kebunmu menunggu.<br>Tanaman tetap tumbuh saat kamu pergi.':'Tanam harapan. Petik hasilnya.<br>Kembangkan kebun kecilmu menjadi dunia milikmu.';
 }
 function enter(){if(!gate.canPlay)return false;entered=true;refreshGate();center();$('worldCanvas').focus();return true;}
-function center(){camera.focus(1590,1135);}
+function center(){if(camera.home)camera.home();else camera.focus(1590,1135);}
 function closePanel(){panel=null;$('farmPanel').hidden=true;document.querySelectorAll('.toolbar button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-expanded','false');});renderSelection();}
 function openPanel(view){
  if(!gate.canPlay||!entered)return;
@@ -111,8 +111,11 @@ canvas.addEventListener('pointerup',e=>{const p=pointer(e);gestures.up(e.pointer
 canvas.addEventListener('pointercancel',e=>gestures.cancel(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('wheel',e=>{if(!entered)return;e.preventDefault();const p=pointer(e);camera.zoomAt(Math.exp(-e.deltaY*.0015),p.x,p.y);},{passive:false});
 $('zoomIn').addEventListener('click',()=>camera.zoomAt(1.2));$('zoomOut').addEventListener('click',()=>camera.zoomAt(1/1.2));$('centerFarm').addEventListener('click',center);
+$('rotateLeft').addEventListener('click',()=>camera.rotate?.(-Math.PI/8));$('rotateRight').addEventListener('click',()=>camera.rotate?.(Math.PI/8));
+$('graphicsQuality').addEventListener('change',e=>{save();try{localStorage.setItem('6xg:graphics',e.target.value);}catch{}location.reload();});
+try{$('graphicsQuality').value=localStorage.getItem('6xg:graphics')||'auto';}catch{}
 $('miniMap').addEventListener('click',e=>{if(!entered)return;const r=e.currentTarget.getBoundingClientRect();camera.focus((e.clientX-r.left)/r.width*3200,(e.clientY-r.top)/r.height*2200);});
-for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
+for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='q'||e.key==='Q')camera.rotate?.(-Math.PI/8);else if(e.key==='e'||e.key==='E')camera.rotate?.(Math.PI/8);else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){pendingBuild=null;selectedPlot=null;closePanel();renderUI();}});
 const resize=()=>{const r=$('map').getBoundingClientRect();camera.resize(r.width,r.height);};new ResizeObserver(resize).observe($('map'));resize();center();
 function draw(){renderer.draw(farm,{selectedPlot,pendingBuild,selectedCrop,now:farm.now(),welcome:!entered});renderer.mini($('miniMap'),farm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);

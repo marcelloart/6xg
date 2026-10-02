@@ -1,6 +1,6 @@
 # 6XG — Ladang Bara
 
-Game kebun di [6xg.online](https://6xg.online): beli bibit, tanam, tunggu matang, panen, jual hasil di toko, beli bahan, lalu bangun rumah dan lumbung. Identitas dan pemandangan vektor dibuat untuk 6XG sendiri.
+Game kebun di [6xg.online](https://6xg.online): beli bibit, tanam, tunggu matang, panen, jual hasil di toko, beli bahan, lalu bangun rumah dan lumbung. Dunia 3D memakai model kebun asli, tekstur alam, pencahayaan matahari, dan kamera yang dapat diputar.
 
 Login Privy diperlukan sebelum bermain. Akun kebun baru mulai dengan **0 koin, 0 kayu, 0 batu, 0 daging, dan 6 bibit wortel gratis**. Ada 9 petak tanam awal dan 20 ruang penyimpanan hasil. Bibit gratis diberikan sekali pada pembuatan kebun, bukan setiap login.
 
@@ -33,6 +33,12 @@ Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta 
 
 Pilih bibit di **Kebun**, lalu klik petak kosong. Wortel dipilih secara awal. Klik tanaman matang untuk memanen. Tombol petak dalam panel Kebun menyediakan alternatif keyboard: pilih petak kemudian tekan **Tanam**. Seret peta, gunakan panah saat canvas fokus, gulir/cubit untuk zoom, Home untuk kembali, dan Escape untuk menutup panel atau membatalkan penempatan.
 
+**Q / E** atau tombol **↶ / ↷** memutar kamera 3D. Koordinat petak dan bangunan tetap sama setelah kamera diputar. Peta kecil menampilkan batas pandangan yang ikut berputar. **Menu → Kualitas tampilan** menyediakan otomatis, detail tinggi, ringan, dan 2D; pengaturan tersimpan per perangkat. WebGL 2 digunakan untuk 3D, dengan tampilan canvas 2D otomatis jika tidak tersedia. Kehilangan konteks grafis menyediakan tombol 2D dan tidak mengubah snapshot kebun.
+
+Tanah, rumah, lumbung, gudang, sumur, dan sembilan jenis tanaman memiliki bentuk 3D. Lanskap memakai daun dan rumput instanced, relief di luar kebun, sungai beriak, normal map, dan bayangan matahari pada kualitas otomatis desktop/detail tinggi. Pertumbuhan mengubah bentuk tanaman; mode ringan mengurangi rumput dan mematikan bayangan. Render dibatasi 20–30 fps dan dihentikan saat halaman tersembunyi; timer pertumbuhan tetap berdasarkan waktu nyata.
+
+Tekstur **Grass005**, **Ground112**, dan **Wood096** berasal dari [ambientCG](https://ambientcg.com), berlisensi [CC0 1.0](https://docs.ambientcg.com/license/). Map warna dan normal asli 1K dikompres ke 512px untuk pengiriman browser; sumber tercatat di `assets/textures/sources.json`. Model, tata letak, dan geometri tanaman dibuat untuk game ini. Grafik mengarah ke tampilan alam realistis ringan untuk browser, bukan kualitas fotorealistik AAA.
+
 ## Progres online
 
 Frontend GitHub Pages menggunakan SDK resmi Privy dan backend Cloudflare Workers + D1. Endpoint kebun `GET/PUT /api/farm-save` memverifikasi token ES256 dan mengambil ID akun dari token. Revisi atomik menolak penyimpanan dari perangkat lama. CORS dibatasi ke origin game. Snapshot versi 4 memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.
@@ -47,7 +53,10 @@ Ini adalah **game kebun solo dengan akun**, belum dunia multiplayer bersama. Eko
 
 - `assets/css/farm.css`: tampilan fullscreen dan panel responsif.
 - `assets/js/farm-engine.js`: harga, timer, inventori, pembangunan, dan validator.
-- `assets/js/farm-scenery.js`: pemandangan vector/canvas asli, dengan cache latar statis.
+- `src/farm-3d.js`, `assets/js/farm-3d.js`: sumber dan bundle mesin pemandangan Three.js.
+- `assets/js/farm-camera.js`: proyeksi tanah, pemilihan petak, dan kamera 3D.
+- `assets/textures/`: tekstur CC0 lokal, tanpa ketergantungan CDN saat bermain.
+- `assets/js/farm-scenery.js`: pemandangan canvas asli untuk fallback 2D.
 - `assets/js/farm-game.js`: kontrol peta, antarmuka, dan penguncian akun.
 - `tools/build_farm.py`: generator dunia menggunakan Python dan fingerprint asset.
 - `src/privy.jsx`, `assets/auth/`: SDK Privy dan sumber antarmuka akun.
@@ -56,6 +65,7 @@ Ini adalah **game kebun solo dengan akun**, belum dunia multiplayer bersama. Eko
 
 ```sh
 npm ci
+npm run build:3d
 npm run build:auth
 python tools/build_farm.py
 python tools/serve.py
