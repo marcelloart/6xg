@@ -13,13 +13,15 @@ let mf, db;
 const fixture = JSON.parse(await readFile(new URL('./save.json', import.meta.url), 'utf8'));
 const fresh = () => structuredClone(fixture);
 const rtsFixture = JSON.parse(await readFile(new URL('../../tests/rts-save.json', import.meta.url), 'utf8'));
+const farmFixture = JSON.parse(await readFile(new URL('../../tests/farm-save.json', import.meta.url), 'utf8'));
 
 before(async () => {
   mf = new Miniflare(convertV4MiniflareOptions({...options, cf: false, telemetry: {enabled: false}}));
   db = await mf.getD1Database('DB');
   await db.exec((await readFile(new URL('../migrations/0001_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
+  await db.exec((await readFile(new URL('../migrations/0002_farm_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
 });
-beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); });
+beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); await db.prepare('DELETE FROM farm_saves').run(); });
 after(async () => { await mf?.dispose(); });
 async function token(uid = 'did:privy:a', updates = {}, privateKey = keys.privateKey) {
   const now = Math.floor(Date.now() / 1000);
@@ -111,10 +113,41 @@ test('only the configured game origin receives CORS permission', async () => {
   assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
 });
 test('health checks the migration and missing auth fails closed', async () => {
-  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true});
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true});
   const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
   try {
     const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});
     assert.equal(res.status, 503);
   } finally { await unconfigured.dispose(); }
+});
+
+test('farm seed purchases, crops and construction round-trip in a separate D1 table', async () => {
+  const auth=await token(), path='/api/farm-save', save=structuredClone(farmFixture);
+  const now=Date.now();save.state.lastSeen=now;save.state.seeds.carrot=5;
+  save.state.plots[0]={id:0,crop:'carrot',plantedAt:now,readyAt:now+300000};
+  save.state.buildings.push({slot:0,kind:'house',startedAt:now,readyAt:now+60000});
+  await call('PUT',auth,{save:fresh(),revision:0});
+  assert.equal((await call('GET',auth,undefined,{path})).body.save,null);
+  assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
+  assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
+  assert.equal((await call('GET',auth)).body.save.version,2);
+  assert.equal((await call('GET',await token('did:privy:b'),undefined,{path})).body.save,null);
+});
+test('farm endpoints reject anonymous requests, wrong namespaces and invalid crop deadlines', async()=>{
+  const auth=await token(),path='/api/farm-save';
+  assert.equal((await call('GET',null,undefined,{path})).status,401);
+  assert.equal((await call('PUT',auth,{save:fresh(),revision:0},{path})).status,400);
+  assert.equal((await call('PUT',auth,{save:farmFixture,revision:0})).status,400);
+  const save=structuredClone(farmFixture),now=Date.now();save.state.lastSeen=now;
+  save.state.plots[0]={id:0,crop:'apple',plantedAt:now,readyAt:now+300000};
+  assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,400);
+  assert.equal((await call('GET',auth,undefined,{path})).body.save,null);
+});
+test('farm revision conflicts cannot overwrite a newer device save',async()=>{
+  const auth=await token(),path='/api/farm-save',save=structuredClone(farmFixture);
+  const responses=await Promise.all([call('PUT',auth,{save,revision:0},{path}),call('PUT',auth,{save,revision:0},{path})]);
+  assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);
+  const changed=structuredClone(save);changed.state.seeds.carrot=4;
+  assert.equal((await call('PUT',auth,{save:changed,revision:0},{path})).status,409);
+  assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
 });

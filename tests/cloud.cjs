@@ -32,5 +32,17 @@ async function test(name,fn){await fn();tests.push(name);}
   await test('Production cloud origins require HTTPS and reject credentials in the URL',async()=>{
     assert.throws(()=>new Session('http://api.example.test','did:privy:a',()=>{}),/HTTPS/);assert.throws(()=>new Session('https://secret@example.test','did:privy:a',()=>{}),/tidak valid/);const s=new Session('http://127.0.0.1:8770','did:privy:a',()=>{});s.close();
   });
+  await test('Farm sessions use the farm endpoint without affecting legacy sessions',async()=>{
+    const urls=[];const fetcher=async url=>{urls.push(url);return ok({userId:'did:privy:a',revision:0,save:null});};
+    const legacy=new Session('https://api.example.test','did:privy:a',async()=>'token',{fetcher});
+    const farm=new Session('https://api.example.test','did:privy:a',async()=>'token',{fetcher,path:'/api/farm-save'});
+    await legacy.load();await farm.load();assert.deepEqual(urls,['https://api.example.test/api/save','https://api.example.test/api/farm-save']);
+    assert.throws(()=>new Session('https://api.example.test','did:privy:a',()=>{}, {path:'/api/other-user'}),/Endpoint/);
+  });
+  await test('The local cloud baseline advances only after a verified successful upload',async()=>{
+    const remembered=[];let online=false;
+    const s=new Session('https://api.example.test','did:privy:a',async()=>'token',{onSaved:(raw,revision)=>remembered.push({raw,revision}),fetcher:async()=>online?ok({userId:'did:privy:a',revision:1}):{ok:false,status:503}});
+    s.changed(raw(2));await s.flush();assert.equal(remembered.length,0);online=true;await s.flush();assert.deepEqual(remembered,[{raw:raw(2),revision:1}]);
+  });
   console.log(JSON.stringify({passed:tests.length,tests},null,2));
 })().catch(error=>{console.error(error);process.exitCode=1;});

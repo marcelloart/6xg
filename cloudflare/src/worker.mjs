@@ -61,12 +61,16 @@ export default {
     if (origin && !origins.includes(origin)) return reply(403, {error: 'origin_not_allowed'});
     const path = new URL(request.url).pathname;
     if (path === '/health' && request.method === 'GET') {
-      let storage = false;
-      try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first(); } catch {}
+      let storage = false, farmStorage = false;
+      try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
+        farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first(); } catch {}
       const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && authConfigured ? 200 : 503, {ok: storage && authConfigured, authConfigured, storage});
+      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage});
     }
-    if (path !== '/api/save') return reply(404, {error: 'not_found'});
+    if (!['/api/save', '/api/farm-save'].includes(path)) return reply(404, {error: 'not_found'});
+    const farm = path === '/api/farm-save';
+    // Table names come only from this fixed route allowlist.
+    const table = farm ? 'farm_saves' : 'saves';
     if (request.method === 'OPTIONS') {
       headers['Access-Control-Allow-Methods'] = 'GET, PUT, OPTIONS';
       headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type';
@@ -83,7 +87,7 @@ export default {
     if (!env.DB) return reply(503, {error: 'storage_unavailable'});
     if (request.method === 'GET') {
       try {
-        const row = await env.DB.prepare('SELECT save, revision, saved_at FROM saves WHERE user_id = ?').bind(uid).first();
+        const row = await env.DB.prepare(`SELECT save, revision, saved_at FROM ${table} WHERE user_id = ?`).bind(uid).first();
         return reply(200, {userId: uid, save: row ? JSON.parse(row.save) : null, revision: row?.revision || 0, savedAt: row?.saved_at || null});
       } catch { return reply(503, {error: 'storage_unavailable'}); }
     }
@@ -91,14 +95,15 @@ export default {
     try {
       payload = await readBody(request);
       if (!payload || !integer(payload.revision, 0, Number.MAX_SAFE_INTEGER - 1)) return reply(400, {error: 'invalid_revision'});
+      if (farm ? payload.save?.version !== 4 : ![2,3].includes(payload.save?.version)) throw new TypeError('Invalid save namespace');
       save = validateSave(payload.save);
     } catch (error) { return reply(error instanceof RangeError ? 413 : 400, {error: error instanceof RangeError ? 'save_too_large' : 'invalid_save'}); }
     const savedAt = new Date().toISOString();
     try {
       // Each conditional statement is atomic; no read-then-write race between devices.
       const statement = payload.revision === 0
-        ? env.DB.prepare('INSERT INTO saves (user_id, save, revision, saved_at) VALUES (?, ?, 1, ?) ON CONFLICT(user_id) DO NOTHING RETURNING revision, saved_at').bind(uid, JSON.stringify(save), savedAt)
-        : env.DB.prepare('UPDATE saves SET save = ?, revision = revision + 1, saved_at = ? WHERE user_id = ? AND revision = ? RETURNING revision, saved_at').bind(JSON.stringify(save), savedAt, uid, payload.revision);
+        ? env.DB.prepare(`INSERT INTO ${table} (user_id, save, revision, saved_at) VALUES (?, ?, 1, ?) ON CONFLICT(user_id) DO NOTHING RETURNING revision, saved_at`).bind(uid, JSON.stringify(save), savedAt)
+        : env.DB.prepare(`UPDATE ${table} SET save = ?, revision = revision + 1, saved_at = ? WHERE user_id = ? AND revision = ? RETURNING revision, saved_at`).bind(JSON.stringify(save), savedAt, uid, payload.revision);
       const row = await statement.first();
       return row ? reply(200, {userId: uid, revision: row.revision, savedAt: row.saved_at}) : reply(409, {error: 'save_conflict'});
     } catch { return reply(503, {error: 'storage_unavailable'}); }

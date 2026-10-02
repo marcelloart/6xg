@@ -1,0 +1,313 @@
+{
+  "version": 4,
+  "state": {
+    "coins": 0,
+    "lastSeen": 1790928000000,
+    "seeds": {
+      "carrot": 6,
+      "tomato": 0,
+      "corn": 0,
+      "strawberry": 0,
+      "potato": 0,
+      "chili": 0,
+      "orange": 0,
+      "apple": 0,
+      "avocado": 0
+    },
+    "produce": {
+      "carrot": 0,
+      "tomato": 0,
+      "corn": 0,
+      "strawberry": 0,
+      "potato": 0,
+      "chili": 0,
+      "orange": 0,
+      "apple": 0,
+      "avocado": 0
+    },
+    "materials": {
+      "wood": 0,
+      "stone": 0,
+      "meat": 0
+    },
+    "plots": [
+      {
+        "id": 0,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 1,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 2,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 3,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 4,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 5,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 6,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 7,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 8,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 9,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 10,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 11,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 12,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 13,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 14,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 15,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 16,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 17,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 18,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 19,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 20,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 21,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 22,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 23,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 24,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 25,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 26,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 27,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 28,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 29,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 30,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 31,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 32,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 33,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 34,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 35,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 36,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 37,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 38,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 39,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 40,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 41,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 42,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 43,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      },
+      {
+        "id": 44,
+        "crop": null,
+        "plantedAt": 0,
+        "readyAt": 0
+      }
+    ],
+    "buildings": [],
+    "log": [
+      {
+        "at": 1790928000000,
+        "text": "Selamat datang! 6 bibit wortel untuk panen pertamamu."
+      }
+    ]
+  }
+}

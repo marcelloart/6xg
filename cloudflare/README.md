@@ -1,5 +1,15 @@
 # Progres online — Cloudflare Workers + D1
 
+## Ladang Bara
+
+Game kebun memakai endpoint `GET/PUT /api/farm-save`, tabel `farm_saves`, dan snapshot versi 4. Migrasi `0002_farm_saves.sql` menambah tabel tanpa mengubah progres Benteng Bara pada `saves`. Jalankan semua migrasi saat deployment. Validator kebun diimpor dari `../assets/js/farm-engine.js` dan dibagikan dengan browser.
+
+`/health` sekarang juga memeriksa `farmStorage`. Nilai `ok`, `authConfigured`, `storage`, dan `farmStorage` harus `true`. Timer kebun tetap matang saat halaman ditutup karena `readyAt` disimpan; server tidak menjalankan simulasi tick. Ini ekonomi solo dari client, bukan ekonomi server untuk uang nyata atau PvP.
+
+Gunakan `python tools/build_farm.py` untuk versi asset frontend. Data kebun tidak dimigrasikan dari kampanye perang. Konfigurasi Workers Builds yang sudah ada tetap dipakai; deploy command menjalankan semua migrasi D1 sebelum menerbitkan Worker. Simpan/muat dengan akun Privy nyata lintas perangkat masih harus diuji pemilik.
+
+Catatan berikut menjelaskan deployment dan kontrak kampanye perang yang juga dipertahankan.
+
 Server ini cocok untuk menjalankan penyimpanan kampanye solo tanpa menyewa VPS. Website tetap berada di GitHub Pages, dan database pemain berada di akun Cloudflare pemilik game. Build dijalankan dari folder ini dengan checkout repository lengkap: validator RTS diimpor dari `../assets/js/rts-engine.js`. Backend Python di `server/` tetap tersedia untuk hosting container.
 
 **Status:** server sudah diterbitkan melalui Cloudflare Workers Builds. Worker `6xg-cloud-save` menggunakan D1 `6xg-player-saves` dengan tabel `saves`; `database_id` dan `apiBase` frontend sudah diisi. Pemeriksaan produksi berhasil: `/health` mengembalikan `ok`, `authConfigured`, dan `storage` bernilai `true`; akses tanpa login dan token tidak valid ditolak; preflight dari `https://6xg.online` diizinkan dan origin lain ditolak. Login Privy tersedia untuk penyimpanan progres online. Pengujian simpan/muat lintas perangkat menggunakan akun Privy nyata belum dilakukan.

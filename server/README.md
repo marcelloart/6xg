@@ -1,5 +1,13 @@
 # Penyimpanan progres akun
 
+## Ladang Bara
+
+Alternatif Python mendukung `GET/PUT /api/farm-save`, snapshot versi 4, dan tabel SQLite `farm_saves` yang dibuat saat startup. Validator memeriksa bibit, hasil panen, koin, bahan, batas kapasitas, tapak unik, dan deadline tanaman/pembangunan. Progres perang tetap disimpan terpisah di tabel `saves` dan endpoint `/api/save`.
+
+Kebun baru dimulai dengan 0 koin dan bahan serta 6 bibit wortel gratis. `readyAt` absolut memungkinkan tanaman matang saat halaman ditutup. Ekonomi tetap dihitung browser; server menyimpan snapshot solo dengan revisi dan token Privy, bukan simulasi ekonomi yang otoritatif. Frontend produksi memakai Cloudflare, bukan container Python ini.
+
+Catatan berikut mempertahankan panduan deployment serta kontrak kampanye perang lama.
+
 Backend Python ini menyimpan kampanye solo per akun Privy. Setiap permintaan memverifikasi tanda tangan ES256, issuer, App ID, masa berlaku, session ID, dan DID pengguna. Pemain tidak dapat memilih ID akun lain dalam permintaan. Token tidak disimpan di database atau ditulis ke log.
 
 Backend Python ini siap dijalankan, tetapi **belum dipasang ke hosting**. Frontend produksi saat ini memakai alternatif Cloudflare Workers + D1 untuk progres online. Backend ini menyediakan kontrak API yang sama untuk sinkronisasi kampanye solo; tidak menyediakan PvP atau dunia multiplayer bersama.

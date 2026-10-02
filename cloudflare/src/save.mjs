@@ -1,4 +1,5 @@
 import '../../assets/js/rts-engine.js';
+import '../../assets/js/farm-engine.js';
 const RESOURCES = ['wood', 'stone', 'gold', 'meat'];
 const UNITS = ['soldier', 'archer', 'cavalry'];
 const LEVELS = {
@@ -15,6 +16,7 @@ const pick = (value, keys) => Object.fromEntries(keys.map(key => [key, value[key
 
 // Solo saves are bounded and whitelisted. They are not an authoritative PvP economy.
 export function validateSave(save) {
+  if (save?.version === 4) return globalThis.BaraFarm.validateSave(save);
   if (save?.version === 3) return globalThis.BaraRTS.validateSave(save);
   require(object(save) && save.version === 2 && object(save.state));
   const s = save.state, levels = s.levels;

@@ -35,6 +35,8 @@ def integer(value, low, high):
 
 def validate_save(save):
     """Bound all gameplay fields before storing a solo campaign snapshot."""
+    if isinstance(save, dict) and save.get("version") == 4:
+        return validate_farm_save(save)
     if isinstance(save, dict) and save.get("version") == 3:
         return validate_rts_save(save)
     if not isinstance(save, dict) or save.get("version") != 2 or not isinstance(save.get("state"), dict):
@@ -192,6 +194,51 @@ def validate_rts_save(save):
     return {"version": 3, "state": clean}
 
 
+def validate_farm_save(save):
+    """Match the farm format's bounded inventories and absolute deadlines."""
+    crops = {"carrot": 5, "tomato": 15, "corn": 30, "strawberry": 60, "potato": 120,
+             "chili": 300, "orange": 600, "apple": 720, "avocado": 1440}
+    buildings = {"barn": 90, "house": 60, "shed": 60, "well": 45}
+    def require(value):
+        if not value:
+            raise ValueError("Invalid farm snapshot")
+    def pick(value, keys):
+        return {key: value[key] for key in keys}
+    s = save.get("state")
+    require(isinstance(s, dict) and integer(s.get("coins"), 0, 10**9) and integer(s.get("lastSeen"), 1, 4102444800000))
+    clean = pick(s, ("coins", "lastSeen"))
+    for field, keys, cap in (("seeds", crops, 1000), ("produce", crops, 10000), ("materials", ("wood", "stone", "meat"), 10000)):
+        require(isinstance(s.get(field), dict) and set(s[field]) == set(keys) and all(integer(s[field][k], 0, cap) for k in keys))
+        clean[field] = pick(s[field], keys)
+    require(isinstance(s.get("buildings"), list) and len(s["buildings"]) <= 8)
+    slots = set()
+    clean["buildings"] = []
+    for b in s["buildings"]:
+        require(isinstance(b, dict) and integer(b.get("slot"), 0, 7) and b["slot"] not in slots and b.get("kind") in buildings)
+        require(integer(b.get("startedAt"), 1, s["lastSeen"]) and b.get("readyAt") == b["startedAt"] + buildings[b["kind"]] * 1000 and integer(b.get("readyAt"), 1, 4102444800000))
+        slots.add(b["slot"])
+        clean["buildings"].append(pick(b, ("slot", "kind", "startedAt", "readyAt")))
+    finished = lambda kind: sum(b["kind"] == kind and b["readyAt"] <= s["lastSeen"] for b in clean["buildings"])
+    cap = 20 + 80 * finished("barn") + 40 * finished("shed")
+    unlocked = min(45, 9 + 6 * finished("house") + 3 * finished("well"))
+    require(sum(clean["produce"].values()) <= cap and isinstance(s.get("plots"), list) and len(s["plots"]) == 45)
+    clean["plots"] = []
+    for i, p in enumerate(s["plots"]):
+        require(isinstance(p, dict) and type(p.get("id")) is int and p["id"] == i)
+        if p.get("crop") is None:
+            require(type(p.get("plantedAt")) is int and p["plantedAt"] == 0 and type(p.get("readyAt")) is int and p["readyAt"] == 0)
+        else:
+            require(i < unlocked and p.get("crop") in crops and integer(p.get("plantedAt"), 1, s["lastSeen"]))
+            require(p.get("readyAt") == p["plantedAt"] + crops[p["crop"]] * 60000 and integer(p.get("readyAt"), 1, 4102444800000))
+        clean["plots"].append(pick(p, ("id", "crop", "plantedAt", "readyAt")))
+    require(isinstance(s.get("log"), list) and len(s["log"]) <= 8)
+    clean["log"] = []
+    for e in s["log"]:
+        require(isinstance(e, dict) and integer(e.get("at"), 1, s["lastSeen"]) and isinstance(e.get("text"), str) and len(e["text"]) <= 180)
+        clean["log"].append(pick(e, ("at", "text")))
+    return {"version": 4, "state": clean}
+
+
 class Store:
     def __init__(self, filename):
         self.filename = str(filename)
@@ -199,6 +246,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("CREATE TABLE IF NOT EXISTS saves (user_id TEXT PRIMARY KEY, save TEXT NOT NULL, revision INTEGER NOT NULL, saved_at TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS farm_saves (user_id TEXT PRIMARY KEY, save TEXT NOT NULL, revision INTEGER NOT NULL, saved_at TEXT NOT NULL)")
 
     @contextmanager
     def connect(self):
@@ -209,19 +257,21 @@ class Store:
         finally:
             db.close()
 
-    def get(self, user_id):
+    def get(self, user_id, farm=False):
+        table = "farm_saves" if farm else "saves"
         with self.connect() as db:
-            row = db.execute("SELECT save, revision, saved_at FROM saves WHERE user_id=?", (user_id,)).fetchone()
+            row = db.execute(f"SELECT save, revision, saved_at FROM {table} WHERE user_id=?", (user_id,)).fetchone()
         return {"userId": user_id, "save": json.loads(row[0]) if row else None, "revision": row[1] if row else 0, "savedAt": row[2] if row else None}
 
-    def put(self, user_id, save, revision):
+    def put(self, user_id, save, revision, farm=False):
+        table = "farm_saves" if farm else "saves"
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            current = db.execute("SELECT revision FROM saves WHERE user_id=?", (user_id,)).fetchone()
+            current = db.execute(f"SELECT revision FROM {table} WHERE user_id=?", (user_id,)).fetchone()
             if (current[0] if current else 0) != revision:
                 return None
             saved_at = datetime.now(timezone.utc).isoformat()
-            db.execute("INSERT INTO saves VALUES (?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET save=excluded.save, revision=excluded.revision, saved_at=excluded.saved_at", (user_id, json.dumps(save, allow_nan=False), revision + 1, saved_at))
+            db.execute(f"INSERT INTO {table} VALUES (?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET save=excluded.save, revision=excluded.revision, saved_at=excluded.saved_at", (user_id, json.dumps(save, allow_nan=False), revision + 1, saved_at))
         return {"userId": user_id, "revision": revision + 1, "savedAt": saved_at}
 
 
@@ -272,8 +322,9 @@ class CloudApp:
             return reply(403, {"error": "origin_not_allowed"})
         if environ.get("PATH_INFO") == "/health" and method == "GET":
             return reply(200, {"ok": True, "authConfigured": bool(self.app_id and self.key)})
-        if environ.get("PATH_INFO") != "/api/save":
+        if environ.get("PATH_INFO") not in ("/api/save", "/api/farm-save"):
             return reply(404, {"error": "not_found"})
+        farm = environ.get("PATH_INFO") == "/api/farm-save"
         if method == "OPTIONS":
             headers.extend([("Access-Control-Allow-Methods", "GET, PUT, OPTIONS"), ("Access-Control-Allow-Headers", "Authorization, Content-Type"), ("Access-Control-Max-Age", "600")])
             return reply(200, {})
@@ -289,7 +340,7 @@ class CloudApp:
             return reply(401, {"error": "invalid_token"})
         try:
             if method == "GET":
-                return reply(200, self.store.get(uid))
+                return reply(200, self.store.get(uid, farm))
             length = int(environ.get("CONTENT_LENGTH") or "0")
             if length > MAX_BODY:
                 return reply(413, {"error": "save_too_large"})
@@ -298,8 +349,11 @@ class CloudApp:
             payload = json.loads(environ["wsgi.input"].read(length))
             if not isinstance(payload, dict) or not integer(payload.get("revision"), 0, 2**53 - 1):
                 return reply(400, {"error": "invalid_revision"})
+            version = payload.get("save", {}).get("version") if isinstance(payload.get("save"), dict) else None
+            if (farm and version != 4) or (not farm and version not in (2, 3)):
+                return reply(400, {"error": "invalid_save"})
             save = validate_save(payload.get("save"))
-            result = self.store.put(uid, save, payload["revision"])
+            result = self.store.put(uid, save, payload["revision"], farm)
             return reply(200, result) if result else reply(409, {"error": "save_conflict"})
         except (ValueError, TypeError, KeyError, OverflowError):
             return reply(400, {"error": "invalid_save"})

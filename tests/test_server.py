@@ -58,6 +58,23 @@ class CloudTests(unittest.TestCase):
         self.assertEqual(restored["save"], self.save)
         self.assertEqual(restored["revision"], 1)
 
+    def test_farm_snapshot_uses_an_independent_authenticated_store(self):
+        farm = json.loads((ROOT / "tests/farm-save.json").read_text())
+        token = self.token()
+        self.call("PUT", token, {"save": self.save, "revision": 0})
+        self.assertEqual(self.call("PUT", token, {"save": farm, "revision": 0}, path="/api/farm-save")["status"], 200)
+        self.assertEqual(self.call(token=token, path="/api/farm-save")["body"]["save"], farm)
+        self.assertEqual(self.call(token=token)["body"]["save"]["version"], 2)
+        self.assertIsNone(self.call(token=self.token("did:privy:b"), path="/api/farm-save")["body"]["save"])
+
+    def test_farm_deadlines_and_wrong_save_namespace_are_rejected(self):
+        farm = json.loads((ROOT / "tests/farm-save.json").read_text())
+        token = self.token()
+        self.assertEqual(self.call("PUT", token, {"save": farm, "revision": 0})["status"], 400)
+        self.assertEqual(self.call("GET", path="/api/farm-save")["status"], 401)
+        farm["state"]["plots"][0] = {"id": 0, "crop": "apple", "plantedAt": farm["state"]["lastSeen"], "readyAt": farm["state"]["lastSeen"] + 300000}
+        self.assertEqual(self.call("PUT", token, {"save": farm, "revision": 0}, path="/api/farm-save")["status"], 400)
+
     def test_another_players_progress_is_never_visible(self):
         self.call("PUT", self.token(), {"save": self.save, "revision": 0})
         other = self.call(token=self.token("did:privy:b"))["body"]
