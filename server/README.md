@@ -2,7 +2,7 @@
 
 ## Ladang Bara
 
-Alternatif Python mendukung `GET/PUT /api/farm-save`, snapshot versi 4, dan tabel SQLite `farm_saves` yang dibuat saat startup. Validator memeriksa bibit, hasil panen, koin, bahan, batas kapasitas, tapak unik, dan deadline tanaman/pembangunan. Progres perang tetap disimpan terpisah di tabel `saves` dan endpoint `/api/save`.
+Alternatif Python mendukung `GET/PUT /api/farm-save`, snapshot versi 4/5, dan tabel SQLite `farm_saves` yang dibuat saat startup. Validator memeriksa bibit, hasil panen, koin, bahan, batas kapasitas, tapak unik, dan deadline tanaman/pembangunan. Progres perang tetap disimpan terpisah di tabel `saves` dan endpoint `/api/save`.
 
 Kebun baru dimulai dengan 0 koin dan bahan serta 6 bibit wortel gratis. `readyAt` absolut memungkinkan tanaman matang saat halaman ditutup. Ekonomi tetap dihitung browser; server menyimpan snapshot solo dengan revisi dan token Privy, bukan simulasi ekonomi yang otoritatif. Frontend produksi memakai Cloudflare, bukan container Python ini.
 
@@ -50,3 +50,6 @@ python -m unittest discover -s tests -p 'test_*.py'
 Pengujian memakai kunci ES256 yang dibuat sementara dan database terisolasi. Tidak ada mode bypass autentikasi pada server produksi.
 
 Referensi: [Privy access tokens](https://docs.privy.io/authentication/user-authentication/access-tokens), [Privy token security](https://docs.privy.io/authentication/user-authentication/tokens).
+
+
+Versi 5 menyimpan posisi bebas dan rotasi bangunan, petak tambahan/pindahan, profil, dan statistik. Validator memeriksa tabrakan/batas layout serta angka dan profil; versi 4 tetap diterima. Migrasi dilakukan oleh model browser tanpa mengulang bibit gratis. Health Cloudflare menyebut `farmSaveVersion: 5`. Tidak ada reset tabel pemain atau perubahan kredensial.

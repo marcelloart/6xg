@@ -35,7 +35,7 @@ def integer(value, low, high):
 
 def validate_save(save):
     """Bound all gameplay fields before storing a solo campaign snapshot."""
-    if isinstance(save, dict) and save.get("version") == 4:
+    if isinstance(save, dict) and save.get("version") in (4, 5):
         return validate_farm_save(save)
     if isinstance(save, dict) and save.get("version") == 3:
         return validate_rts_save(save)
@@ -204,24 +204,40 @@ def validate_farm_save(save):
             raise ValueError("Invalid farm snapshot")
     def pick(value, keys):
         return {key: value[key] for key in keys}
+    modern = save.get("version") == 5
     s = save.get("state")
     require(isinstance(s, dict) and integer(s.get("coins"), 0, 10**9) and integer(s.get("lastSeen"), 1, 4102444800000))
     clean = pick(s, ("coins", "lastSeen"))
     for field, keys, cap in (("seeds", crops, 1000), ("produce", crops, 10000), ("materials", ("wood", "stone", "meat"), 10000)):
         require(isinstance(s.get(field), dict) and set(s[field]) == set(keys) and all(integer(s[field][k], 0, cap) for k in keys))
         clean[field] = pick(s[field], keys)
-    require(isinstance(s.get("buildings"), list) and len(s["buildings"]) <= 8)
+    require(isinstance(s.get("buildings"), list) and len(s["buildings"]) <= (24 if modern else 8))
     slots = set()
     clean["buildings"] = []
     for b in s["buildings"]:
-        require(isinstance(b, dict) and integer(b.get("slot"), 0, 7) and b["slot"] not in slots and b.get("kind") in buildings)
+        require(isinstance(b, dict) and integer(b.get("slot"), 0, 23 if modern else 7) and b["slot"] not in slots and b.get("kind") in buildings)
         require(integer(b.get("startedAt"), 1, s["lastSeen"]) and b.get("readyAt") == b["startedAt"] + buildings[b["kind"]] * 1000 and integer(b.get("readyAt"), 1, 4102444800000))
         slots.add(b["slot"])
         clean["buildings"].append(pick(b, ("slot", "kind", "startedAt", "readyAt")))
+    if modern:
+        require(integer(s.get("expansions"), 0, 72))
+        clean["expansions"] = s["expansions"]
+        profile = s.get("profile")
+        require(isinstance(profile, dict) and profile.get("avatar") in ("sprout", "sunflower", "apple", "bee"))
+        for key in ("name", "farmName"):
+            name = profile.get(key)
+            require(isinstance(name, str) and 1 <= len(name.strip().encode("utf-16-le")) // 2 <= 24 and not any(ord(c) < 32 or ord(c) == 127 for c in name))
+        clean["profile"] = {"name": profile["name"].strip(), "farmName": profile["farmName"].strip(), "avatar": profile["avatar"]}
+        stats = s.get("stats")
+        require(isinstance(stats, dict) and integer(stats.get("harvested"), 0, 10**9) and integer(stats.get("earned"), 0, 10**12))
+        clean["stats"] = pick(stats, ("harvested", "earned"))
+        for source, target in zip(s["buildings"], clean["buildings"]):
+            require(integer(source.get("rotation"), 0, 3))
+            target.update(pick(source, ("x", "y", "rotation")))
     finished = lambda kind: sum(b["kind"] == kind and b["readyAt"] <= s["lastSeen"] for b in clean["buildings"])
     cap = 20 + 80 * finished("barn") + 40 * finished("shed")
-    unlocked = min(45, 9 + 6 * finished("house") + 3 * finished("well"))
-    require(sum(clean["produce"].values()) <= cap and isinstance(s.get("plots"), list) and len(s["plots"]) == 45)
+    unlocked = min(81 if modern else 45, 9 + 6 * finished("house") + 3 * finished("well") + clean.get("expansions", 0))
+    require(sum(clean["produce"].values()) <= cap and isinstance(s.get("plots"), list) and (45 <= len(s["plots"]) <= 81 and len(s["plots"]) >= unlocked if modern else len(s["plots"]) == 45))
     clean["plots"] = []
     for i, p in enumerate(s["plots"]):
         require(isinstance(p, dict) and type(p.get("id")) is int and p["id"] == i)
@@ -230,13 +246,25 @@ def validate_farm_save(save):
         else:
             require(i < unlocked and p.get("crop") in crops and integer(p.get("plantedAt"), 1, s["lastSeen"]))
             require(p.get("readyAt") == p["plantedAt"] + crops[p["crop"]] * 60000 and integer(p.get("readyAt"), 1, 4102444800000))
-        clean["plots"].append(pick(p, ("id", "crop", "plantedAt", "readyAt")))
+        clean["plots"].append(pick(p, ("id", "crop", "plantedAt", "readyAt", "x", "y") if modern else ("id", "crop", "plantedAt", "readyAt")))
     require(isinstance(s.get("log"), list) and len(s["log"]) <= 8)
     clean["log"] = []
     for e in s["log"]:
         require(isinstance(e, dict) and integer(e.get("at"), 1, s["lastSeen"]) and isinstance(e.get("text"), str) and len(e["text"]) <= 180)
         clean["log"].append(pick(e, ("at", "text")))
-    return {"version": 4, "state": clean}
+    if modern:
+        sizes = {"plot": (60, 60), "barn": (150, 128), "house": (130, 116), "shed": (112, 104), "well": (90, 90)}
+        rects = []
+        for item in clean["plots"] + clean["buildings"]:
+            w, h = sizes.get(item.get("kind"), sizes["plot"])
+            if item.get("rotation", 0) % 2:
+                w, h = h, w
+            require(integer(item.get("x"), 1000 + w // 2, 2190 - w // 2) and integer(item.get("y"), 630 + h // 2, 1760 - h // 2))
+            rects.append((item["x"], item["y"], w, h))
+        for i, a in enumerate(rects):
+            for b in rects[i + 1:]:
+                require(not (abs(a[0]-b[0]) < (a[2]+b[2])/2+5 and abs(a[1]-b[1]) < (a[3]+b[3])/2+5))
+    return {"version": save["version"], "state": clean}
 
 
 class Store:
@@ -350,7 +378,7 @@ class CloudApp:
             if not isinstance(payload, dict) or not integer(payload.get("revision"), 0, 2**53 - 1):
                 return reply(400, {"error": "invalid_revision"})
             version = payload.get("save", {}).get("version") if isinstance(payload.get("save"), dict) else None
-            if (farm and version != 4) or (not farm and version not in (2, 3)):
+            if (farm and version not in (4, 5)) or (not farm and version not in (2, 3)):
                 return reply(400, {"error": "invalid_save"})
             save = validate_save(payload.get("save"))
             result = self.store.put(uid, save, payload["revision"], farm)
@@ -369,3 +397,4 @@ if __name__ == "__main__":
     server = make_server("127.0.0.1", int(os.getenv("PORT", "8770")), create_app())
     print("Benteng Bara account API on http://127.0.0.1:8770", flush=True)
     server.serve_forever()
+

@@ -18,7 +18,7 @@ Login Privy diperlukan sebelum bermain. Akun kebun baru mulai dengan **0 koin, 0
 
 Semua harga menggunakan koin permainan. Tanaman menggunakan `plantedAt` dan `readyAt` absolut, sehingga tetap matang saat tab berada di belakang atau ditutup. Tidak ada percepatan waktu pada website produksi. Tanaman matang tidak layu, hasil tidak dijual otomatis, dan panen yang melampaui kapasitas tetap berada di petak sampai ruang tersedia. Setiap panen mengosongkan petak untuk bibit berikutnya.
 
-Toko memiliki bagian **Bibit**, **Jual panen**, dan **Bahan**. Kayu berharga 3 koin, batu 4, daging 5. Jika pemain sudah tidak punya bibit, tanaman, atau hasil panen, pembelian bahan menyisakan minimal 5 koin untuk bibit wortel agar permainan dapat diteruskan.
+Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kayu berharga 3 koin, batu 4, daging 5. Jika pemain sudah tidak punya bibit, tanaman, atau hasil panen, pembelian bahan menyisakan minimal 5 koin untuk bibit wortel agar permainan dapat diteruskan.
 
 | Bangunan | Kayu / batu / daging | Waktu | Manfaat setelah selesai |
 | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ Toko memiliki bagian **Bibit**, **Jual panen**, dan **Bahan**. Kayu berharga 3 k
 | Gudang | 8 / 4 / 1 | 60 detik | +40 ruang panen |
 | Sumur | 5 / 6 / 1 | 45 detik | +3 petak |
 
-Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Ada 8 tapak bangunan dan maksimal 45 petak. Pilih bangunan lalu klik tapak di peta atau tombol nomor tapak. Biaya dibayar hanya saat penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
+Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Bangunan tidak lagi terbatas pada tapak tetap: pilih tanah terbuka di lembah, putar dengan R atau tombol arah, lalu **Konfirmasi**. Pratinjau hijau/merah memeriksa batas tanah, pondok, pohon, bangunan, dan petak lain. Ada maksimal 24 bangunan dan 81 petak. Menu **Atur** memindahkan bangunan/petak tanpa biaya; tanaman dan deadline tetap berjalan. Tambahan area 1/3/6 petak berharga 20 koin per petak dan lokasinya dipilih pemain. Petak cadangan yang belum terbuka ditandai garis putus-putus pada mode penempatan dan juga dilindungi dari tabrakan. Biaya dibayar hanya setelah konfirmasi penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
 
 ## Kontrol
 
@@ -35,13 +35,13 @@ Pilih bibit di **Kebun**, lalu klik petak kosong. Wortel dipilih secara awal. Kl
 
 **Q / E** atau tombol **↶ / ↷** memutar kamera 3D. Koordinat petak dan bangunan tetap sama setelah kamera diputar. Peta kecil menampilkan batas pandangan yang ikut berputar. **Menu → Kualitas tampilan** menyediakan otomatis, detail tinggi, ringan, dan 2D; pengaturan tersimpan per perangkat. WebGL 2 digunakan untuk 3D, dengan tampilan canvas 2D otomatis jika tidak tersedia. Kehilangan konteks grafis menyediakan tombol 2D dan tidak mengubah snapshot kebun.
 
-Tanah, rumah, lumbung, gudang, sumur, dan sembilan jenis tanaman memiliki bentuk 3D. Lanskap memakai daun dan rumput instanced, relief di luar kebun, sungai beriak, normal map, dan bayangan matahari pada kualitas otomatis desktop/detail tinggi. Pertumbuhan mengubah bentuk tanaman; mode ringan mengurangi rumput dan mematikan bayangan. Render dibatasi 20–30 fps dan dihentikan saat halaman tersembunyi; timer pertumbuhan tetap berdasarkan waktu nyata.
+Tanah, rumah, lumbung, gudang, sumur, dan sembilan jenis tanaman memiliki bentuk 3D. Lanskap memakai daun dan rumput instanced, relief di luar kebun, sungai beriak, normal map, dan bayangan matahari pada kualitas otomatis desktop/detail tinggi. Pertumbuhan mengubah bentuk tanaman; mode ringan mengurangi rumput dan mematikan bayangan. Angin menggerakkan daun, puncak pohon, rumput, dan tanaman dengan shader serta bayangan yang selaras. Daun berjatuhan dan partikel udara ikut bergerak. Sungai memakai geometri berombak, aliran, kilau matahari, dan warna air yang tetap terlihat pada mode ringan. Menu menyediakan sakelar animasi dan mengikuti preferensi pengurangan gerakan perangkat secara awal. Katalog menggunakan gambar 3D asli tanaman/buah, bahan, dan bangunan. Render dibatasi 30–50 fps dan dihentikan saat halaman tersembunyi; timer pertumbuhan tetap berdasarkan waktu nyata.
 
 Tekstur **Grass005**, **Ground112**, dan **Wood096** berasal dari [ambientCG](https://ambientcg.com), berlisensi [CC0 1.0](https://docs.ambientcg.com/license/). Map warna dan normal asli 1K dikompres ke 512px untuk pengiriman browser; sumber tercatat di `assets/textures/sources.json`. Model, tata letak, dan geometri tanaman dibuat untuk game ini. Grafik mengarah ke tampilan alam realistis ringan untuk browser, bukan kualitas fotorealistik AAA.
 
 ## Progres online
 
-Frontend GitHub Pages menggunakan SDK resmi Privy dan backend Cloudflare Workers + D1. Endpoint kebun `GET/PUT /api/farm-save` memverifikasi token ES256 dan mengambil ID akun dari token. Revisi atomik menolak penyimpanan dari perangkat lama. CORS dibatasi ke origin game. Snapshot versi 4 memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.
+Frontend GitHub Pages menggunakan SDK resmi Privy dan backend Cloudflare Workers + D1. Endpoint kebun `GET/PUT /api/farm-save` memverifikasi token ES256 dan mengambil ID akun dari token. Revisi atomik menolak penyimpanan dari perangkat lama. CORS dibatasi ke origin game. Snapshot versi 5 menambahkan posisi petak/bangunan, rotasi, perluasan, profil, dan statistik panen/penjualan. Snapshot versi 4 tetap diterima dan dimigrasikan tanpa mereset inventori atau deadline. Profil memiliki nama pekebun, nama kebun, dan empat avatar; nama dibatasi 24 karakter dan ditampilkan sebagai teks. Statistik mencatat panen/penjualan sejak pembaruan ini. Snapshot memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.
 
 Data kebun menggunakan tabel `farm_saves` dan slot lokal `6xg-farm:<DID>`. Progres Benteng Bara tetap di tabel `saves` dan slot `6xg-account:<DID>`; tidak direset atau diimpor menjadi kebun. Sumber serta pengujian game perang dipertahankan untuk kompatibilitas, tetapi tidak dimuat oleh halaman utama.
 
@@ -51,7 +51,7 @@ Ini adalah **game kebun solo dengan akun**, belum dunia multiplayer bersama. Eko
 
 ## Sumber dan pengembangan
 
-- `assets/css/farm.css`: tampilan fullscreen dan panel responsif.
+- `assets/css/farm.css`, `assets/css/farm-studio.css`: tampilan fullscreen, studio tata letak, toko, dan profil responsif.
 - `assets/js/farm-engine.js`: harga, timer, inventori, pembangunan, dan validator.
 - `src/farm-3d.js`, `assets/js/farm-3d.js`: sumber dan bundle mesin pemandangan Three.js.
 - `assets/js/farm-camera.js`: proyeksi tanah, pemilihan petak, dan kamera 3D.

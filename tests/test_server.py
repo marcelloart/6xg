@@ -67,6 +67,19 @@ class CloudTests(unittest.TestCase):
         self.assertEqual(self.call(token=token)["body"]["save"]["version"], 2)
         self.assertIsNone(self.call(token=self.token("did:privy:b"), path="/api/farm-save")["body"]["save"])
 
+    def test_farm_layout_profile_migration_and_invalid_overlap(self):
+        token = self.token()
+        path = '/api/farm-save'
+        old = json.loads((ROOT / 'tests/farm-save.json').read_text())
+        studio = json.loads((ROOT / 'tests/farm-studio-save.json').read_text())
+        self.assertEqual(self.call('PUT', token, {'save': old, 'revision': 0}, path=path)['status'], 200)
+        self.assertEqual(self.call('PUT', token, {'save': studio, 'revision': 1}, path=path)['status'], 200)
+        self.assertEqual(self.call(token=token, path=path)['body']['save'], studio)
+        bad = copy.deepcopy(studio)
+        bad['state']['plots'][0].update(x=bad['state']['plots'][1]['x'], y=bad['state']['plots'][1]['y'])
+        self.assertEqual(self.call('PUT', token, {'save': bad, 'revision': 2}, path=path)['status'], 400)
+        self.assertEqual(self.call(token=token, path=path)['body']['revision'], 2)
+
     def test_farm_deadlines_and_wrong_save_namespace_are_rejected(self):
         farm = json.loads((ROOT / "tests/farm-save.json").read_text())
         token = self.token()

@@ -65,7 +65,7 @@ export default {
       try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
         farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first(); } catch {}
       const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage});
+      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 5});
     }
     if (!['/api/save', '/api/farm-save'].includes(path)) return reply(404, {error: 'not_found'});
     const farm = path === '/api/farm-save';
@@ -95,7 +95,7 @@ export default {
     try {
       payload = await readBody(request);
       if (!payload || !integer(payload.revision, 0, Number.MAX_SAFE_INTEGER - 1)) return reply(400, {error: 'invalid_revision'});
-      if (farm ? payload.save?.version !== 4 : ![2,3].includes(payload.save?.version)) throw new TypeError('Invalid save namespace');
+      if (farm ? ![4,5].includes(payload.save?.version) : ![2,3].includes(payload.save?.version)) throw new TypeError('Invalid save namespace');
       save = validateSave(payload.save);
     } catch (error) { return reply(error instanceof RangeError ? 413 : 400, {error: error instanceof RangeError ? 'save_too_large' : 'invalid_save'}); }
     const savedAt = new Date().toISOString();

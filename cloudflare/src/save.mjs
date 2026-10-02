@@ -16,7 +16,7 @@ const pick = (value, keys) => Object.fromEntries(keys.map(key => [key, value[key
 
 // Solo saves are bounded and whitelisted. They are not an authoritative PvP economy.
 export function validateSave(save) {
-  if (save?.version === 4) return globalThis.BaraFarm.validateSave(save);
+  if ([4,5].includes(save?.version)) return globalThis.BaraFarm.validateSave(save);
   if (save?.version === 3) return globalThis.BaraRTS.validateSave(save);
   require(object(save) && save.version === 2 && object(save.state));
   const s = save.state, levels = s.levels;

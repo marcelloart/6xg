@@ -11,6 +11,8 @@ const keyFor=id=>'6xg-farm:'+id;
 function Account(){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
   const [status,setStatus]=useState({state:'loading',text:'Menyiapkan login Privy…'});
+  const [profile,setProfile]=useState(game.profile());
+  useEffect(()=>{const update=()=>setProfile(game.profile());window.addEventListener('bara:profile',update);window.addEventListener('bara:save',update);return()=>{window.removeEventListener('bara:profile',update);window.removeEventListener('bara:save',update);};},[]);
   const [choice,setChoice]=useState(false);
   const [busy,setBusy]=useState(false);
   const [retry,setRetry]=useState(0);
@@ -27,7 +29,7 @@ function Account(){
     if(!ready)return;
     let cancelled=false;
     session.current?.close();session.current=null;setChoice(false);
-    game.setIdentity(userId);
+    game.setIdentity(userId);setProfile(null);
     if(!userId){
       attached.current=null;game.detach();
       showStatus('guest','Masuk atau daftar untuk memiliki akun pemain.');return;
@@ -122,11 +124,11 @@ function Account(){
   const open=()=>document.getElementById('accountDialog').showModal();
   return <>
     <button className="account-btn" onClick={open} aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'}>
-      <svg className="icon" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/></svg>
-      <span className="account-name">{authenticated?'Akun pemain':'Daftar / Masuk'}</span>
+      <span className="account-avatar" aria-hidden="true">{authenticated?({sprout:"🌱",sunflower:"🌻",apple:"🍎",bee:"🐝"}[profile?.avatar]||"🌱"):"◉"}</span>
+      <span className="account-name">{authenticated?(profile?.name||'Akun pemain'):'Daftar / Masuk'}</span>
     </button>
     {createPortal(<>
-      {authenticated?<><p className="account-email">{name}</p><p className="account-copy">Selamat datang di Lembah Bara. Akun Anda terhubung melalui Privy.</p></>:<p className="account-copy">Daftar atau masuk dengan metode yang tersedia melalui Privy. Akun baru dibuat setelah identitas Anda terverifikasi.</p>}
+      {authenticated?<><p className="account-email">{name}</p><p className="account-meta">Identitas terverifikasi melalui Privy.</p></>:<p className="account-copy">Daftar atau masuk dengan metode yang tersedia melalui Privy. Akun baru dibuat setelah identitas Anda terverifikasi.</p>}
       <div className="account-status" data-state={status.state} role="status">{status.text}</div>
       {!cfg.apiBase&&<div className="account-notice"><p className="account-copy">Penyimpanan online belum aktif.</p><p className="account-meta">Progres tetap tersimpan di browser perangkat ini. Akun belum menyinkronkan kebun ke perangkat lain.</p></div>}
       <div className="account-actions">

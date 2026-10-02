@@ -2,7 +2,7 @@
 // Pure farming rules shared by the browser and the authenticated save service.
 // Growth uses absolute deadlines: closing a tab does not pause a planted crop.
 (function(root){
- const MINUTE=60000,MAX_TIME=4102444800000;
+ const MINUTE=60000,MAX_TIME=4102444800000,MAX_PLOTS=81,MAX_BUILDINGS=24;
  const CROPS=Object.freeze({
   carrot:{name:'Wortel',icon:'🥕',minutes:5,price:5,yield:3,sell:3,color:'#ee9551'},
   tomato:{name:'Tomat',icon:'🍅',minutes:15,price:12,yield:4,sell:5,color:'#e76e58'},
@@ -32,43 +32,65 @@
  const inventory=(v,list,max)=>{check(object(v)&&Object.keys(v).length===list.length);return Object.fromEntries(list.map(k=>{check(Object.hasOwn(v,k)&&integer(v[k],0,max));return[k,v[k]];}));};
  const complete=(s,kind,now)=>s.buildings.filter(b=>b.kind===kind&&b.readyAt<=now).length;
  const capacity=(s,now=s.lastSeen)=>20+80*complete(s,'barn',now)+40*complete(s,'shed',now);
- const unlocked=(s,now=s.lastSeen)=>Math.min(45,9+6*complete(s,'house',now)+3*complete(s,'well',now));
+ const unlocked=(s,now=s.lastSeen)=>Math.min(s.expansions===undefined?45:MAX_PLOTS,9+6*complete(s,'house',now)+3*complete(s,'well',now)+(s.expansions||0));
  const used=s=>keys.reduce((total,k)=>total+s.produce[k],0);
+ const AVATARS=Object.freeze(['sprout','sunflower','apple','bee']);
+ const defaultProfile=()=>({name:'Pekebun',farmName:'Kebunku',avatar:'sprout'});
+ const defaultStats=()=>({harvested:0,earned:0});
+ const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;return clean;};
+ const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
+ const overlaps=(a,b,gap=5)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap;
+ const onLand=(p,size)=>integer(p.x,1000+Math.ceil(size.w/2),2190-Math.ceil(size.w/2))&&integer(p.y,630+Math.ceil(size.h/2),1760-Math.ceil(size.h/2));
+ const defaultPlot=id=>PLOTS[id]||{id,x:1080+(id-45)%12*68,y:1460+Math.floor((id-45)/12)*74};
+ function placement(s,kind,point,rotation=0,{ignoreBuilding=null,ignorePlots=[],props=true}={}){
+  const size=footprint(kind,rotation),rect={...point,...size};
+  if(!integer(rotation,0,3)||!onLand(point,size))return{ok:false,message:'Pilih tanah terbuka di lembah, jauh dari sungai dan tepi hutan.'};
+  if(s.buildings.some(b=>b.slot!==ignoreBuilding&&overlaps(rect,{...b,...footprint(b.kind,b.rotation)})))return{ok:false,message:'Posisi bertabrakan dengan bangunan lain.'};
+  if(s.plots.some(p=>!ignorePlots.includes(p.id)&&overlaps(rect,{...p,...footprint('plot')})))return{ok:false,message:'Posisi bertabrakan dengan petak tanam atau petak cadangan.'};
+  if(props&&(overlaps(rect,{x:1593,y:872,w:112,h:100})||[[1408,867],[1788,859],[1050,910],[1108,1650],[2130,870],[2180,1570]].some(([x,y])=>overlaps(rect,{x,y,w:58,h:58}))))return{ok:false,message:'Sisakan ruang untuk pondok dan pepohonan.'};
+  return{ok:true};
+ }
  function validateSave(save){
-  check(object(save)&&save.version===4&&object(save.state));
+  check(object(save)&&[4,5].includes(save.version)&&object(save.state));const modern=save.version===5;
   const s=save.state;
   check(integer(s.coins,0,1e9)&&integer(s.lastSeen,1,MAX_TIME));
   const clean={coins:s.coins,lastSeen:s.lastSeen,seeds:inventory(s.seeds,keys,1000),produce:inventory(s.produce,keys,10000),materials:inventory(s.materials,materialKeys,10000)};
-  check(Array.isArray(s.buildings)&&s.buildings.length<=LOTS.length);
+  check(Array.isArray(s.buildings)&&s.buildings.length<=(modern?MAX_BUILDINGS:LOTS.length));
   const slots=new Set();clean.buildings=s.buildings.map(b=>{
-   check(object(b)&&integer(b.slot,0,LOTS.length-1)&&!slots.has(b.slot)&&Object.hasOwn(BUILDINGS,b.kind)&&integer(b.startedAt,1,s.lastSeen)&&b.readyAt===b.startedAt+BUILDINGS[b.kind].seconds*1000&&b.readyAt<=MAX_TIME);
-   slots.add(b.slot);return{slot:b.slot,kind:b.kind,startedAt:b.startedAt,readyAt:b.readyAt};
+   check(object(b)&&integer(b.slot,0,(modern?MAX_BUILDINGS:LOTS.length)-1)&&!slots.has(b.slot)&&Object.hasOwn(BUILDINGS,b.kind)&&integer(b.startedAt,1,s.lastSeen)&&b.readyAt===b.startedAt+BUILDINGS[b.kind].seconds*1000&&b.readyAt<=MAX_TIME);
+   slots.add(b.slot);const base={slot:b.slot,kind:b.kind,startedAt:b.startedAt,readyAt:b.readyAt};if(modern){check(integer(b.rotation,0,3)&&onLand(b,footprint(b.kind,b.rotation)));Object.assign(base,{x:b.x,y:b.y,rotation:b.rotation});}return base;
   });
   check(used(clean)<=capacity(clean));
-  check(Array.isArray(s.plots)&&s.plots.length===PLOTS.length);
+  if(modern){check(integer(s.expansions,0,72));clean.expansions=s.expansions;clean.profile=profile(s.profile);check(object(s.stats)&&integer(s.stats.harvested,0,1e9)&&integer(s.stats.earned,0,1e12));clean.stats={harvested:s.stats.harvested,earned:s.stats.earned};}
+  check(Array.isArray(s.plots)&&(modern?s.plots.length>=45&&s.plots.length<=MAX_PLOTS&&s.plots.length>=unlocked(clean):s.plots.length===PLOTS.length));
   clean.plots=s.plots.map((p,id)=>{
-   check(object(p)&&p.id===id);
-   if(p.crop===null){check(p.plantedAt===0&&p.readyAt===0);return{id,crop:null,plantedAt:0,readyAt:0};}
+   check(object(p)&&p.id===id);const pos=modern?{x:p.x,y:p.y}:{};if(modern)check(onLand(p,footprint('plot')));
+   if(p.crop===null){check(p.plantedAt===0&&p.readyAt===0);return{id,...pos,crop:null,plantedAt:0,readyAt:0};}
    check(id<unlocked(clean)&&Object.hasOwn(CROPS,p.crop)&&integer(p.plantedAt,1,s.lastSeen)&&p.readyAt===p.plantedAt+CROPS[p.crop].minutes*MINUTE&&p.readyAt<=MAX_TIME);
-   return{id,crop:p.crop,plantedAt:p.plantedAt,readyAt:p.readyAt};
+   return{id,...pos,crop:p.crop,plantedAt:p.plantedAt,readyAt:p.readyAt};
   });
   check(Array.isArray(s.log)&&s.log.length<=8);
   clean.log=s.log.map(e=>{check(object(e)&&integer(e.at,1,s.lastSeen)&&typeof e.text==='string'&&e.text.length<=180);return{at:e.at,text:e.text};});
-  return{version:4,state:clean};
+  if(modern){for(const p of clean.plots)check(placement(clean,'plot',p,0,{ignorePlots:[p.id],props:false}).ok);for(const b of clean.buildings)check(placement(clean,b.kind,b,b.rotation,{ignoreBuilding:b.slot,props:false}).ok);}
+  return{version:save.version,state:clean};
  }
  class Farm{
   constructor({clock=()=>Date.now(),save=null}={}){
    this.clock=clock;
    const counters=()=>Object.fromEntries(keys.map(k=>[k,0]));
-   this.s=save?validateSave(typeof save==='string'?JSON.parse(save):save).state:{coins:0,lastSeen:clock(),seeds:counters(),produce:counters(),materials:Object.fromEntries(materialKeys.map(k=>[k,0])),plots:PLOTS.map(p=>({id:p.id,crop:null,plantedAt:0,readyAt:0})),buildings:[],log:[]};
+   this.s=save?validateSave(typeof save==='string'?JSON.parse(save):save).state:{coins:0,lastSeen:clock(),seeds:counters(),produce:counters(),materials:Object.fromEntries(materialKeys.map(k=>[k,0])),plots:PLOTS.map(p=>({id:p.id,crop:null,plantedAt:0,readyAt:0})),buildings:[],log:[],expansions:0,profile:defaultProfile(),stats:defaultStats()};
+   if(this.s.expansions===undefined){this.s.expansions=0;this.s.profile=defaultProfile();this.s.stats=defaultStats();}
+   this.s.plots.forEach((p,id)=>{if(p.x===undefined)Object.assign(p,{x:PLOTS[id].x,y:PLOTS[id].y});});
+   this.s.buildings.forEach(b=>{if(b.x===undefined)Object.assign(b,{...LOTS[b.slot],rotation:0});});
    if(!save){this.s.seeds.carrot=6;this.note('Selamat datang! 6 bibit wortel untuk panen pertamamu.');}
   }
-  now(){this.s.lastSeen=Math.max(this.s.lastSeen,this.clock());return this.s.lastSeen;}
+  now(){this.s.lastSeen=Math.max(this.s.lastSeen,this.clock());this.ensurePlots();return this.s.lastSeen;}
+  ensurePlots(){while(this.s.plots.length<unlocked(this.s)){const id=this.s.plots.length;let pos=null;for(let y=670;y<=1720&&!pos;y+=74)for(let x=1040;x<=2150;x+=68){if(placement(this.s,'plot',{x,y}).ok){pos={x,y};break;}}if(!pos)break;this.s.plots.push({id,...pos,crop:null,plantedAt:0,readyAt:0});}}
   get capacity(){return capacity(this.s,this.now());}
-  get unlocked(){return unlocked(this.s,this.now());}
+  get unlocked(){this.now();return Math.min(this.s.plots.length,unlocked(this.s));}
   get used(){return used(this.s);}
   note(text){this.s.log.unshift({at:this.now(),text});this.s.log=this.s.log.slice(0,8);}
-  serialize(){this.now();return JSON.stringify({version:4,state:this.s});}
+  serialize(){this.now();return JSON.stringify({version:5,state:this.s});}
   buySeed(crop,qty=1){
    if(!Object.hasOwn(CROPS,crop)||!integer(qty,1,100))return{ok:false,message:'Jumlah bibit tidak valid.'};
    const cost=CROPS[crop].price*qty;
@@ -78,23 +100,23 @@
   }
   plant(id,crop){
    const p=this.s.plots[id];
-   if(!integer(id,0,44)||id>=this.unlocked||!p||p.crop||!Object.hasOwn(CROPS,crop))return{ok:false,message:'Pilih petak kosong yang sudah terbuka.'};
+   if(!integer(id,0,MAX_PLOTS-1)||id>=this.unlocked||!p||p.crop||!Object.hasOwn(CROPS,crop))return{ok:false,message:'Pilih petak kosong yang sudah terbuka.'};
    if(!this.s.seeds[crop])return{ok:false,message:'Bibit habis. Beli bibit ini di toko.'};
    this.s.seeds[crop]--;p.crop=crop;p.plantedAt=this.now();p.readyAt=p.plantedAt+CROPS[crop].minutes*MINUTE;
    this.note(`Menanam ${CROPS[crop].name.toLowerCase()} di petak ${id+1}.`);return{ok:true};
   }
   harvest(id){
-   const p=this.s.plots[id];if(!integer(id,0,44)||!p?.crop)return{ok:false,message:'Belum ada tanaman di petak ini.'};
+   const p=this.s.plots[id];if(!integer(id,0,MAX_PLOTS-1)||!p?.crop)return{ok:false,message:'Belum ada tanaman di petak ini.'};
    if(this.now()<p.readyAt)return{ok:false,message:'Tanaman masih tumbuh. Tunggu sampai siap dipanen.'};
    const crop=CROPS[p.crop];
    if(this.used+crop.yield>this.capacity)return{ok:false,message:'Penyimpanan penuh. Jual hasil panen atau bangun lumbung.'};
-   this.s.produce[p.crop]+=crop.yield;this.note(`Memanen ${crop.yield} ${crop.name.toLowerCase()}.`);p.crop=null;p.plantedAt=0;p.readyAt=0;return{ok:true};
+   this.s.produce[p.crop]+=crop.yield;this.s.stats.harvested=Math.min(1e9,this.s.stats.harvested+crop.yield);this.note(`Memanen ${crop.yield} ${crop.name.toLowerCase()}.`);p.crop=null;p.plantedAt=0;p.readyAt=0;return{ok:true};
   }
   sell(crop,qty=1){
    if(!Object.hasOwn(CROPS,crop)||!integer(qty,1,10000)||this.s.produce[crop]<qty)return{ok:false,message:'Hasil panen belum tersedia.'};
    const earned=CROPS[crop].sell*qty;
    if(this.s.coins+earned>1e9)return{ok:false,message:'Kapasitas koin sudah penuh.'};
-   this.s.produce[crop]-=qty;this.s.coins+=earned;this.note(`Menjual ${qty} ${CROPS[crop].name.toLowerCase()} · +${earned} koin.`);return{ok:true,earned};
+   this.s.produce[crop]-=qty;this.s.coins+=earned;this.s.stats.earned=Math.min(1e12,this.s.stats.earned+earned);this.note(`Menjual ${qty} ${CROPS[crop].name.toLowerCase()} · +${earned} koin.`);return{ok:true,earned};
   }
   buyMaterial(material,qty=1){
    if(!Object.hasOwn(MATERIALS,material)||!integer(qty,1,100))return{ok:false,message:'Jumlah bahan tidak valid.'};
@@ -106,12 +128,26 @@
    this.s.coins-=cost;this.s.materials[material]+=qty;this.note(`Membeli ${qty} ${MATERIALS[material].name.toLowerCase()}.`);return{ok:true};
   }
   canBuild(kind){return Object.hasOwn(BUILDINGS,kind)&&materialKeys.every(k=>this.s.materials[k]>=BUILDINGS[kind].cost[k]);}
-  build(kind,slot){
-   if(!Object.hasOwn(BUILDINGS,kind)||!integer(slot,0,LOTS.length-1)||this.s.buildings.some(b=>b.slot===slot))return{ok:false,message:'Pilih tapak bangunan kosong.'};
+  buildKitQuote(kind){if(!Object.hasOwn(BUILDINGS,kind))return{cost:0,missing:{}};const missing=Object.fromEntries(materialKeys.map(k=>[k,Math.max(0,BUILDINGS[kind].cost[k]-this.s.materials[k])]));return{missing,cost:materialKeys.reduce((sum,k)=>sum+missing[k]*MATERIALS[k].price,0)};}
+  buyBuildKit(kind){if(!Object.hasOwn(BUILDINGS,kind))return{ok:false,message:'Bangunan tidak tersedia.'};const q=this.buildKitQuote(kind);if(!q.cost)return{ok:false,message:'Bahan bangunan sudah lengkap.'};if(this.s.coins<q.cost)return{ok:false,message:'Koin belum cukup untuk paket bahan.'};const future=this.used||keys.some(k=>this.s.seeds[k])||this.s.plots.some(p=>p.crop);if(!future&&this.s.coins-q.cost<5)return{ok:false,message:'Sisakan 5 koin untuk membeli bibit wortel.'};this.s.coins-=q.cost;for(const k of materialKeys)this.s.materials[k]+=q.missing[k];this.note(`Melengkapi bahan ${BUILDINGS[kind].name.toLowerCase()} · ${q.cost} koin.`);return{ok:true};}
+  build(kind,point,rotation=0){
+   if(!Object.hasOwn(BUILDINGS,kind)||this.s.buildings.length>=MAX_BUILDINGS)return{ok:false,message:'Maksimal 24 bangunan di kebun.'};
+   const legacy=typeof point==='number';let slot=legacy?point:Array.from({length:MAX_BUILDINGS},(_,i)=>i).find(i=>!this.s.buildings.some(b=>b.slot===i));
+   if(legacy){if(!integer(point,0,7)||this.s.buildings.some(b=>b.slot===point))return{ok:false,message:'Tapak ini sudah terisi.'};point=LOTS[point];}
+   const valid=placement(this.s,kind,point||{},rotation,{props:!legacy});if(!valid.ok)return valid;
    if(!this.canBuild(kind))return{ok:false,message:'Bahan belum cukup. Beli bahan pembangunan di toko.'};
    for(const k of materialKeys)this.s.materials[k]-=BUILDINGS[kind].cost[k];
-   const startedAt=this.now();this.s.buildings.push({kind,slot,startedAt,readyAt:startedAt+BUILDINGS[kind].seconds*1000});this.note(`Mulai membangun ${BUILDINGS[kind].name.toLowerCase()}.`);return{ok:true};
+   const startedAt=this.now();this.s.buildings.push({kind,slot,x:point.x,y:point.y,rotation,startedAt,readyAt:startedAt+BUILDINGS[kind].seconds*1000});this.note(`Mulai membangun ${BUILDINGS[kind].name.toLowerCase()}.`);return{ok:true};
   }
+  moveBuilding(slot,point,rotation=0){const b=this.s.buildings.find(b=>b.slot===slot);if(!b)return{ok:false,message:'Pilih bangunan yang ingin dipindahkan.'};const valid=placement(this.s,b.kind,point,rotation,{ignoreBuilding:slot});if(!valid.ok)return valid;Object.assign(b,{x:point.x,y:point.y,rotation});this.note(`Memindahkan ${BUILDINGS[b.kind].name.toLowerCase()}.`);return{ok:true};}
+  movePlot(id,point){const p=this.s.plots[id];if(!p)return{ok:false,message:'Petak tidak tersedia.'};const valid=placement(this.s,'plot',point,0,{ignorePlots:[id]});if(!valid.ok)return valid;Object.assign(p,{x:point.x,y:point.y});this.note(`Memindahkan petak ${id+1}. Tanaman tetap tumbuh.`);return{ok:true};}
+  gardenQuote(count=6){if(![1,3,6].includes(count)||this.unlocked+count>MAX_PLOTS)return{ok:false,message:'Maksimal 81 petak di kebun.'};return{ok:true,cost:count*20,count};}
+  gardenPoints(point,count=6,rotation=0){return Array.from({length:count},(_,i)=>{const dx=((i%3)-(Math.min(count,3)-1)/2)*68,dy=(Math.floor(i/3)-(Math.ceil(count/3)-1)/2)*74;return{x:Math.round(point.x+(rotation%2?dy:dx)),y:Math.round(point.y+(rotation%2?dx:dy))};});}
+  gardenPlacement(point,count=6,rotation=0){const quote=this.gardenQuote(count);if(!quote.ok)return quote;const ids=Array.from({length:count},(_,i)=>this.unlocked+i);for(const p of this.gardenPoints(point,count,rotation)){const valid=placement(this.s,'plot',p,0,{ignorePlots:ids});if(!valid.ok)return valid;}return{ok:true};}
+  expandGarden(point,count=6,rotation=0){const valid=this.gardenPlacement(point,count,rotation);if(!valid.ok)return valid;const quote=this.gardenQuote(count);if(this.s.coins<quote.cost)return{ok:false,message:`Perlu ${quote.cost} koin untuk ${count} petak baru.`};const future=this.used||keys.some(k=>this.s.seeds[k])||this.s.plots.some(p=>p.crop);if(!future&&this.s.coins-quote.cost<5)return{ok:false,message:'Sisakan 5 koin untuk membeli bibit wortel.'};const start=this.unlocked,points=this.gardenPoints(point,count,rotation);this.s.coins-=quote.cost;this.s.expansions+=count;for(let i=0;i<count;i++){const id=start+i;this.s.plots[id]={id,...points[i],crop:null,plantedAt:0,readyAt:0};}this.note(`Membuka ${count} petak baru · ${quote.cost} koin.`);return{ok:true};}
+  checkPlacement(kind,point,rotation=0,ignore={}){return placement(this.s,kind,point,rotation,ignore);}
+  updateProfile(value){try{this.s.profile=profile(value);return{ok:true};}catch{return{ok:false,message:'Nama wajib diisi, maksimal 24 karakter. Pilih avatar yang tersedia.'};}}
+
  }
- root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,validateSave});
+ root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,footprint,validateSave});
 })(globalThis);

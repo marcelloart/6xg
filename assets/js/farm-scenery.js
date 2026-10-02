@@ -1,7 +1,8 @@
 'use strict';
 // Original vector scenery; no FarmVille artwork or game assets are used.
 class FarmRenderer{
- constructor(canvas,camera){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=camera;this.back=document.createElement('canvas');this.back.width=3200;this.back.height=2200;this.paintLandscape(this.back.getContext('2d'));}
+ constructor(canvas,camera){this.wind=!matchMedia('(prefers-reduced-motion: reduce)').matches;try{const saved=localStorage.getItem('6xg:motion');if(saved!==null)this.wind=saved==='true';}catch{}this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=camera;this.back=document.createElement('canvas');this.back.width=3200;this.back.height=2200;this.paintLandscape(this.back.getContext('2d'));}
+ setMotion(enabled){this.wind=Boolean(enabled);}
  ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
  rect(c,x,y,w,h,color,r=0){c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,r);c.fill();}
  line(c,points,color,width){c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();}
@@ -38,7 +39,7 @@ class FarmRenderer{
   this.line(c,[[810,1130],[1050,1120],[1250,1250],[1930,1250],[2250,1510],[2540,1640]],'#adbc80',58);this.line(c,[[810,1130],[1050,1120],[1250,1250],[1930,1250],[2250,1510],[2540,1640]],'#d4cd96',36);
   this.line(c,[[1600,710],[1600,920]],'#d2ca94',30);
   this.ellipse(c,1600,1130,510,410,'#b6c88144');this.ellipse(c,1660,915,125,61,'#c1cd9233');
-  this.fence(c,1283,956,642,405);
+  
   this.house(c,1593,896,'house',.85);this.rect(c,1480,902,57,8,'#c1a479',3);this.rect(c,1486,908,6,12,'#9f8a67');this.rect(c,1520,908,6,12,'#9f8a67');
   this.tree(c,1420,890,44,2);this.tree(c,1770,862,50,1);
   // Footbridge connects both sides of the valley.
@@ -51,7 +52,7 @@ class FarmRenderer{
  crop(c,x,y,key,stage,t){
   const crop=BaraFarm.CROPS[key],orchard=['apple','orange','avocado'].includes(key),size=.4+.6*stage;
   if(orchard){c.save();c.translate(x,y+4);c.scale(size,size);this.tree(c,0,0,22,0);if(stage>.7)for(const[dx,dy]of[[-10,-14],[9,-25],[0,-34]])this.ellipse(c,dx,dy,3.5,3.5,crop.color);c.restore();return;}
-  const sway=Math.sin(t/1400+x)*1.4;
+  const sway=this.wind?Math.sin(t/1400+x)*1.4:0;
   for(const dx of[-15,15])for(const dy of[-5,15]){
    const xx=x+dx,yy=y+dy,high=10+20*stage;
    this.line(c,[[xx,yy],[xx+sway,yy-high]],'#639452',2.5);this.ellipse(c,xx-5,yy-high*.65,8*size,3.5*size,'#80a762');this.ellipse(c,xx+5,yy-high*.88,7*size,3.5*size,'#6e9855');
@@ -61,36 +62,30 @@ class FarmRenderer{
  label(c,x,y,text,color='#f7efdc',background='#3f6547e8'){
   c.font='500 10px "DM Sans",sans-serif';const width=c.measureText(text).width+16;this.rect(c,x-width/2,y,width,20,background,5);c.fillStyle=color;c.textAlign='center';c.fillText(text,x,y+14);
  }
- draw(farm,{selectedPlot=null,pendingBuild=null,selectedCrop='carrot',now=Date.now(),welcome=false}={}){
+ draw(farm,{selectedPlot=null,pendingBuild=null,selectedCrop='carrot',now=Date.now(),welcome=false,placement=null}={}){
   const c=this.ctx,cam=this.camera,dpr=Math.min(2,devicePixelRatio||1);if(this.canvas.width!==Math.round(cam.width*dpr)||this.canvas.height!==Math.round(cam.height*dpr)){this.canvas.width=Math.round(cam.width*dpr);this.canvas.height=Math.round(cam.height*dpr);}
   c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,cam.width,cam.height);c.translate(cam.width/2,cam.height/2);c.scale(cam.zoom,cam.zoom);c.translate(-cam.x,-cam.y);c.drawImage(this.back,0,0);
   const open=farm.unlocked;
-  for(const p of BaraFarm.PLOTS){
+  for(const p of farm.s.plots){
    const planted=farm.s.plots[p.id],locked=p.id>=open;
    this.rect(c,p.x-29,p.y-25,59,55,locked?'#9cb17b':'#977350',5);this.rect(c,p.x-26,p.y-22,53,48,locked?'#a5b981':'#b18b5e',4);
    if(!locked){for(let i=-15;i<23;i+=10)this.line(c,[[p.x-23,p.y+i],[p.x+23,p.y+i]],'#976f4b66',2);}
-   if(locked){if(p.id===open){c.fillStyle='#d0daae';c.font='16px sans-serif';c.textAlign='center';c.fillText('+',p.x,p.y+9);}continue;}
+   if(locked){if(placement){c.strokeStyle='#e0e6bd';c.lineWidth=1.5;c.setLineDash([5,5]);c.strokeRect(p.x-30,p.y-30,60,60);c.setLineDash([]);}if(p.id===open){c.fillStyle='#d0daae';c.font='16px sans-serif';c.textAlign='center';c.fillText('+',p.x,p.y+9);}continue;}
    if(planted.crop){const progress=Math.max(0,Math.min(1,(now-planted.plantedAt)/(planted.readyAt-planted.plantedAt)));this.crop(c,p.x,p.y,planted.crop,progress,now);if(now>=planted.readyAt){this.ellipse(c,p.x+21,p.y-22,8,8,'#edce7e');c.fillStyle='#6e7850';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('✓',p.x+21,p.y-18);}else{this.rect(c,p.x-20,p.y+31,40,3,'#668753',2);this.rect(c,p.x-20,p.y+31,40*progress,3,'#e6c57a',2);}}
    else if(!welcome){c.fillStyle='#d5ba8a';c.textAlign='center';c.font='18px sans-serif';c.fillText('+',p.x,p.y+8);}
    if(p.id===selectedPlot){c.strokeStyle='#f4d17c';c.lineWidth=3;c.beginPath();c.roundRect(p.x-30,p.y-26,61,57,5);c.stroke();}
   }
   this.label(c,1610,1391,open+' petak · kebunmu','#5e744d','#f5efdcdf');
-  for(let slot=0;slot<BaraFarm.LOTS.length;slot++){
-   const p=BaraFarm.LOTS[slot],b=farm.s.buildings.find(v=>v.slot===slot);
-   if(b){const ready=now>=b.readyAt;if(!ready){this.rect(c,p.x-48,p.y-30,96,48,'#bfb88d',4);this.line(c,[[p.x-48,p.y-56],[p.x-48,p.y+16],[p.x+48,p.y+16],[p.x+48,p.y-56]],'#a08b68',4);this.line(c,[[p.x-50,p.y-50],[p.x+50,p.y-50]],'#d0b78d',5);this.label(c,p.x,p.y+26,'Membangun · '+Math.ceil((b.readyAt-now)/1000)+'d');}else{this.house(c,p.x,p.y,b.kind);this.label(c,p.x,p.y+26,BaraFarm.BUILDINGS[b.kind].name);}}
-   else{
-    this.ellipse(c,p.x,p.y,54,24,pendingBuild?'#e0d8a57d':'#bad09032');c.setLineDash([5,6]);c.strokeStyle=pendingBuild?'#f2df9c':'#ccdbac88';c.lineWidth=2;c.beginPath();c.ellipse(p.x,p.y,53,24,0,0,Math.PI*2);c.stroke();c.setLineDash([]);
-    c.fillStyle=pendingBuild?'#fff0b6':'#d9e3b285';c.font='22px sans-serif';c.textAlign='center';c.fillText('+',p.x,p.y+7);if(pendingBuild)this.label(c,p.x,p.y+30,'Tapak '+(slot+1));
-   }
-  }
+  for(const b of farm.s.buildings){const ready=now>=b.readyAt;c.save();c.translate(b.x,b.y);if(!ready){this.rect(c,-48,-30,96,48,'#bfb88d',4);this.line(c,[[-48,-56],[-48,16],[48,16],[48,-56]],'#a08b68',4);}else this.house(c,0,0,b.kind);c.restore();this.label(c,b.x,b.y+26,ready?BaraFarm.BUILDINGS[b.kind].name:'Membangun · '+Math.ceil((b.readyAt-now)/1000)+'d');}
+  if(placement?.point){const points=placement.kind==='garden'?farm.gardenPoints(placement.point,placement.count,placement.rotation):[placement.point];for(const p of points){const size=BaraFarm.footprint(placement.kind==='garden'?'plot':placement.kind,placement.rotation);this.rect(c,p.x-size.w/2,p.y-size.h/2,size.w,size.h,placement.valid?'#9bd49b99':'#d9807899',5);c.strokeStyle=placement.valid?'#397f50':'#af463c';c.lineWidth=3;c.strokeRect(p.x-size.w/2,p.y-size.h/2,size.w,size.h);}}
   this.label(c,1593,927,'Pondok kebun','#f4eedb','#566e47dc');
   // Slow ripples and birds keep the valley alive without changing the economy.
   for(let i=0;i<3;i++){const x=680+Math.sin(now/10000+i)*38,y=830+i*47;this.ellipse(c,x,y,8,4,'#edf0ce');this.ellipse(c,x+6,y-3,4,3,'#faf4dd');this.ellipse(c,x+10,y-3,2,1,'#d8a95c');}
  }
  mini(canvas,farm){
   const c=canvas.getContext('2d'),sx=canvas.width/3200,sy=canvas.height/2200;c.setTransform(sx,0,0,sy,0,0);c.drawImage(this.back,0,0);
-  for(const p of BaraFarm.PLOTS.slice(0,farm.unlocked)){this.rect(c,p.x-23,p.y-23,46,46,farm.s.plots[p.id].crop?'#668847':'#ad875c');}
-  for(const b of farm.s.buildings){const p=BaraFarm.LOTS[b.slot];this.rect(c,p.x-38,p.y-32,76,64,'#ad7f59');}
+  for(const p of farm.s.plots.slice(0,farm.unlocked)){this.rect(c,p.x-23,p.y-23,46,46,farm.s.plots[p.id].crop?'#668847':'#ad875c');}
+  for(const b of farm.s.buildings){const p=b;this.rect(c,p.x-38,p.y-32,76,64,'#ad7f59');}
   const r=this.camera.bounds;c.lineWidth=20;c.strokeStyle='#f3df97';c.strokeRect(r.left,r.top,r.width,r.height);
  }
 }

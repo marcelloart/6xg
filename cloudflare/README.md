@@ -2,7 +2,7 @@
 
 ## Ladang Bara
 
-Game kebun memakai endpoint `GET/PUT /api/farm-save`, tabel `farm_saves`, dan snapshot versi 4. Migrasi `0002_farm_saves.sql` menambah tabel tanpa mengubah progres Benteng Bara pada `saves`. Jalankan semua migrasi saat deployment. Validator kebun diimpor dari `../assets/js/farm-engine.js` dan dibagikan dengan browser.
+Game kebun memakai endpoint `GET/PUT /api/farm-save`, tabel `farm_saves`, dan snapshot versi 4/5. Migrasi `0002_farm_saves.sql` menambah tabel tanpa mengubah progres Benteng Bara pada `saves`. Jalankan semua migrasi saat deployment. Validator kebun diimpor dari `../assets/js/farm-engine.js` dan dibagikan dengan browser.
 
 `/health` sekarang juga memeriksa `farmStorage`. Nilai `ok`, `authConfigured`, `storage`, dan `farmStorage` harus `true`. Timer kebun tetap matang saat halaman ditutup karena `readyAt` disimpan; server tidak menjalankan simulasi tick. Ini ekonomi solo dari client, bukan ekonomi server untuk uang nyata atau PvP.
 
@@ -57,3 +57,6 @@ Ini adalah sinkronisasi kampanye solo, bukan PvP. Simulasi berjalan di browser s
 Saat panduan ini ditulis, Workers Free menyertakan 100.000 request/hari; D1 Free menyertakan 5 juta baris dibaca/hari, 100.000 baris ditulis/hari, dan 5 GB penyimpanan akun. Batas berlaku untuk seluruh akun. Saat kuota gratis habis, API dapat gagal sementara; salinan lokal tetap disimpan. Periksa kuota aktual di Dashboard sebelum membuka game untuk banyak pemain.
 
 Referensi resmi: [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/), [Deploy to Cloudflare](https://developers.cloudflare.com/workers/platform/deploy-buttons/), [verifikasi token Privy](https://docs.privy.io/authentication/user-authentication/access-tokens).
+
+
+Versi 5 menyimpan posisi bebas dan rotasi bangunan, petak tambahan/pindahan, profil, dan statistik. Validator memeriksa tabrakan/batas layout serta angka dan profil; versi 4 tetap diterima. Migrasi dilakukan oleh model browser tanpa mengulang bibit gratis. Health Cloudflare menyebut `farmSaveVersion: 5`. Tidak ada reset tabel pemain atau perubahan kredensial.

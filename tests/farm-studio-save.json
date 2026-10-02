@@ -1,10 +1,10 @@
 {
-  "version": 4,
+  "version": 5,
   "state": {
     "coins": 0,
-    "lastSeen": 1790928000000,
+    "lastSeen": 1790928600000,
     "seeds": {
-      "carrot": 6,
+      "carrot": 5,
       "tomato": 0,
       "corn": 0,
       "strawberry": 0,
@@ -26,278 +26,388 @@
       "avocado": 0
     },
     "materials": {
-      "wood": 0,
-      "stone": 0,
-      "meat": 0
+      "wood": 94,
+      "stone": 97,
+      "meat": 99
     },
-    "buildings": [],
+    "buildings": [
+      {
+        "slot": 0,
+        "kind": "barn",
+        "startedAt": 1790928600000,
+        "readyAt": 1790928690000,
+        "x": 1170,
+        "y": 740,
+        "rotation": 1
+      }
+    ],
+    "expansions": 6,
+    "profile": {
+      "name": "Pekebun Uji",
+      "farmName": "Kebun Uji",
+      "avatar": "sunflower"
+    },
+    "stats": {
+      "harvested": 0,
+      "earned": 0
+    },
     "plots": [
       {
         "id": 0,
-        "crop": null,
-        "plantedAt": 0,
-        "readyAt": 0
+        "x": 1130,
+        "y": 1170,
+        "crop": "carrot",
+        "plantedAt": 1790928600000,
+        "readyAt": 1790928900000
       },
       {
         "id": 1,
+        "x": 1592,
+        "y": 1010,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 2,
+        "x": 1660,
+        "y": 1010,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 3,
+        "x": 1524,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 4,
+        "x": 1592,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 5,
+        "x": 1660,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 6,
+        "x": 1524,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 7,
+        "x": 1592,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 8,
+        "x": 1660,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 9,
+        "x": 1763,
+        "y": 1482,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 10,
+        "x": 1763,
+        "y": 1550,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 11,
+        "x": 1763,
+        "y": 1618,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 12,
+        "x": 1837,
+        "y": 1482,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 13,
+        "x": 1837,
+        "y": 1550,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 14,
+        "x": 1837,
+        "y": 1618,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 15,
+        "x": 1320,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 16,
+        "x": 1388,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 17,
+        "x": 1456,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 18,
+        "x": 1728,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 19,
+        "x": 1796,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 20,
+        "x": 1864,
+        "y": 1084,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 21,
+        "x": 1320,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 22,
+        "x": 1388,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 23,
+        "x": 1456,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 24,
+        "x": 1728,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 25,
+        "x": 1796,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 26,
+        "x": 1864,
+        "y": 1158,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 27,
+        "x": 1320,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 28,
+        "x": 1388,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 29,
+        "x": 1456,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 30,
+        "x": 1524,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 31,
+        "x": 1592,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 32,
+        "x": 1660,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 33,
+        "x": 1728,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 34,
+        "x": 1796,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 35,
+        "x": 1864,
+        "y": 1232,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 36,
+        "x": 1320,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 37,
+        "x": 1388,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 38,
+        "x": 1456,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 39,
+        "x": 1524,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 40,
+        "x": 1592,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 41,
+        "x": 1660,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 42,
+        "x": 1728,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 43,
+        "x": 1796,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
       },
       {
         "id": 44,
+        "x": 1864,
+        "y": 1306,
         "crop": null,
         "plantedAt": 0,
         "readyAt": 0
@@ -305,7 +415,23 @@
     ],
     "log": [
       {
-        "at": 1790928000000,
+        "at": 1790928600000,
+        "text": "Menanam wortel di petak 1."
+      },
+      {
+        "at": 1790928600000,
+        "text": "Memindahkan petak 1. Tanaman tetap tumbuh."
+      },
+      {
+        "at": 1790928600000,
+        "text": "Mulai membangun lumbung."
+      },
+      {
+        "at": 1790928600000,
+        "text": "Membuka 6 petak baru · 120 koin."
+      },
+      {
+        "at": 1790928600000,
         "text": "Selamat datang! 6 bibit wortel untuk panen pertamamu."
       }
     ]

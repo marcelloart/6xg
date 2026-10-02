@@ -113,7 +113,7 @@ test('only the configured game origin receives CORS permission', async () => {
   assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
 });
 test('health checks the migration and missing auth fails closed', async () => {
-  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true});
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:5});
   const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
   try {
     const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});
@@ -150,4 +150,13 @@ test('farm revision conflicts cannot overwrite a newer device save',async()=>{
   const changed=structuredClone(save);changed.state.seeds.carrot=4;
   assert.equal((await call('PUT',auth,{save:changed,revision:0},{path})).status,409);
   assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
+});
+
+test('version 5 chosen layout and profile round-trip while version 4 remains accepted',async()=>{
+ const auth=await token(),path='/api/farm-save',studio=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8'));
+ assert.equal((await call('PUT',auth,{save:farmFixture,revision:0},{path})).status,200);
+ assert.equal((await call('PUT',auth,{save:studio,revision:1},{path})).status,200);
+ assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,studio);
+ for(const mutate of[s=>s.plots[0].x=650,s=>Object.assign(s.plots[0],{x:s.plots[1].x,y:s.plots[1].y}),s=>s.profile.avatar='invalid']){const bad=structuredClone(studio);mutate(bad.state);assert.equal((await call('PUT',auth,{save:bad,revision:2},{path})).status,400);}
+ assert.equal((await call('GET',auth,undefined,{path})).body.revision,2);
 });

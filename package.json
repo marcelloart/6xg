@@ -1,11 +1,11 @@
 {
   "name": "6xg-benteng-bara",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build:auth": "node tools/build-auth.mjs",
-    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs && node tests/farm.cjs && node tests/farm-accounts.cjs && node tests/farm-camera.cjs && node tests/farm-scene.mjs",
+    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs && node tests/farm.cjs && node tests/farm-layout.cjs && node tests/farm-accounts.cjs && node tests/farm-camera.cjs && node tests/farm-scene.mjs",
     "build:3d": "node tools/build-3d.mjs"
   },
   "dependencies": {
