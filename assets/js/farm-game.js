@@ -24,6 +24,7 @@ function center(){if(camera.home)camera.home();else camera.focus(1590,1135);}
 function closePanel(){panel=null;$('farmPanel').hidden=true;document.querySelectorAll('.toolbar button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-expanded','false');});renderSelection();}
 function openPanel(view){
  if(!gate.canPlay||!entered)return;
+ pickup.reset();
  placement=null;pendingBuild=null;$('placementDock').hidden=true;
  if(panel===view){closePanel();return;}
  panel=view;selectedPlot=null;selectedBuilding=null;$('plotInfo').hidden=true;$('farmPanel').hidden=false;
@@ -55,7 +56,7 @@ function renderPanel(){
   $('panelLabel').textContent='ARSITEKTUR KEBUN';$('panelTitle').textContent='Tempat untuk bertumbuh.';$('panelCopy').textContent='Bangunan bebas ditempatkan di tanah terbuka. Putar, tinjau, lalu konfirmasi.';
   body.innerHTML='<div class="building-grid">'+Object.entries(F.BUILDINGS).map(([key,b])=>`<article class="building-card"><div class="building-art">${picture(key,b.icon)}</div><div class="building-copy"><h3>${b.name}</h3><p>${b.benefit} · ${b.seconds} detik</p><div class="cost-list">${buildingCosts(key)}</div><div class="item-actions">${action('Pilih tempat','build',key,1,!farm.canBuild(key)||s.buildings.length>=F.MAX_BUILDINGS)}${action('Belanja bahan','building-shop',key,1,false,true)}</div></div></article>`).join('')+'</div><div class="item-actions">'+action('Pindahkan bangunan / petak','panel','layout',1,false,true)+'</div>';
  }else if(panel==='layout'){
-  $('panelLabel').textContent='STUDIO TATA LETAK';$('panelTitle').textContent='Kebun sesuai caramu.';$('panelCopy').textContent='Pindahkan petak atau bangunan tanpa biaya. Tanaman dan waktu pembangunan tetap berjalan.';
+  $('panelLabel').textContent='STUDIO TATA LETAK';$('panelTitle').textContent='Kebun sesuai caramu.';$('panelCopy').textContent='Tahan bangunan atau petak di peta selama 3 detik untuk mengangkatnya. Geser ke lokasi hijau, lalu lepaskan. Tanaman tetap tumbuh.';
   body.innerHTML='<section class="layout-expansion"><span class="layout-icon">🌿</span><div><h3>Tambah area tanam</h3><p>20 koin per petak · maksimal '+F.MAX_PLOTS+' petak</p><div class="item-actions">'+[1,3,6].map(n=>action('+'+n+' petak · '+n*20+' ◉','expand','',n,farm.unlocked+n>F.MAX_PLOTS||s.coins<n*20)).join('')+'</div></div></section><div class="catalog-heading"><h3>Bangunanmu</h3><span>'+s.buildings.length+' / '+F.MAX_BUILDINGS+'</span></div>'+(s.buildings.map(b=>`<article class="layout-row"><span>${F.BUILDINGS[b.kind].icon}</span><div><b>${F.BUILDINGS[b.kind].name}</b><small>${b.readyAt<=farm.now()?'Selesai':'Sedang dibangun'} · arah ${b.rotation*90}°</small></div>${action('Pindah','move-building',b.slot,1,false,true)}</article>`).join('')||'<p class="empty-note">Bangun lumbung pertamamu melalui menu Bangun atau Toko → Bangunan.</p>')+'<div class="catalog-heading"><h3>Petak tanam</h3><span>'+farm.unlocked+' aktif</span></div><div class="layout-plots">'+s.plots.slice(0,farm.unlocked).map(p=>`<button data-action="move-plot" data-key="${p.id}" aria-label="Pindahkan petak ${p.id+1}"><span>${p.crop?F.CROPS[p.crop].icon:'🌱'}</span><b>Petak ${p.id+1}</b><small>Pindahkan ↗</small></button>`).join('')+'</div>';
  }else{
   $('panelLabel').textContent='LUMBUNG DAN CATATAN';$('panelTitle').textContent='Hasil kerja tanganmu.';$('panelCopy').textContent='Pantau persediaan dan perjalanan kebunmu.';
@@ -73,7 +74,7 @@ function renderSelection(){
 function renderUI(){
  const s=farm.s;$('coinsValue').textContent=format(s.coins);for(const k of Object.keys(F.MATERIALS))$(k+'Value').textContent=format(s.materials[k]);
  $('storageValue').textContent=farm.used+' / '+farm.capacity;$('storageFill').style.width=100*farm.used/farm.capacity+'%';
- $('mapNote').textContent=placement?'KLIK TANAH · R PUTAR · KONFIRMASI UNTUK MENEMPATKAN':selectedCrop?'BIBIT '+F.CROPS[selectedCrop].name.toUpperCase()+' · KLIK PETAK KOSONG':'SERET PETA UNTUK MENJELAJAH ↔';
+ $('mapNote').textContent=placement?.followPointer?'GESER KE AREA HIJAU · LEPASKAN / KLIK UNTUK MENEMPATKAN':placement?'KLIK TANAH · R PUTAR · KONFIRMASI UNTUK MENEMPATKAN':selectedCrop?'KLIK UNTUK MENANAM · TAHAN 3 DETIK UNTUK MEMINDAHKAN':'SERET PETA UNTUK MENJELAJAH ↔';
  $('farmName').textContent=s.profile.farmName;renderPlacement();renderProfile();renderPanel();renderSelection();
 }
 function perform(result,success){if(!result.ok){toast(result.message);return false;}save();renderUI();if(success)toast(success);return true;}
@@ -85,9 +86,9 @@ function choosePlot(id,plantOnClick=false){
  closePanel();renderSelection();
 }
 function placementResult(){if(!placement?.point)return{ok:false,message:'Klik tanah di peta untuk memilih posisi.'};const p=placement;return p.kind==='garden'?farm.gardenPlacement(p.point,p.count,p.rotation):farm.checkPlacement(p.kind,p.point,p.rotation,{ignoreBuilding:p.moveBuilding??null,ignorePlots:p.movePlot===undefined?[]:[p.movePlot]});}
-function renderPlacement(){const dock=$('placementDock');dock.hidden=!placement;if(!placement)return;const valid=placementResult();placement.valid=valid.ok;$('placementTitle').textContent=placement.kind==='garden'?'Area '+placement.count+' petak baru':placement.kind==='plot'?'Pindahkan petak '+(placement.movePlot+1):(placement.moveBuilding!==undefined?'Pindahkan ':'Bangun ')+F.BUILDINGS[placement.kind].name;$('placementCopy').textContent=placement.point?(valid.ok?'Lokasi tersedia · klik Konfirmasi untuk menempatkan.':valid.message):'Klik tanah kosong untuk memilih lokasi. Seret peta untuk melihat area lain.';$('confirmPlacement').disabled=!valid.ok;$('rotatePlacement').hidden=placement.kind==='plot';dock.dataset.valid=String(valid.ok);$('placementAngle').textContent=placement.rotation*90+'°';}
-function beginPlacement(value){placement={rotation:0,point:null,...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();renderUI();toast('Klik posisi pilihanmu di peta, lalu konfirmasi.');}
-function cancelPlacement(){placement=null;pendingBuild=null;renderUI();}
+function renderPlacement(){const dock=$('placementDock');dock.hidden=!placement;dock.dataset.follow=String(Boolean(placement?.followPointer));$('map').classList.toggle('is-carrying',Boolean(placement?.followPointer));if(!placement)return;const valid=placementResult();placement.valid=valid.ok;$('placementTitle').textContent=placement.kind==='garden'?'Area '+placement.count+' petak baru':placement.kind==='plot'?'Pindahkan petak '+(placement.movePlot+1):(placement.moveBuilding!==undefined?'Pindahkan ':'Bangun ')+F.BUILDINGS[placement.kind].name;$('placementCopy').textContent=placement.point?(valid.ok?(placement.followPointer?'Lokasi tersedia · lepaskan atau klik untuk menempatkan.':'Lokasi tersedia · klik Konfirmasi untuk menempatkan.'):valid.message):'Klik tanah kosong untuk memilih lokasi. Seret peta untuk melihat area lain.';$('confirmPlacement').disabled=!valid.ok;$('rotatePlacement').hidden=placement.kind==='plot';dock.dataset.valid=String(valid.ok);$('placementAngle').textContent=placement.rotation*90+'°';}
+function beginPlacement(value){placement={rotation:0,point:null,...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();renderUI();if(!value.followPointer)toast('Klik posisi pilihanmu di peta, lalu konfirmasi.');}
+function cancelPlacement(){pickup.reset();placement=null;pendingBuild=null;renderUI();}
 function confirmPlacement(){if(!placement||!gate.canPlay||!entered)return;const valid=placementResult();if(!valid.ok){toast(valid.message);return;}const p=placement,result=p.kind==='garden'?farm.expandGarden(p.point,p.count,p.rotation):p.kind==='plot'?farm.movePlot(p.movePlot,p.point):p.moveBuilding!==undefined?farm.moveBuilding(p.moveBuilding,p.point,p.rotation):farm.build(p.kind,p.point,p.rotation);if(perform(result,p.kind==='garden'?'Area tanam baru siap digunakan.':p.moveBuilding!==undefined||p.kind==='plot'?'Tata letak berhasil diperbarui.':'Pembangunan dimulai.')){cancelPlacement();}}
 function chooseLocation(point){
  if(!gate.canPlay||!entered)return;
@@ -126,15 +127,32 @@ for(const[name,id]of[['farm','openFarm'],['shop','openShop'],['build','openBuild
 for(const b of document.querySelectorAll('[data-shop]'))b.addEventListener('click',()=>{shop=b.dataset.shop;storeItem=Object.keys(storeKinds())[0];tradeQty=1;renderPanel();});
 $('closePanel').addEventListener('click',()=>{closePanel();$('openFarm').focus();});
 $('startButton').addEventListener('click',()=>gate.canPlay?enter():document.dispatchEvent(new Event('bara:account-open')));
-for(const[id,dialog]of[['helpButton','helpDialog'],['menuButton','menuDialog']])$(id).addEventListener('click',()=>$(dialog).showModal());
+for(const[id,dialog]of[['helpButton','helpDialog'],['menuButton','menuDialog']])$(id).addEventListener('click',()=>{if(placement?.followPointer)cancelPlacement();else pickup.reset();$(dialog).showModal();});
 for(const b of document.querySelectorAll('[data-close]'))b.addEventListener('click',()=>b.closest('dialog').close());
 $('saveButton').addEventListener('click',()=>{if(gate.canPlay){save();toast('Progres dikirim untuk disimpan. Lihat status akun.');}else document.dispatchEvent(new Event('bara:account-open'));});
+function pickMovable(point){
+ if(placement)return null;
+ const building=renderer.pickBuilding?.(point)??farm.s.buildings.find(b=>{const size=F.footprint(b.kind,b.rotation);return Math.abs(b.x-point.x)<size.w/2&&Math.abs(b.y-point.y)<size.h/2;})?.slot;
+ if(Number.isInteger(building)){const b=farm.s.buildings.find(b=>b.slot===building);return{kind:b.kind,moveBuilding:b.slot,rotation:b.rotation,origin:{x:b.x,y:b.y}};}
+ const hit=renderer.pickPlot?.(point);if(hit===-1)return null;
+ const p=Number.isInteger(hit)?farm.s.plots[hit]:farm.s.plots.slice(0,farm.unlocked).find(p=>Math.abs(p.x-point.x)<31&&Math.abs(p.y-point.y)<30);
+ return p&&p.id<farm.unlocked?{kind:'plot',movePlot:p.id,origin:{x:p.x,y:p.y}}:null;
+}
 const gestures=new MapGesture(camera,chooseLocation),canvas=$('worldCanvas');
+const pickup=new FarmPickupGesture(camera,gestures,{
+ enabled:()=>gate.canPlay&&entered&&!document.hidden&&!document.querySelector('dialog[open]'),
+ active:()=>Boolean(placement?.followPointer),pick:pickMovable,
+ hold:p=>{const hint=$('pickupHint');hint.hidden=!p;if(p){hint.style.left=p.x+'px';hint.style.top=p.y+'px';}},
+ lift:(target,point)=>{if(!gate.canPlay||!entered)return false;beginPlacement({...target,point:target.origin,followPointer:true,lifted:true,offset:{x:target.origin.x-point.x,y:target.origin.y-point.y}});toast('Objek terangkat. Geser ke area hijau, lalu lepaskan atau klik untuk menempatkan.');return true;},
+ move:point=>{if(!placement?.followPointer||!gate.canPlay||!entered)return;placement.point={x:Math.round(point.x+placement.offset.x),y:Math.round(point.y+placement.offset.y)};renderPlacement();},
+ drop:confirmPlacement,cancel:cancelPlacement
+});
 const pointer=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
-canvas.addEventListener('pointerdown',e=>{if(!entered)return;const p=pointer(e);canvas.setPointerCapture(e.pointerId);gestures.down(e.pointerId,p.x,p.y);});
-canvas.addEventListener('pointermove',e=>{const p=pointer(e);gestures.move(e.pointerId,p.x,p.y);});
-canvas.addEventListener('pointerup',e=>{const p=pointer(e);gestures.up(e.pointerId,p.x,p.y);});
-canvas.addEventListener('pointercancel',e=>gestures.cancel(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{if(!entered||e.button!==0)return;const p=pointer(e);canvas.setPointerCapture(e.pointerId);pickup.down(e.pointerId,p.x,p.y);});
+canvas.addEventListener('pointermove',e=>{const p=pointer(e);pickup.move(e.pointerId,p.x,p.y);});
+canvas.addEventListener('pointerup',e=>{const p=pointer(e);pickup.up(e.pointerId,p.x,p.y);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);});
+canvas.addEventListener('pointercancel',e=>pickup.cancel(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('blur',()=>{if(placement?.followPointer)cancelPlacement();else pickup.reset();});
 canvas.addEventListener('wheel',e=>{if(!entered)return;e.preventDefault();const p=pointer(e);camera.zoomAt(Math.exp(-e.deltaY*.0015),p.x,p.y);},{passive:false});
 $('zoomIn').addEventListener('click',()=>camera.zoomAt(1.2));$('zoomOut').addEventListener('click',()=>camera.zoomAt(1/1.2));$('centerFarm').addEventListener('click',center);
 $('rotateLeft').addEventListener('click',()=>camera.rotate?.(-Math.PI/8));$('rotateRight').addEventListener('click',()=>camera.rotate?.(Math.PI/8));
@@ -143,11 +161,11 @@ $('graphicsQuality').addEventListener('change',e=>{save();try{localStorage.setIt
 try{$('graphicsQuality').value=localStorage.getItem('6xg:graphics')||'auto';}catch{}
 $('miniMap').addEventListener('click',e=>{if(!entered)return;const r=e.currentTarget.getBoundingClientRect();camera.focus((e.clientX-r.left)/r.width*3200,(e.clientY-r.top)/r.height*2200);});
 for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='q'||e.key==='Q')camera.rotate?.(-Math.PI/8);else if(e.key==='e'||e.key==='E')camera.rotate?.(Math.PI/8);else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){placement=null;pendingBuild=null;selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){placement.rotation=(placement.rotation+1)%4;renderPlacement();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelPlacement();selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){placement.rotation=(placement.rotation+1)%4;renderPlacement();}});
 const resize=()=>{const r=$('map').getBoundingClientRect();camera.resize(r.width,r.height);};new ResizeObserver(resize).observe($('map'));resize();center();
 function draw(){renderer.draw(farm,{selectedPlot,pendingBuild,placement,selectedCrop,now:farm.now(),welcome:!entered});renderer.mini($('miniMap'),farm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
 setInterval(()=>{const now=farm.now(),signature=farm.unlocked+'|'+farm.capacity+'|'+farm.s.plots.filter(p=>p.crop&&p.readyAt<=now).map(p=>p.id).join(',')+'|'+farm.s.buildings.filter(b=>b.readyAt<=now).length;if(signature!==uiSignature){uiSignature=signature;renderUI();}else if(selectedPlot!==null){const p=farm.s.plots[selectedPlot];if(p?.crop&&p.readyAt>now)$('plotCopy').textContent='Sedang tumbuh · '+countdown(p.readyAt-now)+' lagi';}},1000);
-window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else renderUI();});setInterval(save,60000);
+window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden){save();if(placement?.followPointer)cancelPlacement();else pickup.reset();}else renderUI();});setInterval(save,60000);
 const AVATAR_ICONS={sprout:'🌱',sunflower:'🌻',apple:'🍎',bee:'🐝'};
 function renderProfile(){const holder=$('profileBody');holder.hidden=!gate.canPlay;if(!gate.canPlay){holder.replaceChildren();return;}const p=farm.s.profile;if(!holder.querySelector('form'))holder.innerHTML=`<div class="profile-banner"><div class="profile-avatar" id="profileAvatar">🌱</div><span>PEKEBUN LEMBAH BARA</span><h3 id="profileHeading">Pekebun</h3><p id="profileFarm">Kebunku</p><button class="profile-play" id="profilePlay" type="button">Ke kebun ↗</button></div><div class="profile-stats"><div><b id="profileHarvest">0</b><span>Hasil dipanen</span></div><div><b id="profileEarned">0</b><span>Koin penjualan</span></div><div><b id="profilePlots">9</b><span>Petak terbuka</span></div></div><form id="profileForm"><div class="profile-fields"><label>Nama pekebun<input name="name" required maxlength="24" autocomplete="nickname"></label><label>Nama kebun<input name="farmName" required maxlength="24" autocomplete="off"></label></div><fieldset class="avatar-options"><legend>Pilih avatar kebunmu</legend>${F.AVATARS.map(k=>`<label title="${({sprout:'Tunas',sunflower:'Bunga matahari',apple:'Apel',bee:'Lebah'})[k]}"><input type="radio" name="avatar" value="${k}" aria-label="${({sprout:'Tunas',sunflower:'Bunga matahari',apple:'Apel',bee:'Lebah'})[k]}"><span>${AVATAR_ICONS[k]}</span></label>`).join('')}</fieldset><div class="profile-save"><button class="action" type="submit">Simpan profil</button><span id="profileFeedback" role="status"></span></div></form>`;
  $('profileHeading').textContent=p.name;$('profileFarm').textContent=p.farmName;$('profileAvatar').textContent=AVATAR_ICONS[p.avatar];$('profileHarvest').textContent=format(farm.s.stats.harvested);$('profileEarned').textContent=format(farm.s.stats.earned);$('profilePlots').textContent=farm.unlocked;
@@ -161,9 +179,9 @@ window.addEventListener('bara:art',()=>{for(const img of document.querySelectorA
 
 // Narrow account adapter; no anonymous game save is attached or exported.
 window.LadangBara={
- setIdentity(id){save();gate.setIdentity(id);activeSaveKey=null;farm=new F.Farm();entered=false;pendingBuild=null;placement=null;selectedBuilding=null;selectedPlot=null;closePanel();refreshGate();renderUI();},
- attach(key,raw){const next=new F.Farm({save:raw});gate.attach(key);farm=next;activeSaveKey=key;entered=false;selectedCrop='carrot';placement=null;pendingBuild=null;selectedPlot=null;selectedBuilding=null;save();refreshGate();renderUI();},
- detach(){save();gate.setIdentity(null);activeSaveKey=null;farm=new F.Farm();entered=false;pendingBuild=null;placement=null;selectedBuilding=null;selectedPlot=null;closePanel();refreshGate();renderUI();},
+ setIdentity(id){save();pickup.reset();gate.setIdentity(id);activeSaveKey=null;farm=new F.Farm();entered=false;pendingBuild=null;placement=null;selectedBuilding=null;selectedPlot=null;closePanel();refreshGate();renderUI();},
+ attach(key,raw){pickup.reset();const next=new F.Farm({save:raw});gate.attach(key);farm=next;activeSaveKey=key;entered=false;selectedCrop='carrot';placement=null;pendingBuild=null;selectedPlot=null;selectedBuilding=null;save();refreshGate();renderUI();},
+ detach(){save();pickup.reset();gate.setIdentity(null);activeSaveKey=null;farm=new F.Farm();entered=false;pendingBuild=null;placement=null;selectedBuilding=null;selectedPlot=null;closePanel();refreshGate();renderUI();},
  snapshot:()=>farm.serialize(),validate:raw=>{try{F.validateSave(JSON.parse(raw));return true;}catch{return false;}},legacySnapshot:()=>null,
  profile:()=>gate.canPlay?{...farm.s.profile}:null,canPlay:()=>gate.canPlay,enter,pause:save,setSaveStatus:text=>{$('saveStatus').textContent=text;},setSaveNote:text=>{$('saveNote').textContent=text;}
 };

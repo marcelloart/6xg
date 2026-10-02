@@ -67,6 +67,7 @@ class FarmRenderer{
   c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,cam.width,cam.height);c.translate(cam.width/2,cam.height/2);c.scale(cam.zoom,cam.zoom);c.translate(-cam.x,-cam.y);c.drawImage(this.back,0,0);
   const open=farm.unlocked;
   for(const p of farm.s.plots){
+   if(placement?.point&&p.id===placement.movePlot)continue;
    const planted=farm.s.plots[p.id],locked=p.id>=open;
    this.rect(c,p.x-29,p.y-25,59,55,locked?'#9cb17b':'#977350',5);this.rect(c,p.x-26,p.y-22,53,48,locked?'#a5b981':'#b18b5e',4);
    if(!locked){for(let i=-15;i<23;i+=10)this.line(c,[[p.x-23,p.y+i],[p.x+23,p.y+i]],'#976f4b66',2);}
@@ -76,8 +77,9 @@ class FarmRenderer{
    if(p.id===selectedPlot){c.strokeStyle='#f4d17c';c.lineWidth=3;c.beginPath();c.roundRect(p.x-30,p.y-26,61,57,5);c.stroke();}
   }
   this.label(c,1610,1391,open+' petak · kebunmu','#5e744d','#f5efdcdf');
-  for(const b of farm.s.buildings){const ready=now>=b.readyAt;c.save();c.translate(b.x,b.y);if(!ready){this.rect(c,-48,-30,96,48,'#bfb88d',4);this.line(c,[[-48,-56],[-48,16],[48,16],[48,-56]],'#a08b68',4);}else this.house(c,0,0,b.kind);c.restore();this.label(c,b.x,b.y+26,ready?BaraFarm.BUILDINGS[b.kind].name:'Membangun · '+Math.ceil((b.readyAt-now)/1000)+'d');}
+  for(const b of farm.s.buildings){if(placement?.point&&b.slot===placement.moveBuilding)continue;const ready=now>=b.readyAt;c.save();c.translate(b.x,b.y);if(!ready){this.rect(c,-48,-30,96,48,'#bfb88d',4);this.line(c,[[-48,-56],[-48,16],[48,16],[48,-56]],'#a08b68',4);}else this.house(c,0,0,b.kind);c.restore();this.label(c,b.x,b.y+26,ready?BaraFarm.BUILDINGS[b.kind].name:'Membangun · '+Math.ceil((b.readyAt-now)/1000)+'d');}
   if(placement?.point){const points=placement.kind==='garden'?farm.gardenPoints(placement.point,placement.count,placement.rotation):[placement.point];for(const p of points){const size=BaraFarm.footprint(placement.kind==='garden'?'plot':placement.kind,placement.rotation);this.rect(c,p.x-size.w/2,p.y-size.h/2,size.w,size.h,placement.valid?'#9bd49b99':'#d9807899',5);c.strokeStyle=placement.valid?'#397f50':'#af463c';c.lineWidth=3;c.strokeRect(p.x-size.w/2,p.y-size.h/2,size.w,size.h);}}
+  if(placement?.lifted&&placement.point){const p=placement.point;c.save();c.globalAlpha=.8;if(placement.kind==='plot'){this.rect(c,p.x-29,p.y-43,58,55,'#b18b5e',4);const original=farm.s.plots[placement.movePlot];if(original?.crop)this.crop(c,p.x,p.y-18,original.crop,Math.min(1,(now-original.plantedAt)/(original.readyAt-original.plantedAt)),now);}else this.house(c,p.x,p.y-18,placement.kind);c.restore();}
   this.label(c,1593,927,'Pondok kebun','#f4eedb','#566e47dc');
   // Slow ripples and birds keep the valley alive without changing the economy.
   for(let i=0;i<3;i++){const x=680+Math.sin(now/10000+i)*38,y=830+i*47;this.ellipse(c,x,y,8,4,'#edf0ce');this.ellipse(c,x+6,y-3,4,3,'#faf4dd');this.ellipse(c,x+10,y-3,2,1,'#d8a95c');}
