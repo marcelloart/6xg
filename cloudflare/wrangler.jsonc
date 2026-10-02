@@ -14,7 +14,7 @@
   "d1_databases": [{
     "binding": "DB",
     "database_name": "6xg-player-saves",
-    "database_id": "00000000-0000-0000-0000-000000000000",
+    "database_id": "1fb59ad2-de50-4c25-b2c2-526677ab73a2",
     "migrations_dir": "migrations"
   }]
 }

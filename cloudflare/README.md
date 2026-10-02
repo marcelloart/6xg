@@ -2,7 +2,9 @@
 
 Server ini cocok untuk menjalankan penyimpanan kampanye solo tanpa menyewa VPS. Website tetap berada di GitHub Pages, dan database pemain berada di akun Cloudflare pemilik game. Folder ini dapat dibangun tersendiri. Backend Python di `server/` tetap tersedia untuk hosting container.
 
-**Status:** kode dan pengujian siap; belum diterbitkan ke akun Cloudflare. `database_id` masih placeholder dan `apiBase` frontend masih kosong. Login Privy sudah tersedia di website, tetapi progres antarperangkat belum aktif.
+**Status:** kode dan pengujian siap. Worker `6xg-cloud-save` dan D1 `6xg-player-saves` sudah dibuat di akun Cloudflare pemilik game; tabel `saves` sudah tersedia dan `database_id` sudah diisi. Worker masih menggunakan kode awal Cloudflare. Deployment kode server menunggu koneksi repository GitHub; `apiBase` frontend tetap kosong sampai `/health` berhasil diperiksa. Login Privy tersedia, tetapi progres antarperangkat belum aktif.
+
+Untuk resources yang sudah dibuat, hubungkan Worker ke `marcelloart/6xg`, branch `main`, root directory `cloudflare`, build command `npm run build`, dan deploy command `npm run deploy`. URL Worker: `https://6xg-cloud-save.marcelloartis.workers.dev`. Persetujuan aplikasi Cloudflare Workers and Pages dibatasi ke repository game tersebut.
 
 ## Cara termudah
 
@@ -25,11 +27,10 @@ cd cloudflare
 npm ci
 npm test
 npx wrangler login
-npx wrangler d1 create 6xg-player-saves --binding DB --update-config --location apac
 npm run deploy
 ```
 
-Periksa bahwa Wrangler telah mengganti placeholder `database_id` dengan ID database yang baru dibuat. Login Wrangler meminta akses akun; pemilik harus meninjau persetujuannya. Jangan memasukkan token Cloudflare, `.dev.vars`, App Secret, atau database ke GitHub. URL `workers.dev` dapat digunakan tanpa mengganti DNS domain website.
+Perintah di atas menggunakan database yang sudah dibuat untuk akun pemilik game. Untuk akun Cloudflare lain, buat D1 sendiri dengan `npx wrangler d1 create 6xg-player-saves --binding DB --update-config --location apac` dan ganti `database_id` sebelum deploy. Login Wrangler meminta akses akun; pemilik harus meninjau persetujuannya. Jangan memasukkan token Cloudflare, `.dev.vars`, App Secret, atau database ke GitHub. URL `workers.dev` dapat digunakan tanpa mengganti DNS domain website.
 
 ## Perilaku penyimpanan
 
