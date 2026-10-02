@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "seed": 1436,
+  "bounds": {"width": 3200, "height": 2200, "originX": 1100, "originY": 740},
+  "vegetation": {"treeCandidates": 1850, "grassCount": 1100, "rockCount": 105},
+  "sites": {
+    "barracks": {"x": 550, "y": 505},
+    "tower": {"x": 382, "y": 366},
+    "wall": {"x": 501, "y": 426},
+    "townhall": {"x": 493, "y": 337},
+    "lumber": {"x": 224, "y": 280},
+    "quarry": {"x": 725, "y": 435},
+    "mine": {"x": 638, "y": 184},
+    "hunt": {"x": 266, "y": 513}
+  },
+  "camps": [{"x": 1450, "y": -200}, {"x": 1650, "y": 1020}, {"x": -460, "y": -290}]
+}
