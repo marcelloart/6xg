@@ -1,0 +1,16 @@
+{
+  "name": "6xg-benteng-bara",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:auth": "node tools/build-auth.mjs",
+    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs"
+  },
+  "dependencies": {
+    "@privy-io/react-auth": "3.46.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {"esbuild": "0.28.2"}
+}

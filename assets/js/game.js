@@ -1,7 +1,7 @@
 'use strict';
 // Browser interface. The simulation is independent of the renderer and persistence.
 const $=id=>document.getElementById(id),icon=(key,cls='')=>'<svg class="icon '+cls+'" aria-hidden="true"><use href="#i-'+key+'"/></svg>';
-const SAVE_KEY='6xg-benteng-bara-v2';let storageAvailable=true,loaded=false,screen='welcome',selected='barracks',sendFraction=1,speed=1,toastSeconds=0,uiTimer=0,saveTimer=0,lastFrame=0,visualTime=0;
+const SAVE_KEY='6xg-benteng-bara-v2';let activeSaveKey=SAVE_KEY,storageAvailable=true,loaded=false,screen='welcome',selected='barracks',sendFraction=1,speed=1,toastSeconds=0,uiTimer=0,saveTimer=0,lastFrame=0,visualTime=0;
 let game=new Kingdom(handleEvent);
 try{const raw=localStorage.getItem(SAVE_KEY);if(raw)loaded=game.load(raw);}catch{storageAvailable=false;}
 const simulationClock=new SimulationClock(()=>game,()=>speed);
@@ -11,10 +11,10 @@ const timeText=value=>Math.floor(Math.max(0,value)/60).toString().padStart(2,'0'
 const short=value=>Math.floor(value).toLocaleString('id-ID');
 function announce(text){$('announcer').textContent=text;}
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;toastSeconds=4;}
-function save(show=false){try{localStorage.setItem(SAVE_KEY,game.serialize());$('saveStatus').textContent='PROGRES TERSIMPAN';}catch{storageAvailable=false;$('saveStatus').textContent='SIMPAN TIDAK TERSEDIA';}$('saveNote').textContent=storageAvailable?'Progres tersimpan otomatis. Game tetap berjalan di tab belakang selama halaman terbuka. Menutup halaman menghentikan permainan.':'Browser tidak mengizinkan penyimpanan. Progres berlaku selama halaman ini terbuka.';if(show)toast(storageAvailable?'Progres kerajaan tersimpan.':'Penyimpanan browser tidak tersedia.');}
+function save(show=false){try{localStorage.setItem(activeSaveKey,game.serialize());window.dispatchEvent(new CustomEvent('bara:save',{detail:{key:activeSaveKey,save:game.serialize()}}));$('saveStatus').textContent='PROGRES TERSIMPAN';}catch{storageAvailable=false;$('saveStatus').textContent='SIMPAN TIDAK TERSEDIA';}$('saveNote').textContent=storageAvailable?'Progres tersimpan otomatis. Game tetap berjalan di tab belakang selama halaman terbuka. Menutup halaman menghentikan permainan.':'Browser tidak mengizinkan penyimpanan. Progres berlaku selama halaman ini terbuka.';if(show)toast(storageAvailable?'Progres kerajaan tersimpan.':'Penyimpanan browser tidak tersedia.');}
 function handleEvent(type,text){
  if(type==='pause'){if(screen==='play'){screen='pause';$('pauseOverlay').hidden=false;$('resumeButton').focus({preventScroll:true});}save();}
- if(type==='resume'){const entering=screen==='welcome';simulationClock.reset();screen='play';$('welcome').hidden=true;$('pauseOverlay').hidden=true;$('endOverlay').hidden=true;$('pauseButton').disabled=false;lastFrame=performance.now();announce('Kerajaan aktif. Produksi berjalan, termasuk saat pindah tab.');if(entering)openGamePanel(mapWidth>760?'build':'');}
+ if(type==='resume'){const entering=screen==='welcome';simulationClock.reset();screen='play';$('welcome').hidden=true;$('pauseOverlay').hidden=true;$('endOverlay').hidden=true;$('pauseButton').disabled=false;lastFrame=performance.now();announce('Kerajaan aktif. Produksi berjalan, termasuk saat pindah tab.');if(entering)openGamePanel('');}
  if(type==='end'){screen='end';$('pauseOverlay').hidden=true;$('welcome').hidden=true;$('endOverlay').hidden=false;$('pauseButton').disabled=true;$('endEyebrow').textContent=game.s.result==='won'?'THE VALLEY IS YOURS':'A KINGDOM WILL RISE AGAIN';$('endTitle').textContent=game.s.result==='won'?'Lembah ini milikmu.':'Benteng telah jatuh.';$('endCopy').textContent=game.s.result==='won'?'Tiga kamp ditaklukkan dalam '+timeText(game.s.time)+'. Rakyat Lembah Bara kini berdiri di bawah panjimu.':'Bertahan selama '+timeText(game.s.time)+' dan melewati '+game.s.wave+' gelombang. Perkuat menara, tembok, dan persediaan daging di kampanye berikutnya.';$('newCampaignButton').focus({preventScroll:true});}
  if(text){if(['built','conquest','retreat','raid','damaged','defended','return','repair'].includes(type))toast(text);announce(text);}
  if(type!=='resume'&&type!=='pause')save();renderUI();
@@ -95,7 +95,7 @@ function roofHouse(x,y,s=30,roof='#9b6249',height=30){ellipse(x+4,y+4,s*1.2,s*.4
 function flag(x,y,color='#e4bf79',scale=1){line([[x,y],[x,y-37*scale]],'#d0bd86',2*scale);const flutter=reduceMotion?0:Math.sin(visualTime*2+x)*3;poly([[x,y-37*scale],[x+23*scale,y-33*scale+flutter],[x+19*scale,y-21*scale+flutter],[x,y-24*scale]],color);}
 function towerSprite(x,y,s=19,roof='#6e6443'){ellipse(x+4,y+2,s*1.2,s*.43,'#20382455');ctx.fillStyle='#a1a17b';ctx.fillRect(x-s*.6,y-s*2.6,s*1.2,s*2.6);poly([[x+s*.6,y-s*2.6],[x+s,y-s*2.9],[x+s,y-s*.3],[x+s*.6,y]],'#737b5b');poly([[x-s*.6,y-s*2.6],[x-s,y-s*2.9],[x,y-s*3.7],[x+s,y-s*2.9],[x+s*.6,y-s*2.6]],roof);ctx.fillStyle='#4c5941';ctx.fillRect(x-3,y-s*1.9,6,9);for(let i=0;i<3;i++)line([[x-s*.5,y-s*.6*i],[x+s*.5,y-s*.6*i]],'#808665',1);}
 function fortress(x,y,level=1,enemy=false){const roof=enemy?'#695d53':'#a16647';roofHouse(x,y,39,roof,44);roofHouse(x-28,y+20,24,roof,29);towerSprite(x-45,y+17,17,roof);towerSprite(x+45,y+17,17,roof);poly([[x-38,y+14],[x,y+33],[x+38,y+14],[x+38,y+32],[x,y+51],[x-38,y+32]],'#a4a27b');poly([[x,y+33],[x+38,y+14],[x+38,y+32],[x,y+51]],'#7c855f');ctx.fillStyle='#4a523a';ctx.fillRect(x-5,y+31,10,17);for(let i=-3;i<=3;i++){const bx=x+i*10,by=y+33-Math.abs(i)*4;ctx.fillStyle='#bdba8d';ctx.fillRect(bx-3,by-6,6,8);}flag(x+7,y-45,enemy?'#be7564':'#e4bf79');if(level>1){towerSprite(x,y-20,13,roof);flag(x,y-58,enemy?'#be7564':'#e4bf79',.8);}}
-function label(x,y,text,color='#d9d7b2',selectedLabel=false){ctx.font=(selectedLabel?'600 ':'')+'14px "Segoe UI",Arial';const tw=ctx.measureText(text).width;ctx.fillStyle=selectedLabel?'#303b24ee':'#1f3529d9';ctx.beginPath();ctx.roundRect(x-tw/2-12,y-10,tw+24,25,5);ctx.fill();ctx.strokeStyle=selectedLabel?'#d8bf79a0':'#b3c09c35';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,x,y+7);}
+function label(x,y,text,color='#d9d7b2',selectedLabel=false){ctx.font=(selectedLabel?'600 ':'')+'11px "Segoe UI",Arial';const tw=ctx.measureText(text).width;ctx.fillStyle=selectedLabel?'#303b24ee':'#1f3529d9';ctx.beginPath();ctx.roundRect(x-tw/2-8,y-8,tw+16,20,4);ctx.fill();ctx.strokeStyle=selectedLabel?'#d8bf79a0':'#b3c09c35';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,x,y+5);}
 function foundation(b){ellipse(b.x,b.y+5,37,18,'#66775245');ctx.strokeStyle='#ded3a070';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(b.x,b.y+5,37,18,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.font='23px Georgia';ctx.textAlign='center';ctx.fillStyle='#efe0afaa';ctx.fillText('+',b.x,b.y+10);}
 function drawTerrain(){
  const gradient=ctx.createRadialGradient(493,365,60,493,365,1900);gradient.addColorStop(0,'#879361');gradient.addColorStop(.42,'#718954');gradient.addColorStop(1,'#375b3d');ctx.fillStyle=gradient;ctx.fillRect(-WORLD.originX,-WORLD.originY,WORLD.width,WORLD.height);
@@ -167,3 +167,24 @@ if(loaded){$('startButton').textContent=game.s.result?'Lihat hasil kampanye ↗'
 if(!storageAvailable)$('saveNote').textContent='Penyimpanan browser tidak tersedia. Progres berlaku selama halaman ini terbuka.';renderUI();resizeMap();requestAnimationFrame(frame);
 // Background tabs may stop animation frames; this timer uses the same clock.
 setInterval(()=>{advanceGame();if(document.hidden)renderUI();},1000);
+
+// Narrow interface for account-specific saves; guest progress remains separate.
+window.BentengBara=Object.freeze({
+  guestKey:SAVE_KEY,
+  snapshot:()=>game.serialize(),
+  validate:raw=>new Kingdom().load(raw),
+  pause:()=>{advanceGame();game.pause();},
+  setSaveStatus:text=>{$('saveStatus').textContent=text;},
+  setSaveNote:text=>{$('saveNote').textContent=text;},
+  attach(key,raw){
+    advanceGame();save();game.pause();
+    const next=new Kingdom(handleEvent);if(raw&&!next.load(raw))throw new Error('Progres tidak valid');
+    activeSaveKey=key;game=next;loaded=Boolean(raw);simulationClock.reset();saveTimer=0;speed=1;screen='welcome';
+    $('welcome').hidden=false;$('pauseOverlay').hidden=true;$('endOverlay').hidden=true;
+    $('startButton').textContent=loaded?'Lanjutkan desamu ↗':'Bangun desamu ↗';
+    $('welcomeCopy').textContent=loaded?'Progres kerajaanmu siap dilanjutkan.':'Kelola sumber daya. Bangun pertahanan. Latih pasukan dan taklukkan tiga kamp musuh.';
+    openGamePanel('');focusVillage();renderUI();save();
+  },
+  detach(){let raw=null;try{raw=localStorage.getItem(SAVE_KEY);}catch{}this.attach(SAVE_KEY,raw);},
+  resetAccount(){this.attach(activeSaveKey,null);},
+});
