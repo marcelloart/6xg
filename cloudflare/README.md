@@ -2,7 +2,7 @@
 
 Server ini cocok untuk menjalankan penyimpanan kampanye solo tanpa menyewa VPS. Website tetap berada di GitHub Pages, dan database pemain berada di akun Cloudflare pemilik game. Folder ini dapat dibangun tersendiri. Backend Python di `server/` tetap tersedia untuk hosting container.
 
-**Status:** kode dan pengujian siap. Worker `6xg-cloud-save` dan D1 `6xg-player-saves` sudah dibuat di akun Cloudflare pemilik game; tabel `saves` sudah tersedia dan `database_id` sudah diisi. Repository sudah terhubung ke Cloudflare Workers Builds. Deployment pertama dijalankan dari commit konfigurasi ini; `apiBase` frontend tetap kosong sampai `/health` berhasil diperiksa. Login Privy tersedia, tetapi progres antarperangkat belum aktif.
+**Status:** server sudah diterbitkan melalui Cloudflare Workers Builds. Worker `6xg-cloud-save` menggunakan D1 `6xg-player-saves` dengan tabel `saves`; `database_id` dan `apiBase` frontend sudah diisi. Pemeriksaan produksi berhasil: `/health` mengembalikan `ok`, `authConfigured`, dan `storage` bernilai `true`; akses tanpa login dan token tidak valid ditolak; preflight dari `https://6xg.online` diizinkan dan origin lain ditolak. Login Privy tersedia untuk penyimpanan progres online. Pengujian simpan/muat lintas perangkat menggunakan akun Privy nyata belum dilakukan.
 
 Konfigurasi deployment menggunakan `marcelloart/6xg`, branch `main`, root directory `cloudflare`, build command `npm run build`, dan deploy command `npm run deploy`. Build watch path adalah `cloudflare/**`; preview builds dinonaktifkan. URL Worker: `https://6xg-cloud-save.marcelloartis.workers.dev`. Persetujuan aplikasi Cloudflare Workers and Pages dibatasi ke repository game tersebut. Token build disimpan oleh Cloudflare, bukan di repository.
 
