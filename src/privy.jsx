@@ -27,12 +27,13 @@ function Account(){
     if(!ready)return;
     let cancelled=false;
     session.current?.close();session.current=null;setChoice(false);
+    game.setIdentity(userId);
     if(!userId){
-      if(attached.current){attached.current=null;game.detach();}
+      attached.current=null;game.detach();
       showStatus('guest','Masuk atau daftar untuk memiliki akun pemain.');return;
     }
     try{localStorage.setItem('6xg-account-used','1');}catch{}
-    game.pause();guest.current=game.snapshot();
+    game.pause();guest.current=game.legacySnapshot();
     const accountKey=keyFor(userId),cached=read(accountKey);
     const apply=raw=>{if(cancelled)return;attached.current=null;game.attach(accountKey,raw);attached.current=accountKey;};
     (async()=>{
@@ -99,7 +100,7 @@ function Account(){
   function continueLocal(){
     if(!userId)return;
     const raw=read(keyFor(userId));attached.current=null;
-    game.attach(keyFor(userId),raw&&game.validate(raw)?raw:guest.current);attached.current=keyFor(userId);
+    game.attach(keyFor(userId),raw&&game.validate(raw)?raw:null);attached.current=keyFor(userId);
     showStatus('local','Progres tersimpan di perangkat ini. Sinkronisasi belum tersambung.');
   }
   async function signOut(){
@@ -121,12 +122,13 @@ function Account(){
       {!cfg.apiBase&&<div className="account-notice"><p className="account-copy">Penyimpanan online belum aktif.</p><p className="account-meta">Progres tetap tersimpan di browser perangkat ini. Akun belum menyinkronkan kerajaan ke perangkat lain.</p></div>}
       <div className="account-actions">
         {!authenticated&&<button className="primary" disabled={!ready||busy} onClick={()=>{document.getElementById('accountDialog').close();login({disableSignup:false});}}>{ready?'Daftar / Masuk dengan Privy ↗':'Menyiapkan login…'}</button>}
-        {authenticated&&choice&&<><button className="primary" onClick={()=>choose(true)}>Gunakan desaku saat ini</button><button className="secondary" onClick={()=>choose(false)}>Mulai desa baru</button></>}
+        {authenticated&&choice&&<><button className="primary" onClick={()=>choose(false)}>Mulai kerajaan baru</button>{guest.current&&<button className="secondary" onClick={()=>choose(true)}>Impor progres lama dari perangkat</button>}</>}
+        {authenticated&&game.canPlay()&&<button className="primary" onClick={()=>{document.getElementById('accountDialog').close();game.enter();}}>Mainkan Benteng Bara ↗</button>}
         {authenticated&&['error','local'].includes(status.state)&&cfg.apiBase&&<><button className="primary" onClick={()=>setRetry(n=>n+1)}>Coba sinkronkan lagi</button>{status.state==='error'&&<button className="secondary" onClick={continueLocal}>Lanjutkan di perangkat ini</button>}</>}
         {authenticated&&status.state==='conflict'&&<button className="primary" onClick={()=>setRetry(n=>n+1)}>Muat progres online</button>}
         {authenticated&&<button className="secondary" disabled={busy||status.state==='loading'} onClick={signOut}>{busy?'Keluar…':'Keluar dari akun'}</button>}
       </div>
-      <p className="account-footer">Progres tamu dan progres akun disimpan terpisah. Login ditangani oleh <a href="https://privy.io" target="_blank" rel="noopener noreferrer">Privy</a>.</p>
+      <p className="account-footer">Login diperlukan untuk bermain. Progres disimpan pada akun pemain; kampanye baru dimulai dengan semua resource 0. Login ditangani oleh <a href="https://privy.io" target="_blank" rel="noopener noreferrer">Privy</a>.</p>
     </>,document.getElementById('accountBody'))}
   </>;
 }

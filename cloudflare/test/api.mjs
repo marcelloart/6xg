@@ -12,6 +12,7 @@ let mf, db;
 // Fixture was exported from new Kingdom().serialize(), using save format version 2.
 const fixture = JSON.parse(await readFile(new URL('./save.json', import.meta.url), 'utf8'));
 const fresh = () => structuredClone(fixture);
+const rtsFixture = JSON.parse(await readFile(new URL('../../tests/rts-save.json', import.meta.url), 'utf8'));
 
 before(async () => {
   mf = new Miniflare(convertV4MiniflareOptions({...options, cf: false, telemetry: {enabled: false}}));
@@ -43,6 +44,23 @@ test('a signed account can save and restore a real game snapshot', async () => {
   assert.equal(restored.body.revision, 1);
   assert.deepEqual(restored.body.save, save);
   assert.equal(restored.headers.get('cache-control'), 'no-store');
+});
+
+test('RTS positions, active orders and castles round-trip through authenticated D1 storage', async () => {
+  const auth = await token(), save = structuredClone(rtsFixture);
+  save.state.units[0].order = {type:'move',x:1800,y:1400,target:0,resource:null};
+  save.state.buildings.push({id:save.state.nextId++,kind:'castle',x:1696,y:1488,hp:1400,progress:.5,cooldown:0,rally:{x:1800,y:1550},queue:[]});
+  assert.equal((await call('PUT',auth,{save,revision:0})).status,200);
+  assert.deepEqual((await call('GET',auth)).body.save,save);
+  assert.equal(save.state.resources.wood,0);
+});
+
+test('RTS malformed identities and dangling order targets are rejected', async () => {
+  const auth=await token();
+  for(const change of [s=>s.units[1].id=s.units[0].id,s=>s.units[0].order.target=99999,s=>s.units[0].hp=10000,s=>s.nodes[0].resource='admin']){
+    const save=structuredClone(rtsFixture);change(save.state);
+    assert.equal((await call('PUT',auth,{save,revision:0})).status,400);
+  }
 });
 test('another account cannot read or replace a players village by providing its ID', async () => {
   await call('PUT', await token(), {save: fresh(), revision: 0, userId: 'did:privy:b'});

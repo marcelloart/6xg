@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build:auth": "node tools/build-auth.mjs",
-    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs"
+    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs"
   },
   "dependencies": {
     "@privy-io/react-auth": "3.46.0",

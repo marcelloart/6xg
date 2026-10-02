@@ -2,7 +2,7 @@
 
 Backend Python ini menyimpan kampanye solo per akun Privy. Setiap permintaan memverifikasi tanda tangan ES256, issuer, App ID, masa berlaku, session ID, dan DID pengguna. Pemain tidak dapat memilih ID akun lain dalam permintaan. Token tidak disimpan di database atau ditulis ke log.
 
-Backend siap dijalankan, tetapi **belum dipasang ke hosting**. Frontend saat ini memakai `apiBase: ''`, sehingga login tersedia dan progres tetap berada di perangkat. Backend ini menyediakan sinkronisasi kampanye solo; tidak menyediakan PvP atau dunia multiplayer bersama.
+Backend Python ini siap dijalankan, tetapi **belum dipasang ke hosting**. Frontend produksi saat ini memakai alternatif Cloudflare Workers + D1 untuk progres online. Backend ini menyediakan kontrak API yang sama untuk sinkronisasi kampanye solo; tidak menyediakan PvP atau dunia multiplayer bersama.
 
 Untuk memulai dengan paket gratis tanpa menyewa container dan disk, gunakan alternatif [Cloudflare Workers + D1](../cloudflare/README.md). Kedua server menyediakan API yang sama; pilih satu untuk alamat `apiBase` frontend.
 
@@ -26,9 +26,9 @@ docker run --env-file server/.env -p 8770:8770 -v bara-data:/data benteng-bara-a
 
 ## Penyimpanan dan perangkat bersamaan
 
-`GET /api/save` mengambil progres akun yang ditentukan token. `PUT /api/save` menyimpan snapshot versi 2 dengan nomor revisi yang diharapkan. Jika perangkat lain sudah memperbarui progres, server mengembalikan 409 dan frontend menghentikan upload otomatis sampai pemain memuat progres online terbaru. Tidak ada penimpaan otomatis dari perangkat lama.
+`GET /api/save` mengambil progres akun yang ditentukan token. `PUT /api/save` menyimpan snapshot versi 3 dengan nomor revisi yang diharapkan: posisi unit, perintah, barang bawaan, bangunan/kastel, antrean, dan resource divalidasi. Versi 2 tetap diterima untuk migrasi progres lama. Jika perangkat lain sudah memperbarui progres, server mengembalikan 409 dan frontend menghentikan upload otomatis sampai pemain memuat progres online terbaru. Tidak ada penimpaan otomatis dari perangkat lama.
 
-Progres tamu dan akun memiliki slot lokal terpisah. Akun pertama kali dapat memilih untuk membawa desa tamu atau memulai desa baru. Jika server putus, snapshot terbaru tetap tersimpan lokal. Pengguna dapat mencoba sinkronisasi kembali dari layar Akun.
+Permainan membutuhkan login sebelum kampanye dapat dimulai. Slot lokal terpisah per akun. Akun pertama kali dapat memilih mengimpor progres lama perangkat atau memulai kerajaan baru dengan semua resource 0. Progres versi 2 dicadangkan sebelum migrasi RTS. Jika server putus, snapshot terbaru tetap tersimpan lokal. Pengguna dapat mencoba sinkronisasi kembali dari layar Akun.
 
 Simulasi tetap berjalan di browser. Penutupan halaman menghentikan simulasi; server menyimpan snapshot dan tidak menghitung produksi saat halaman ditutup. Data kampanye solo dilaporkan oleh client dan bukan dasar untuk leaderboard, transaksi, atau PvP yang harus dikendalikan server.
 

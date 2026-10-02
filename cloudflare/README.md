@@ -1,6 +1,6 @@
 # Progres online — Cloudflare Workers + D1
 
-Server ini cocok untuk menjalankan penyimpanan kampanye solo tanpa menyewa VPS. Website tetap berada di GitHub Pages, dan database pemain berada di akun Cloudflare pemilik game. Folder ini dapat dibangun tersendiri. Backend Python di `server/` tetap tersedia untuk hosting container.
+Server ini cocok untuk menjalankan penyimpanan kampanye solo tanpa menyewa VPS. Website tetap berada di GitHub Pages, dan database pemain berada di akun Cloudflare pemilik game. Build dijalankan dari folder ini dengan checkout repository lengkap: validator RTS diimpor dari `../assets/js/rts-engine.js`. Backend Python di `server/` tetap tersedia untuk hosting container.
 
 **Status:** server sudah diterbitkan melalui Cloudflare Workers Builds. Worker `6xg-cloud-save` menggunakan D1 `6xg-player-saves` dengan tabel `saves`; `database_id` dan `apiBase` frontend sudah diisi. Pemeriksaan produksi berhasil: `/health` mengembalikan `ok`, `authConfigured`, dan `storage` bernilai `true`; akses tanpa login dan token tidak valid ditolak; preflight dari `https://6xg.online` diizinkan dan origin lain ditolak. Login Privy tersedia untuk penyimpanan progres online. Pengujian simpan/muat lintas perangkat menggunakan akun Privy nyata belum dilakukan.
 
@@ -36,7 +36,7 @@ Perintah di atas menggunakan database yang sudah dibuat untuk akun pemilik game.
 
 - Token Privy ES256 diverifikasi dengan public key, issuer, audience, expiry, session, subject, dan waktu penerbitan. ID pengguna berasal dari token yang terverifikasi.
 - `GET /api/save` mengambil desa akun tersebut. `PUT /api/save` menerima `{save, revision}`. Nomor revisi diperiksa dalam satu operasi SQL atomik. Dua perangkat dengan revisi sama tidak dapat keduanya mengganti desa.
-- Snapshot versi 2 dibatasi 48 KiB dan diperiksa level bangunan, kapasitas resource/pasukan, serta antreannya. Field yang tidak digunakan dibuang.
+- Snapshot versi 3 menyimpan posisi unit, perintah, barang bawaan, HP, progres kastel/bangunan, antrean, dan resource. Validator dibagikan dengan simulasi browser; ID entitas unik, target perintah, batas jumlah unit/bangunan, posisi, dan angka diperiksa. Snapshot versi 2 tetap diterima agar progres lama dapat dimigrasikan setelah login. Body permintaan dibatasi 48 KiB dan field yang tidak digunakan dibuang.
 - CORS mengizinkan origin yang dikonfigurasi. Token tidak ditulis ke log atau database. Throttle 120 permintaan/menit per IP dan akun berlaku per instance Worker, bukan pembatas global.
 - D1 menyimpan data di luar asset GitHub Pages. Gunakan fitur backup/Time Travel Cloudflare untuk pemulihan. Dua implementasi backend menggunakan kontrak API yang sama; jalankan salah satunya.
 

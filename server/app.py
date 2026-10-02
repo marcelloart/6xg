@@ -35,6 +35,8 @@ def integer(value, low, high):
 
 def validate_save(save):
     """Bound all gameplay fields before storing a solo campaign snapshot."""
+    if isinstance(save, dict) and save.get("version") == 3:
+        return validate_rts_save(save)
     if not isinstance(save, dict) or save.get("version") != 2 or not isinstance(save.get("state"), dict):
         raise ValueError("Invalid save version")
     s = save["state"]
@@ -111,6 +113,83 @@ def validate_save(save):
     entries = s.get("log", [])
     clean["log"] = [{"time": e["time"], "text": e["text"][:180]} for e in entries[:8] if isinstance(e, dict) and number(e.get("time"), 0, 1e8) and isinstance(e.get("text"), str)] if isinstance(entries, list) else []
     return {"version": 2, "state": clean}
+
+
+def validate_rts_save(save):
+    """Validate and whitelist positions, orders and entities in RTS saves."""
+    kinds = {"villager": (55, 8, "townhall"), "soldier": (95, 8, "barracks"),
+             "archer": (60, 11, "archery"), "cavalry": (155, 15, "stable")}
+    buildings = {"townhall": 720, "house": 220, "barracks": 380, "archery": 320,
+                 "stable": 400, "tower": 450, "castle": 1400, "wall": 600,
+                 "storehouse": 260, "farm": 180}
+    def require(value):
+        if not value:
+            raise ValueError("Invalid RTS snapshot")
+    def point(value):
+        return isinstance(value, dict) and number(value.get("x"), 0, 3200) and number(value.get("y"), 0, 2200)
+    def pick(value, keys):
+        return {key: value[key] for key in keys}
+    s = save.get("state")
+    require(isinstance(s, dict) and number(s.get("time"), 0, 1e8))
+    require(isinstance(s.get("resources"), dict) and all(number(s["resources"].get(r), 0, 9999) for r in RESOURCES))
+    require(integer(s.get("nextId"), 1, 10000000) and integer(s.get("wave"), 0, 100000) and number(s.get("raidTimer"), 0, 600) and s.get("result") in (None, "won", "lost"))
+    for key, low, high in (("units", 0, 100), ("buildings", 0, 48), ("nodes", 16, 16), ("camps", 3, 3)):
+        require(isinstance(s.get(key), list) and low <= len(s[key]) <= high)
+    ids = set()
+    def entity(v):
+        require(point(v) and integer(v.get("id"), 1, s["nextId"]-1) and v["id"] not in ids)
+        ids.add(v["id"])
+    clean_units = []
+    for u in s["units"]:
+        entity(u)
+        require(u.get("kind") in kinds and type(u.get("team")) is int and u["team"] in (0, 1))
+        require(number(u.get("hp"), .000001, kinds[u["kind"]][0]) and number(u.get("cooldown"), 0, 3))
+        require(number(u.get("carry"), 0, 12) and u.get("carryType") in (None, *RESOURCES) and integer(u.get("home"), -1, 2))
+        order = u.get("order")
+        require(point(order) and order.get("type") in ("idle", "hold", "move", "attackMove", "attack", "gather", "build", "repair", "return"))
+        require(order.get("resource") in (None, *RESOURCES) and integer(order.get("target"), 0, s["nextId"]-1))
+        unit = pick(u, ("id", "kind", "team", "x", "y", "hp", "cooldown", "carry", "carryType", "home"))
+        unit["order"] = pick(order, ("type", "x", "y", "target", "resource"))
+        clean_units.append(unit)
+    require(sum(u["team"] == 0 for u in clean_units) <= 64 and sum(u["team"] == 1 for u in clean_units) <= 36)
+    clean_buildings = []
+    for b in s["buildings"]:
+        entity(b)
+        require(b.get("kind") in buildings and number(b.get("hp"), .000001, buildings[b["kind"]]) and number(b.get("progress"), 0, 1) and number(b.get("cooldown"), 0, 3) and point(b.get("rally")))
+        require(isinstance(b.get("queue"), list) and len(b["queue"]) <= 5)
+        queue = []
+        for q in b["queue"]:
+            require(isinstance(q, dict) and q.get("kind") in kinds and kinds[q["kind"]][2] == b["kind"] and number(q.get("left"), .000001, kinds[q["kind"]][1]))
+            queue.append(pick(q, ("kind", "left")))
+        building = pick(b, ("id", "kind", "x", "y", "hp", "progress", "cooldown"))
+        building.update(rally=pick(b["rally"], ("x", "y")), queue=queue)
+        clean_buildings.append(building)
+    clean_nodes = []
+    for i, n in enumerate(s["nodes"]):
+        entity(n)
+        require(n.get("resource") == RESOURCES[i % 4] and number(n.get("amount"), 0, 8000))
+        clean_nodes.append(pick(n, ("id", "resource", "x", "y", "amount")))
+    clean_camps = []
+    for c, (x, y, hp) in zip(s["camps"], ((2550, 540, 320), (2750, 1760, 500), (640, 450, 850))):
+        entity(c)
+        require(c["x"] == x and c["y"] == y and number(c.get("hp"), 0, hp))
+        clean_camps.append(pick(c, ("id", "x", "y", "hp")))
+    refs = {v["id"]: v for v in (*clean_units, *clean_buildings, *clean_nodes, *clean_camps)}
+    for u in clean_units:
+        o = u["order"]
+        target = refs.get(o["target"])
+        require(not o["target"] or target is not None)
+        if o["type"] == "gather":
+            require(u["kind"] == "villager" and target and ("amount" in target or target.get("kind") == "farm"))
+        if o["type"] in ("build", "repair"):
+            require(u["kind"] == "villager" and target and "progress" in target)
+        if o["type"] == "return":
+            require(u["kind"] == "villager")
+    clean = pick(s, ("time", "nextId", "wave", "raidTimer", "result"))
+    clean.update(resources=pick(s["resources"], RESOURCES), units=clean_units, buildings=clean_buildings, nodes=clean_nodes, camps=clean_camps)
+    entries = s.get("log", [])
+    clean["log"] = [{"time": e["time"], "text": e["text"][:180]} for e in entries[:8] if isinstance(e, dict) and number(e.get("time"), 0, 1e8) and isinstance(e.get("text"), str)] if isinstance(entries, list) else []
+    return {"version": 3, "state": clean}
 
 
 class Store:
