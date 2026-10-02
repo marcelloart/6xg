@@ -43,7 +43,7 @@ class FarmRenderer{
   this.house(c,1593,896,'house',.85);this.rect(c,1480,902,57,8,'#c1a479',3);this.rect(c,1486,908,6,12,'#9f8a67');this.rect(c,1520,908,6,12,'#9f8a67');
   this.tree(c,1420,890,44,2);this.tree(c,1770,862,50,1);
   // Footbridge connects both sides of the valley.
-  c.save();c.translate(535,1100);c.rotate(.1);this.rect(c,-115,-34,230,66,'#aa8b58',4);for(let i=-110;i<116;i+=15)this.rect(c,i,-31,11,61,'#d6b981',1);this.line(c,[[-114,-33],[114,-33]],'#987853',5);this.line(c,[[-114,33],[114,33]],'#987853',5);c.restore();
+  c.save();c.translate(550,1115);this.rect(c,-155,-34,310,66,'#aa8b58',4);for(let i=-150;i<156;i+=15)this.rect(c,i,-31,11,61,'#d6b981',1);this.line(c,[[-154,-33],[154,-33]],'#987853',5);this.line(c,[[-154,33],[154,33]],'#987853',5);c.restore();
   for(const[x,y,k]of WORLD_DATA.flowers){if(x>1100&&x<2100&&y>780&&y<1700)continue;this.line(c,[[x,y],[x,y-8]],'#7b9c62',1.5);this.ellipse(c,x,y-9,3,2,['#ead7a1','#c6a4ac','#f3e8bd'][k]);}
   for(const[x,y,size,kind]of WORLD_DATA.trees)this.tree(c,x,y,size,kind);
   for(const[x,y]of[[1130,780],[2070,920],[1110,1650],[2070,1600]]){this.ellipse(c,x,y+8,22,9,'#7a976b2b');this.ellipse(c,x,y,17,11,'#c1c5ac');this.ellipse(c,x-5,y-4,11,8,'#d0d2ba');}

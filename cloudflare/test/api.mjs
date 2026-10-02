@@ -160,3 +160,16 @@ test('version 5 chosen layout and profile round-trip while version 4 remains acc
  for(const mutate of[s=>s.plots[0].x=650,s=>Object.assign(s.plots[0],{x:s.plots[1].x,y:s.plots[1].y}),s=>s.profile.avatar='invalid']){const bad=structuredClone(studio);mutate(bad.state);assert.equal((await call('PUT',auth,{save:bad,revision:2},{path})).status,400);}
  assert.equal((await call('GET',auth,undefined,{path})).body.revision,2);
 });
+
+test('uploaded profile photo persists privately; invalid images cannot overwrite it',async()=>{
+ const auth=await token(),path='/api/farm-save',save=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8')),photo=JSON.parse(await readFile(new URL('../../tests/profile-photo.json',import.meta.url),'utf8')).photo;
+ save.state.profile.photo=photo;
+ assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
+ assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,photo);
+ assert.equal((await call('GET',await token('did:privy:b'),undefined,{path})).body.save,null);
+ for(const image of ['https://example.com/a.jpg','data:image/svg+xml;base64,PHN2Zz4=',photo+'A'.repeat(16384)]){const bad=structuredClone(save);bad.state.profile.photo=image;assert.equal((await call('PUT',auth,{save:bad,revision:1},{path})).status,400);}
+ assert.equal((await call('GET',auth,undefined,{path})).body.revision,1);
+ delete save.state.profile.photo;
+ assert.equal((await call('PUT',auth,{save,revision:1},{path})).status,200);
+ assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,undefined);
+});

@@ -124,7 +124,7 @@ function Account(){
   const open=()=>document.getElementById('accountDialog').showModal();
   return <>
     <button className="account-btn" onClick={open} aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'}>
-      <span className="account-avatar" aria-hidden="true">{authenticated?({sprout:"🌱",sunflower:"🌻",apple:"🍎",bee:"🐝"}[profile?.avatar]||"🌱"):"◉"}</span>
+      <span className="account-avatar" aria-hidden="true">{authenticated&&profile?.photo?<img src={profile.photo} alt=""/>:authenticated?({sprout:"🌱",sunflower:"🌻",apple:"🍎",bee:"🐝"}[profile?.avatar]||"🌱"):"◉"}</span>
       <span className="account-name">{authenticated?(profile?.name||'Akun pemain'):'Daftar / Masuk'}</span>
     </button>
     {createPortal(<>

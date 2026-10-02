@@ -3,12 +3,13 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
+import {bridgeBounds,renderScale} from '../src/farm-visuals.js';
 const errors=[],window={};
 const source=fs.readFileSync('src/farm-3d.js','utf8').replace(/^import .*;\r?\n/gm,'');
-const context={THREE,mergeGeometries,window,FARM_TEXTURE_URLS:{},console:{error:(...args)=>errors.push(args),warn:()=>{}}};
+const context={THREE,mergeGeometries,bridgeBounds,renderScale,window,FARM_TEXTURE_URLS:{},console:{error:(...args)=>errors.push(args),warn:()=>{}}};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('assets/js/farm-engine.js','utf8')+'\nwindow.BaraFarm=BaraFarm;'+fs.readFileSync('assets/js/farm-camera.js','utf8')+'\nwindow.Camera=FarmCamera;',context);
-vm.runInContext(source+'\nwindow.GeometryTests={mergeStatic,FarmRenderer3D,windMaterial,makeRiverGeometry,riverMaterial};',context);
+vm.runInContext(source+'\nwindow.GeometryTests={mergeStatic,FarmRenderer3D,windMaterial,makeRiverGeometry,riverMaterial,terrainPath,terrainHeight};',context);
 const {mergeStatic,FarmRenderer3D}=window.GeometryTests;
 const group=new THREE.Group(),mat=new THREE.MeshStandardMaterial();let vertices=0;
 for(const geometry of[new THREE.BoxGeometry(),new THREE.SphereGeometry(),new THREE.CylinderGeometry(),new THREE.DodecahedronGeometry(1,1)]){vertices+=geometry.index?geometry.index.count:geometry.attributes.position.count;const mesh=new THREE.Mesh(geometry,mat);mesh.position.x=group.children.length*4;group.add(mesh);}
@@ -25,6 +26,7 @@ canopy=leaves.localToWorld(canopy);
 for(let i=0;i<8;i++){renderer.camera.rotate(Math.PI/4);renderer.updateView();const screen=renderer.camera.worldToScreen(canopy.x,canopy.z,canopy.y),projected=canopy.clone().project(renderer.view);assert(Math.abs(screen.x-(projected.x+1)*640)<1e-6);assert(Math.abs(screen.y-(1-projected.y)*360)<1e-6);assert.equal(renderer.pickPlot(renderer.camera.screenToWorld(screen.x,screen.y)),4,'A canopy click belongs to its fruit tree after rotation');}
 renderer.pondok=renderer.building('house');renderer.pondok.position.set(1592,0,1084);renderer.pondok.userData.building=true;const roof=renderer.camera.worldToScreen(1592,1084,104);assert.equal(renderer.pickPlot(renderer.camera.screenToWorld(roof.x,roof.y)),-1,'An occluding roof blocks a click through to a crop');
 const river=window.GeometryTests.makeRiverGeometry();for(let i=0;i<river.attributes.normal.count;i++)assert(river.attributes.normal.getY(i)>.99,'River surface faces the daylight');
+const approach=window.GeometryTests.terrainPath([bridgeBounds().right,1115],[1080,1130]);for(let i=0;i<approach.attributes.position.count;i++){const p=approach.attributes.position;assert(Math.abs(p.getY(i)-window.GeometryTests.terrainHeight(p.getX(i),p.getZ(i))-.55)<.001,'Bridge approach follows the ground rather than disappearing below it');assert(approach.attributes.normal.getY(i)>.9);}
 const clock={value:2},strength={value:4},wind=window.GeometryTests.windMaterial(new THREE.MeshStandardMaterial(),clock,strength),shader={uniforms:{},vertexShader:'#include <begin_vertex>'};wind.onBeforeCompile(shader);assert.equal(shader.uniforms.baraWindTime,clock);assert(shader.vertexShader.includes('inverse(mat3(instanceMatrix))'));const depthShader={uniforms:{},vertexShader:'#include <begin_vertex>'};wind.userData.windDepth.onBeforeCompile(depthShader);assert.equal(depthShader.vertexShader,shader.vertexShader,'Visible foliage and shadow use identical wind deformation');assert(window.GeometryTests.riverMaterial(clock).fragmentShader.includes('sparkle'));
 for(const kind of [...Object.keys(window.BaraFarm.CROPS),...Object.keys(window.BaraFarm.MATERIALS)])assert(renderer.catalogueProduct(kind).children.length>0,'Product artwork '+kind);
 const farm=new window.BaraFarm.Farm({clock:()=>1000000});farm.plant(0,'carrot');renderer.pondok=null;renderer.scene=new THREE.Scene();renderer.syncFarm(farm,farm.now());

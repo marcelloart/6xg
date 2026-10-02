@@ -18,5 +18,100 @@
       "download": "https://ambientcg.com/get?file=Wood096_1K-JPG.zip"
     }
   ],
-  "processing": "Original 1K-JPG color and OpenGL normal maps resized to 512px and JPEG-compressed for browser delivery"
+  "processing": "Original 1K-JPG color and OpenGL normal maps resized to 512px and JPEG-compressed for browser delivery",
+  "ultraMaterials": [
+    {
+      "id": "Grass005",
+      "source": "https://ambientcg.com/get?file=Grass005_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/textures/Grass005_4K-JPG_Color.jpg",
+          "bytes": 3172745,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Grass005_4K-JPG_NormalGL.jpg",
+          "bytes": 4083656,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Grass005_4K-JPG_Roughness.jpg",
+          "bytes": 3186070,
+          "resolution": [
+            4096,
+            4096
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Ground112",
+      "source": "https://ambientcg.com/get?file=Ground112_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/textures/Ground112_4K-JPG_Color.jpg",
+          "bytes": 2941536,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Ground112_4K-JPG_NormalGL.jpg",
+          "bytes": 2305814,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Ground112_4K-JPG_Roughness.jpg",
+          "bytes": 3032283,
+          "resolution": [
+            4096,
+            4096
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Wood096",
+      "source": "https://ambientcg.com/get?file=Wood096_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/textures/Wood096_4K-JPG_Color.jpg",
+          "bytes": 824575,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Wood096_4K-JPG_NormalGL.jpg",
+          "bytes": 545956,
+          "resolution": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "path": "assets/textures/Wood096_4K-JPG_Roughness.jpg",
+          "bytes": 1878924,
+          "resolution": [
+            4096,
+            4096
+          ]
+        }
+      ]
+    }
+  ]
 }

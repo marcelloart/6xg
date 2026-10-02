@@ -14,6 +14,7 @@ export const integer = (value, low, high) => Number.isSafeInteger(value) && valu
 const require = condition => { if (!condition) throw new TypeError('Invalid game snapshot'); };
 const pick = (value, keys) => Object.fromEntries(keys.map(key => [key, value[key]]));
 
+// Farm v5 also allows a bounded JPEG profile thumbnail (original upload stays local).
 // Solo saves are bounded and whitelisted. They are not an authoritative PvP economy.
 export function validateSave(save) {
   if ([4,5].includes(save?.version)) return globalThis.BaraFarm.validateSave(save);

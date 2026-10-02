@@ -37,7 +37,7 @@
  const AVATARS=Object.freeze(['sprout','sunflower','apple','bee']);
  const defaultProfile=()=>({name:'Pekebun',farmName:'Kebunku',avatar:'sprout'});
  const defaultStats=()=>({harvested:0,earned:0});
- const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;return clean;};
+ const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;if(v.photo!=null){check(typeof v.photo==='string'&&v.photo.length>=128&&v.photo.length<=16384&&/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(v.photo)&&(v.photo.length-23)%4===0);clean.photo=v.photo;}return clean;};
  const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
  const overlaps=(a,b,gap=5)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap;
  const onLand=(p,size)=>integer(p.x,1000+Math.ceil(size.w/2),2190-Math.ceil(size.w/2))&&integer(p.y,630+Math.ceil(size.h/2),1760-Math.ceil(size.h/2));
@@ -146,7 +146,7 @@
   gardenPlacement(point,count=6,rotation=0){const quote=this.gardenQuote(count);if(!quote.ok)return quote;const ids=Array.from({length:count},(_,i)=>this.unlocked+i);for(const p of this.gardenPoints(point,count,rotation)){const valid=placement(this.s,'plot',p,0,{ignorePlots:ids});if(!valid.ok)return valid;}return{ok:true};}
   expandGarden(point,count=6,rotation=0){const valid=this.gardenPlacement(point,count,rotation);if(!valid.ok)return valid;const quote=this.gardenQuote(count);if(this.s.coins<quote.cost)return{ok:false,message:`Perlu ${quote.cost} koin untuk ${count} petak baru.`};const future=this.used||keys.some(k=>this.s.seeds[k])||this.s.plots.some(p=>p.crop);if(!future&&this.s.coins-quote.cost<5)return{ok:false,message:'Sisakan 5 koin untuk membeli bibit wortel.'};const start=this.unlocked,points=this.gardenPoints(point,count,rotation);this.s.coins-=quote.cost;this.s.expansions+=count;for(let i=0;i<count;i++){const id=start+i;this.s.plots[id]={id,...points[i],crop:null,plantedAt:0,readyAt:0};}this.note(`Membuka ${count} petak baru · ${quote.cost} koin.`);return{ok:true};}
   checkPlacement(kind,point,rotation=0,ignore={}){return placement(this.s,kind,point,rotation,ignore);}
-  updateProfile(value){try{this.s.profile=profile(value);return{ok:true};}catch{return{ok:false,message:'Nama wajib diisi, maksimal 24 karakter. Pilih avatar yang tersedia.'};}}
+  updateProfile(value){try{this.s.profile=profile(value);return{ok:true};}catch{return{ok:false,message:'Isi nama hingga 24 karakter dan pilih avatar atau foto JPG yang valid.'};}}
 
  }
  root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,footprint,validateSave});

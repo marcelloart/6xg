@@ -27,7 +27,7 @@ Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kay
 | Gudang | 8 / 4 / 1 | 60 detik | +40 ruang panen |
 | Sumur | 5 / 6 / 1 | 45 detik | +3 petak |
 
-Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Bangunan tidak lagi terbatas pada tapak tetap: pilih tanah terbuka di lembah, putar dengan R atau tombol arah, lalu **Konfirmasi**. Pratinjau hijau/merah memeriksa batas tanah, pondok, pohon, bangunan, dan petak lain. Ada maksimal 24 bangunan dan 81 petak. Tahan bangunan atau petak selama **3 detik** untuk mengangkatnya. Objek dan tanaman mengikuti kursor dengan preview lokasi hijau/merah; seret lalu lepaskan pada lokasi sah, atau lepas di tempat lalu gerakkan kursor dan klik untuk menempatkan. Lokasi terhalang ditolak, **Batal/Esc** mengembalikan objek. Klik singkat tetap menanam/memanen; pinch membatalkan pickup. Menu **Atur** juga memindahkan bangunan/petak tanpa biaya; tanaman dan deadline tetap berjalan. Tambahan area 1/3/6 petak berharga 20 koin per petak dan lokasinya dipilih pemain. Petak cadangan yang belum terbuka ditandai garis putus-putus pada mode penempatan dan juga dilindungi dari tabrakan. Biaya dibayar hanya setelah konfirmasi penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
+Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Bangunan tidak lagi terbatas pada tapak tetap: pilih tanah terbuka di lembah, putar dengan R atau tombol arah, lalu **Konfirmasi**. Pratinjau hijau/merah memeriksa batas tanah, pondok, pohon, bangunan, dan petak lain. Ada maksimal 24 bangunan dan 81 petak. Tahan bangunan atau petak selama **1,5 detik** untuk mengangkatnya. Objek dan tanaman mengikuti kursor dengan preview lokasi hijau/merah; seret lalu lepaskan pada lokasi sah, atau lepas di tempat lalu gerakkan kursor dan klik untuk menempatkan. Lokasi terhalang ditolak, **Batal/Esc** mengembalikan objek. Klik singkat tetap menanam/memanen; pinch membatalkan pickup. Menu **Atur** juga memindahkan bangunan/petak tanpa biaya; tanaman dan deadline tetap berjalan. Tambahan area 1/3/6 petak berharga 20 koin per petak dan lokasinya dipilih pemain. Petak cadangan yang belum terbuka ditandai garis putus-putus pada mode penempatan dan juga dilindungi dari tabrakan. Biaya dibayar hanya setelah konfirmasi penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
 
 ## Kontrol
 
@@ -54,7 +54,7 @@ Ini adalah **game kebun solo dengan akun**, belum dunia multiplayer bersama. Eko
 - `assets/css/farm.css`, `assets/css/farm-studio.css`: tampilan fullscreen, studio tata letak, toko, dan profil responsif.
 - `assets/js/farm-engine.js`: harga, timer, inventori, pembangunan, dan validator.
 - `src/farm-3d.js`, `assets/js/farm-3d.js`: sumber dan bundle mesin pemandangan Three.js.
-- `assets/js/farm-pickup.js`: tekan 3 detik, drag/drop, klik normal, pembatalan dan pinch.
+- `assets/js/farm-pickup.js`: tekan 1,5 detik, drag/drop, klik normal, pembatalan dan pinch.
 - `assets/js/farm-camera.js`: proyeksi tanah, pemilihan petak, dan kamera 3D.
 - `assets/textures/`: tekstur CC0 lokal, tanpa ketergantungan CDN saat bermain.
 - `assets/js/farm-scenery.js`: pemandangan canvas asli untuk fallback 2D.
@@ -85,3 +85,11 @@ npm test
 Tes Python membutuhkan `server/requirements.txt`. Sesudah mengubah komponen akun, bangun ulang bundle dan fingerprint asset. Sesudah mengubah validator kebun, terbitkan backend juga. Cloudflare watch path saat ini `cloudflare/**`: perubahan aturan di luar folder ini harus disertai perubahan backend agar deployment terpicu.
 
 Deployment berjalan pada repository `marcelloart/6xg`, branch `main`. App ID Privy `cmuqjbgfe02a60cjlya6r4t0m` bersifat publik; jangan menyimpan App Secret, private key, token Cloudflare, atau database dalam repository. GitHub Pages tidak menjalankan Python; Python di sini membuat data dunia, sedangkan Workers menjalankan API produksi. Lihat [cloudflare/README.md](cloudflare/README.md) dan [server/README.md](server/README.md).
+
+## Tampilan layar penuh dan foto profil
+
+Dunia 3D memenuhi area browser, dengan kontrol mengambang dan login di tengah layar awal. Komputer memakai preset Ultra pada pilihan Otomatis; perangkat kecil memakai 3D ringan. Menu → Kualitas tampilan menyediakan Ultra 4K, detail tinggi, dan ringan. Ultra menggunakan tekstur warna, normal, dan roughness asli 4096 × 4096 dari ambientCG (CC0). Buffer render hingga 3840 × 2160 mempertahankan bentuk layar dan batas GPU; resolusi aktual ditampilkan di Menu. Resolusi tinggi memperjelas model yang ada, bukan jaminan kualitas fotorealistis.
+
+Profil → Pilih foto dari perangkat menerima JPG/PNG/WebP hingga 10 MB. Foto dipotong di tengah menjadi JPEG persegi 192 × 192, tanpa metadata foto asli, dengan payload maksimal 16 KiB. Hanya thumbnail disimpan bersama progres akun; file asli tidak dikirim. Simpan profil menerapkan perubahan. Hapus foto atau pilih avatar untuk kembali ke ikon. Validator JS dan Python menerima field opsional ini pada save v5, tanpa mengubah ekonomi atau timer.
+
+Klik singkat memilih/menanam/memanen. Tahan diam 1,5 detik untuk mengangkat; indikator menunjukkan maksud memindahkan. Bergerak sebelum ambang waktu tetap menggeser peta. Lepaskan objek di hijau untuk menempatkan; merah mempertahankan pratinjau. Esc/Batal mengembalikan objek.

@@ -12,7 +12,7 @@ class FarmPickupGesture {
   this.gestures.down(id,x,y);
   const target=this.handlers.pick(this.camera.screenToWorld(x,y));if(!target)return;
   const wait=this.wait={id,x,y,target,timer:null};this.handlers.hold?.({x,y});
-  wait.timer=this.timers.set(()=>{if(this.wait!==wait)return;if(this.pointers.size!==1||!this.handlers.enabled()){this.clearWait();return;}this.clearWait();this.gestures.cancel(id);if(this.handlers.lift(target,this.camera.screenToWorld(x,y)))this.carry={id,x,y,moved:false,bornHolding:true};},3000);
+  wait.timer=this.timers.set(()=>{if(this.wait!==wait)return;if(this.pointers.size!==1||!this.handlers.enabled()){this.clearWait();return;}this.clearWait();this.gestures.cancel(id);if(this.handlers.lift(target,this.camera.screenToWorld(x,y)))this.carry={id,x,y,moved:false,bornHolding:true};},1500);
  }
  move(id,x,y){
   if(this.pointers.has(id))this.pointers.set(id,{x,y});

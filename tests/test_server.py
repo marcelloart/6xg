@@ -141,6 +141,23 @@ class CloudTests(unittest.TestCase):
         self.app.store = module.Store(Path(self.temp.name) / "save.sqlite3")
         self.assertEqual(self.call(token=self.token())["body"]["save"], self.save)
 
+    def test_uploaded_profile_photo_is_private_and_invalid_images_are_rejected(self):
+        token = self.token()
+        path = '/api/farm-save'
+        save = json.loads((ROOT / 'tests/farm-studio-save.json').read_text(encoding='utf-8'))
+        photo = json.loads((ROOT / 'tests/profile-photo.json').read_text(encoding='utf-8'))['photo']
+        save['state']['profile']['photo'] = photo
+        self.assertEqual(self.call('PUT', token, {'save': save, 'revision': 0}, path=path)['status'], 200)
+        self.assertEqual(self.call(token=token, path=path)['body']['save']['state']['profile']['photo'], photo)
+        self.assertIsNone(self.call(token=self.token('did:privy:b'), path=path)['body']['save'])
+        for image in ('https://example.com/a.jpg', 'data:image/svg+xml;base64,PHN2Zz4=', photo + 'A' * 16384):
+            bad = copy.deepcopy(save)
+            bad['state']['profile']['photo'] = image
+            self.assertEqual(self.call('PUT', token, {'save': bad, 'revision': 1}, path=path)['status'], 400)
+        self.assertEqual(self.call(token=token, path=path)['body']['revision'], 1)
+        del save['state']['profile']['photo']
+        self.assertEqual(self.call('PUT', token, {'save': save, 'revision': 1}, path=path)['status'], 200)
+
 
 if __name__ == "__main__":
     unittest.main()

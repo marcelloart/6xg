@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sqlite3
 import threading
@@ -228,6 +229,10 @@ def validate_farm_save(save):
             name = profile.get(key)
             require(isinstance(name, str) and 1 <= len(name.strip().encode("utf-16-le")) // 2 <= 24 and not any(ord(c) < 32 or ord(c) == 127 for c in name))
         clean["profile"] = {"name": profile["name"].strip(), "farmName": profile["farmName"].strip(), "avatar": profile["avatar"]}
+        photo = profile.get("photo")
+        if photo is not None:
+            require(isinstance(photo, str) and 128 <= len(photo) <= 16384 and (len(photo) - 23) % 4 == 0 and re.fullmatch(r"data:image/jpeg;base64,/9j/[A-Za-z0-9+/]*={0,2}", photo) is not None)
+            clean["profile"]["photo"] = photo
         stats = s.get("stats")
         require(isinstance(stats, dict) and integer(stats.get("harvested"), 0, 10**9) and integer(stats.get("earned"), 0, 10**12))
         clean["stats"] = pick(stats, ("harvested", "earned"))
