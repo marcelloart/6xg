@@ -4,6 +4,8 @@ Backend Python ini menyimpan kampanye solo per akun Privy. Setiap permintaan mem
 
 Backend siap dijalankan, tetapi **belum dipasang ke hosting**. Frontend saat ini memakai `apiBase: ''`, sehingga login tersedia dan progres tetap berada di perangkat. Backend ini menyediakan sinkronisasi kampanye solo; tidak menyediakan PvP atau dunia multiplayer bersama.
 
+Untuk memulai dengan paket gratis tanpa menyewa container dan disk, gunakan alternatif [Cloudflare Workers + D1](../cloudflare/README.md). Kedua server menyediakan API yang sama; pilih satu untuk alamat `apiBase` frontend.
+
 ## Mengaktifkan
 
 1. Gunakan hosting yang dapat menjalankan container Python dan memiliki disk persisten. Pasang HTTPS untuk alamat API, misalnya `https://api.6xg.online`. Domain contoh tersebut harus dibuat terlebih dahulu; belum ada konfigurasi DNS otomatis.

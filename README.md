@@ -6,7 +6,7 @@ Sumber daya dan panel pengelolaan menyatu dengan peta. Seret peta dengan mouse a
 
 Resource berada dalam bilah ringkas, dan panel perintah dibuka hanya saat dipilih. Header menyediakan **Daftar / Masuk** melalui SDK resmi Privy. Akun baru dapat membawa desa tamu atau membuat desa baru; slot tamu dan slot akun terpisah.
 
-**Status online saat ini:** login Privy tersedia, tetapi sinkronisasi lintas perangkat belum diaktifkan karena backend belum memiliki hosting. UI menampilkan status ini secara jelas. Backend Python beserta validasi token, penyimpanan SQLite, kontrol revisi, Dockerfile, dan pengujian tersedia di `server/`. Petunjuk aktivasi: [server/README.md](server/README.md). Game saat ini merupakan kampanye solo, bukan multiplayer.
+**Status online saat ini:** login Privy tersedia, tetapi sinkronisasi lintas perangkat belum diaktifkan karena backend belum memiliki hosting. UI menampilkan status ini secara jelas. Pilihan Cloudflare Workers + D1 untuk paket gratis beserta tombol deploy tersedia di [cloudflare/README.md](cloudflare/README.md). Backend Python beserta validasi token, penyimpanan SQLite, kontrol revisi, Dockerfile, dan pengujian tersedia di [server/README.md](server/README.md). Game saat ini merupakan kampanye solo, bukan multiplayer.
 
 Produksi, pembangunan, pelatihan, ekspedisi, dan serangan tetap maju selama halaman terbuka di belakang. Waktu yang terlewat saat tab ditangguhkan dihitung ketika browser kembali menjalankannya. Jeda manual menghentikan seluruh simulasi. Progres disimpan di browser dengan format versi 2 yang kompatibel dengan versi sebelumnya.
 
@@ -28,6 +28,7 @@ Produksi, pembangunan, pelatihan, ekspedisi, dan serangan tetap maju selama hala
 | `assets/js/cloud-client.js` | Sinkronisasi, antrean simpan, dan penanganan konflik perangkat |
 | `assets/auth/` | SDK akun yang telah dibundel; dimuat saat membuka akun |
 | `server/` | API Python untuk progres lintas perangkat setelah dipasang ke hosting |
+| `cloudflare/` | API alternatif untuk Workers + D1, dengan migrasi dan pengujian runtime |
 | `tests/` | Pengujian ekonomi, kampanye, latar belakang, kamera, dan compiler dunia |
 
 Pemandangan statis disimpan pada canvas terpisah, sehingga hutan dan bentang alam tidak digambar ulang dari awal di setiap frame. Data dunia dibuat terlebih dahulu oleh Python. Kampanye tamu dapat dijalankan tanpa layanan eksternal. Login akun memakai Privy.

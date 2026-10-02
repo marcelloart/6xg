@@ -1,0 +1,102 @@
+import {after, before, beforeEach, test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {Miniflare, convertV4MiniflareOptions} from 'miniflare';
+import {exportSPKI, generateKeyPair, importSPKI, SignJWT} from 'jose';
+
+const config = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
+const keys = await generateKeyPair('ES256');
+const bindings = {PRIVY_APP_ID: 'test-app', PRIVY_VERIFICATION_KEY: await exportSPKI(keys.publicKey), ALLOWED_ORIGINS: 'https://6xg.online'};
+const options = {modules: true, scriptPath: new URL('../dist/worker.js', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'), compatibilityDate: '2026-10-01', bindings, d1Databases: {DB: 'test-bara-saves'}};
+let mf, db;
+// Fixture was exported from new Kingdom().serialize(), using save format version 2.
+const fixture = JSON.parse(await readFile(new URL('./save.json', import.meta.url), 'utf8'));
+const fresh = () => structuredClone(fixture);
+
+before(async () => {
+  mf = new Miniflare(convertV4MiniflareOptions({...options, cf: false, telemetry: {enabled: false}}));
+  db = await mf.getD1Database('DB');
+  await db.exec((await readFile(new URL('../migrations/0001_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
+});
+beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); });
+after(async () => { await mf?.dispose(); });
+async function token(uid = 'did:privy:a', updates = {}, privateKey = keys.privateKey) {
+  const now = Math.floor(Date.now() / 1000);
+  return new SignJWT({sub: uid, sid: 'test-session', iss: 'privy.io', aud: 'test-app', iat: now, exp: now + 3600, ...updates}).setProtectedHeader({alg: 'ES256'}).sign(privateKey);
+}
+async function call(method = 'GET', auth, payload, extra = {}) {
+  const headers = {origin: 'https://6xg.online', ...extra.headers};
+  if (auth) headers.authorization = 'Bearer ' + auth;
+  if (payload !== undefined) headers['content-type'] = 'application/json';
+  const response = await mf.dispatchFetch('https://api.example' + (extra.path || '/api/save'), {method, headers, ...(payload !== undefined ? {body: JSON.stringify(payload)} : {})});
+  return {status: response.status, headers: response.headers, body: await response.json()};
+}
+
+test('deployment public key can be imported as a P-256 verification key', async () => {
+  assert.equal((await importSPKI(config.vars.PRIVY_VERIFICATION_KEY, 'ES256')).algorithm.namedCurve, 'P-256');
+});
+test('a signed account can save and restore a real game snapshot', async () => {
+  const auth = await token(), save = fresh();
+  assert.equal((await call('GET', auth)).body.revision, 0);
+  assert.equal((await call('PUT', auth, {save, revision: 0})).status, 200);
+  const restored = await call('GET', auth);
+  assert.equal(restored.body.revision, 1);
+  assert.deepEqual(restored.body.save, save);
+  assert.equal(restored.headers.get('cache-control'), 'no-store');
+});
+test('another account cannot read or replace a players village by providing its ID', async () => {
+  await call('PUT', await token(), {save: fresh(), revision: 0, userId: 'did:privy:b'});
+  assert.equal((await call('GET', await token('did:privy:b'))).body.save, null);
+  assert.equal((await call('GET', await token())).body.revision, 1);
+});
+test('two simultaneous writes at the same revision allow exactly one update', async () => {
+  const auth = await token(), save = fresh();
+  const first = await Promise.all([call('PUT', auth, {save, revision: 0}), call('PUT', auth, {save, revision: 0})]);
+  assert.deepEqual(first.map(r => r.status).sort(), [200, 409]);
+  const next = structuredClone(save); next.state.time = 250;
+  const second = await Promise.all([call('PUT', auth, {save, revision: 1}), call('PUT', auth, {save: next, revision: 1})]);
+  assert.deepEqual(second.map(r => r.status).sort(), [200, 409]);
+  assert.equal((await call('GET', auth)).body.revision, 2);
+});
+test('a stale device cannot overwrite the newest snapshot', async () => {
+  const auth = await token(), save = fresh();
+  await call('PUT', auth, {save, revision: 0});
+  const changed = structuredClone(save); changed.state.resources.gold = 1;
+  assert.equal((await call('PUT', auth, {save: changed, revision: 0})).status, 409);
+  assert.deepEqual((await call('GET', auth)).body.save, save);
+});
+test('signature, expiry, issuer, audience, session, subject and issued time are checked', async () => {
+  const now = Math.floor(Date.now() / 1000);
+  for (const updates of [{exp: now - 1}, {iss: 'evil.example'}, {aud: 'other-app'}, {sub: 'other-user'}, {sid: ''}, {iat: now + 60}]) assert.equal((await call('GET', await token('did:privy:a', updates))).status, 401);
+  const wrong = await generateKeyPair('ES256');
+  assert.equal((await call('GET', await token('did:privy:a', {}, wrong.privateKey))).status, 401);
+  assert.equal((await call()).status, 401);
+});
+test('invalid resources, tasks, capacities and revisions are rejected', async () => {
+  const auth = await token();
+  for (const invalid of [-1, 99999, true, null]) {
+    const save = fresh(); save.state.resources.gold = invalid;
+    assert.equal((await call('PUT', auth, {save, revision: 0})).status, 400);
+  }
+  const save = fresh(); save.state.training = Array(6).fill({key: 'soldier', left: 5});
+  assert.equal((await call('PUT', auth, {save, revision: 0})).status, 400);
+  assert.equal((await call('PUT', auth, {save: fresh(), revision: true})).status, 400);
+  assert.equal((await call('GET', auth)).body.save, null);
+});
+test('body size is enforced even when no content length is supplied', async () => {
+  assert.equal((await call('PUT', await token(), {save: fresh(), revision: 0, extra: 'x'.repeat(50000)})).status, 413);
+});
+test('only the configured game origin receives CORS permission', async () => {
+  assert.equal((await call('GET', await token(), undefined, {headers: {origin: 'https://evil.example'}})).status, 403);
+  const preflight = await call('OPTIONS');
+  assert.equal(preflight.headers.get('access-control-allow-origin'), 'https://6xg.online');
+  assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
+});
+test('health checks the migration and missing auth fails closed', async () => {
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true});
+  const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
+  try {
+    const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});
+    assert.equal(res.status, 503);
+  } finally { await unconfigured.dispose(); }
+});

@@ -1,0 +1,22 @@
+{
+  "name": "6xg-cloud-save",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "test": "npm run build && node --test test/*.mjs"
+  },
+  "dependencies": {"jose": "6.2.12"},
+  "devDependencies": {"wrangler": "4.146.0", "miniflare": "5.20261001.0-alpha"},
+  "cloudflare": {
+    "bindings": {
+      "DB": {"description": "Database progres kampanye solo per akun Privy."},
+      "PRIVY_APP_ID": {"description": "App ID publik Privy untuk game 6xg.online."},
+      "PRIVY_VERIFICATION_KEY": {"description": "Public verification key dari aplikasi Privy yang sama. Ini bukan App Secret."},
+      "ALLOWED_ORIGINS": {"description": "Origin website yang boleh mengakses API: https://6xg.online."}
+    }
+  }
+}

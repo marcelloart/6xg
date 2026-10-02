@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "6xg-cloud-save",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "vars": {
+    "PRIVY_APP_ID": "cmuqjbgfe02a60cjlya6r4t0m",
+    "PRIVY_VERIFICATION_KEY": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET0i/0N+17JD3ZFFzNQChCW7gZcOIgwD1ilGSaJ+dxLsXghQEZQSBXLhAZDL565I89l+/1/xE5WIEjw32RRBAtQ==\n-----END PUBLIC KEY-----",
+    "ALLOWED_ORIGINS": "https://6xg.online"
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "6xg-player-saves",
+    "database_id": "00000000-0000-0000-0000-000000000000",
+    "migrations_dir": "migrations"
+  }]
+}

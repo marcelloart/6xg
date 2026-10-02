@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "state": {
+    "time": 0,
+    "resources": {
+      "wood": 120,
+      "stone": 90,
+      "gold": 65,
+      "meat": 80
+    },
+    "workers": {
+      "wood": 3,
+      "stone": 2,
+      "gold": 1,
+      "meat": 2
+    },
+    "levels": {
+      "barracks": 0,
+      "tower": 0,
+      "wall": 0,
+      "townhall": 1,
+      "lumber": 1,
+      "quarry": 1,
+      "mine": 1,
+      "hunt": 1
+    },
+    "army": {
+      "soldier": 2,
+      "archer": 0,
+      "cavalry": 0
+    },
+    "hp": 240,
+    "construction": null,
+    "training": [],
+    "expedition": null,
+    "captured": [
+      false,
+      false,
+      false
+    ],
+    "wave": 0,
+    "raidTimer": 150,
+    "raid": null,
+    "result": null,
+    "log": [
+      {
+        "time": 0,
+        "text": "Desa didirikan. Bangun barak dan siapkan pertahanan."
+      }
+    ]
+  }
+}
