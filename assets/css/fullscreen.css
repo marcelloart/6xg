@@ -1,0 +1,141 @@
+/* The browser viewport is the game world; every control floats over it. */
+:root {
+  --hud-left: max(16px, env(safe-area-inset-left));
+  --hud-right: max(16px, env(safe-area-inset-right));
+  --hud-top: max(12px, env(safe-area-inset-top));
+  --hud-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; }
+.wrap.game-main { width: 100%; height: 100vh; height: 100dvh; margin: 0; padding: 0; }
+.world-card { width: 100%; height: 100%; border: 0; border-radius: 0; }
+.map { width: 100%; height: 100%; min-height: 0; max-height: none; aspect-ratio: auto; border-radius: 0; }
+
+.topbar { position: fixed; top: var(--hud-top); left: var(--hud-left); right: var(--hud-right); z-index: 20; border: 0; pointer-events: none; }
+.wrap.header { height: 40px; padding: 0; margin: 0; gap: 10px; }
+.brand, .nav, .header-right { pointer-events: auto; }
+.brand { padding: 2px 12px; border: 1px solid #a3b28b55; border-radius: 8px; background: #17251ce8; box-shadow: 0 4px 14px #10201930; }
+.wordmark { font-size: 26px; }
+.brand-caption, .brand-line { display: none; }
+.nav { margin-left: auto; gap: 0; padding: 0 5px; border: 1px solid #a3b28b55; border-radius: 7px; background: #17251ce8; }
+.nav button { min-height: 36px; padding: 8px 12px; font-size: 11px; }
+.header-right { gap: 12px; }
+.save-badge { text-shadow: 0 1px 4px #102019; }
+.account-btn { min-height: 38px; background: #17251ce8; box-shadow: 0 4px 14px #10201930; }
+
+.world-header { position: absolute; top: calc(var(--hud-top) + 104px); left: var(--hud-left); right: var(--hud-right); z-index: 12; padding: 0; background: none; border: 0; pointer-events: none; }
+.world-header .world-name { font-size: 10px; color: #f0efcc; text-shadow: 0 1px 4px #102019; }
+.world-name small { display: none; }
+.world-meta { position: absolute; top: -52px; right: 0; gap: 10px; padding: 5px 7px 5px 12px; background: #17251ce8; border: 1px solid #a3b28b55; border-radius: 7px; }
+.world-header .day-chip { font-size: 8px; }
+.world-tools { pointer-events: auto; gap: 5px; }
+.world-tools .small-btn { min-width: 30px; min-height: 30px; }
+
+.resource-bar { top: calc(var(--hud-top) + 52px); left: var(--hud-left); right: auto; width: min(520px, calc(100% - 260px)); gap: 5px; }
+.resource-card { min-height: 44px; padding: 6px 8px; gap: 6px; align-items: center; }
+.resource-main strong { font-size: 17px; }
+.resource-main label { font-size: 7px; }
+.resource-rate { display: block; font-size: 8px; }
+.map-label { display: block; top: calc(var(--hud-top) + 124px); left: var(--hud-left); font-size: 7px; letter-spacing: .8px; }
+.compass { top: calc(var(--hud-top) + 112px); right: calc(var(--hud-right) + 5px); }
+.zoom-tools { top: calc(var(--hud-top) + 159px); right: var(--hud-right); }
+
+.map-nav { left: var(--hud-left); right: auto; bottom: var(--hud-bottom); gap: 5px; }
+.map-nav button { flex: initial; min-height: 38px; padding: 8px 11px; font-size: 10px; }
+.health-bar { left: var(--hud-left); bottom: calc(var(--hud-bottom) + 50px); min-width: 145px; }
+.mini-wrap { right: var(--hud-right); bottom: var(--hud-bottom); width: 121px; padding: 6px; }
+.mini-wrap canvas { width: 107px; height: 73px; }
+.mini-wrap p { font-size: 7px; }
+.map-note { display: none; }
+.raid-strip { position: absolute; z-index: 12; bottom: var(--hud-bottom); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); gap: 18px; padding: 10px 12px; border: 1px solid #a3b28b55; border-radius: 7px; background: #17251ce8; pointer-events: none; box-shadow: 0 4px 14px #10201930; }
+.raid-title { font-size: 10px; }
+.raid-strip span { font-size: 8px; }
+.raid-timer { font-size: 13px; }
+
+.sidebar { top: calc(var(--hud-top) + 148px); right: calc(var(--hud-right) + 45px); left: auto; width: 300px; max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 258px); }
+.workers-panel, .log-box { top: calc(var(--hud-top) + 148px); left: var(--hud-left); max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 258px); }
+.toast { top: calc(var(--hud-top) + 104px); }
+.overlay { justify-content: center; padding: calc(var(--hud-top) + 150px) 24px calc(var(--hud-bottom) + 100px); text-align: center; background: radial-gradient(ellipse at center, #102219c2 0%, #10221966 45%, #10221922 100%); }
+.welcome-content { width: 100%; max-width: 480px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; text-shadow: 0 2px 12px #102019; }
+.welcome-content h2 { font-size: clamp(64px, 7vw, 104px); margin: 14px 0 20px; }
+.welcome-content p { margin: 0 auto 24px; max-width: 340px; }
+.welcome-content .eyebrow { margin-bottom: 0; font-size: 9px; }
+.welcome-content .primary { box-shadow: 0 5px 22px #10201944; text-shadow: none; }
+.center-overlay { background: #142319b8; padding: 130px 24px 110px; }
+.center-overlay > div { max-height: 100%; overflow-y: auto; }
+
+@media (max-width: 1050px) {
+  .save-badge { display: none; }
+  .raid-strip { left: 180px; bottom: calc(var(--hud-bottom) + 52px); transform: none; padding: 8px 10px; }
+}
+
+@media (max-width: 650px) {
+  :root { --hud-left: max(8px, env(safe-area-inset-left)); --hud-right: max(8px, env(safe-area-inset-right)); --hud-top: max(8px, env(safe-area-inset-top)); --hud-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .wrap.header { height: 34px; gap: 6px; }
+  .brand { padding: 2px 8px; }
+  .wordmark { font-size: 23px; }
+  .nav button { min-height: 32px; padding: 7px 9px; font-size: 10px; }
+  #navHome { display: none; }
+  .header-right { gap: 0; }
+  .account-btn { min-height: 34px; padding: 6px 8px; font-size: 10px; }
+  .account-btn .account-name { max-width: 82px; }
+  .resource-bar { top: calc(var(--hud-top) + 44px); left: var(--hud-left); right: var(--hud-right); width: auto; gap: 4px; }
+  .resource-card { min-height: 42px; padding: 5px 6px; gap: 4px; }
+  .resource-main strong { font-size: 16px; }
+  .resource-main label { font-size: 6px; }
+  .resource-rate { display: none; }
+  .world-header { top: calc(var(--hud-top) + 96px); }
+  .world-header .world-name { font-size: 9px; }
+  .world-meta { top: -4px; padding: 4px 5px 4px 8px; gap: 7px; }
+  .world-header .day-chip { font-size: 7px; }
+  .world-tools .small-btn { min-width: 28px; min-height: 28px; }
+  .map-label { top: calc(var(--hud-top) + 113px); font-size: 6px; }
+  .compass { display: none; }
+  .zoom-tools { top: calc(var(--hud-top) + 142px); }
+  .map-nav { left: var(--hud-left); right: var(--hud-right); gap: 4px; }
+  .map-nav button { flex: 1; min-width: 0; min-height: 38px; padding: 8px 3px; font-size: 9px; }
+  .mini-wrap { bottom: calc(var(--hud-bottom) + 50px); width: 97px; padding: 5px; }
+  .mini-wrap p { font-size: 6px; }
+  .mini-wrap canvas { width: 85px; height: 58px; }
+  .health-bar { min-width: 130px; bottom: calc(var(--hud-bottom) + 92px); }
+  .raid-strip { left: var(--hud-left); bottom: calc(var(--hud-bottom) + 50px); gap: 8px; padding: 8px; max-width: calc(100% - var(--hud-left) - var(--hud-right) - 107px); }
+  .raid-title { font-size: 8px; gap: 4px; }
+  .raid-title .icon { width: 12px; height: 12px; }
+  .raid-strip span { display: none; }
+  .raid-timer { font-size: 11px; margin-left: 0; }
+  .sidebar { top: calc(var(--hud-top) + 145px); left: var(--hud-left); right: calc(var(--hud-right) + 42px); width: auto; max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 294px); }
+  .workers-panel, .log-box { top: calc(var(--hud-top) + 145px); left: var(--hud-left); width: calc(100% - var(--hud-left) - var(--hud-right) - 42px); max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 294px); }
+  .toast { top: calc(var(--hud-top) + 135px); max-width: 90%; }
+  .overlay { padding: calc(var(--hud-top) + 147px) 20px calc(var(--hud-bottom) + 152px); }
+  .welcome-content h2 { font-size: 58px; margin: 12px 0 18px; }
+  .welcome-content p { font-size: 11px; margin-bottom: 20px; }
+  .welcome-content .tags { font-size: 7px; margin-top: 16px; }
+  .center-overlay { padding: 140px 20px 150px; }
+  .center-overlay h2 { font-size: 29px; }
+}
+
+/* A short landscape viewport keeps menus scrollable and controls reachable. */
+@media (max-height: 500px) and (min-width: 651px) {
+  .world-header { top: calc(var(--hud-top) + 98px); }
+  .map-label, .compass { display: none; }
+  .zoom-tools { top: calc(var(--hud-top) + 104px); }
+  .sidebar, .workers-panel, .log-box { top: calc(var(--hud-top) + 110px); max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 155px); }
+  .sidebar { width: 300px; }
+  .overlay, .center-overlay { padding: 110px 20px 65px; }
+  .welcome-content h2 { font-size: 45px; margin: 8px 0 10px; }
+  .welcome-content p { font-size: 11px; line-height: 1.6; margin-bottom: 12px; }
+  .welcome-content .tags, .welcome-content .eyebrow { display: none; }
+  .welcome-content .primary { min-height: 36px; padding: 8px 16px; }
+  .mini-wrap { width: 97px; padding: 5px; }
+  .mini-wrap canvas { width: 85px; height: 58px; }
+}
+
+@media (max-width: 360px) {
+  .nav button { padding: 7px; font-size: 9px; }
+  .account-btn { padding: 6px; font-size: 9px; }
+  .account-btn .account-name { max-width: 62px; }
+  .resource-card { padding: 5px; }
+  .resource-main strong { font-size: 15px; }
+  .welcome-content h2 { font-size: 44px; margin: 8px 0 12px; }
+  .welcome-content .tags { margin-top: 12px; }
+}

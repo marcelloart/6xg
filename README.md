@@ -4,7 +4,7 @@ Game strategi solo di [6xg.online](https://6xg.online). Kelola kayu, batu, emas,
 
 Sumber daya dan panel pengelolaan menyatu dengan peta. Seret peta dengan mouse atau sentuhan, gulir/cubit untuk zoom, atau klik peta kecil untuk berpindah. Tombol ⌂ dan Home mengembalikan kamera ke desa. P menjeda permainan.
 
-Resource berada dalam bilah ringkas, dan panel perintah dibuka hanya saat dipilih. Header menyediakan **Daftar / Masuk** melalui SDK resmi Privy. Akun baru dapat membawa desa tamu atau membuat desa baru; slot tamu dan slot akun terpisah.
+Peta memenuhi seluruh area browser tanpa bingkai atau gulir halaman. Resource, navigasi, akun, dan informasi serangan mengambang di atas dunia; panel perintah dibuka hanya saat dipilih. Layar pembuka berada di tengah peta, dan kontrol menyesuaikan layar HP, desktop, serta posisi landscape. **Daftar / Masuk** tersedia melalui SDK resmi Privy. Akun baru dapat membawa desa tamu atau membuat desa baru; slot tamu dan slot akun terpisah.
 
 **Status online saat ini:** login Privy tersedia dan game terhubung ke server Cloudflare Workers + D1 untuk menyimpan progres akun. Deployment, kesehatan server/database, penolakan token tidak valid, dan izin koneksi website telah diperiksa. Pengujian simpan/muat lintas perangkat dengan akun Privy nyata belum dilakukan. Konfigurasi server dan deployment otomatis tersedia di [cloudflare/README.md](cloudflare/README.md). Backend Python beserta validasi token, penyimpanan SQLite, kontrol revisi, Dockerfile, dan pengujian tersedia di [server/README.md](server/README.md). Game saat ini merupakan kampanye solo, bukan multiplayer.
 
@@ -16,6 +16,7 @@ Produksi, pembangunan, pelatihan, ekspedisi, dan serangan tetap maju selama hala
 | --- | --- |
 | `index.html` | Struktur layar dan kontrol yang dapat diakses |
 | `assets/css/game.css` | Tampilan game dan ukuran layar HP/desktop |
+| `assets/css/fullscreen.css` | Peta layar penuh dan posisi kontrol mengambang |
 | `assets/js/engine.js` | Ekonomi, pasukan, pertempuran, penyimpanan, dan jam simulasi |
 | `assets/js/camera.js` | Kamera, batas peta, drag, dan pinch zoom |
 | `assets/js/game.js` | Antarmuka, canvas, peta kecil, dan penggambaran dunia |
