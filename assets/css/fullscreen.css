@@ -57,7 +57,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
 .toast { top: calc(var(--hud-top) + 104px); }
 .overlay { justify-content: center; padding: calc(var(--hud-top) + 150px) 24px calc(var(--hud-bottom) + 100px); text-align: center; background: radial-gradient(ellipse at center, #102219c2 0%, #10221966 45%, #10221922 100%); }
 .welcome-content { width: 100%; max-width: 480px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; text-shadow: 0 2px 12px #102019; }
-.welcome-content h2 { font-size: clamp(64px, 7vw, 104px); margin: 14px 0 20px; }
+/* Keep the longest title line inside its 480px content area. */
+.welcome-content h2 { font-size: clamp(32px, 7vw, 84px); line-height: 1.02; letter-spacing: -.035em; margin: 14px 0 20px; }
 .welcome-content p { margin: 0 auto 24px; max-width: 340px; }
 .welcome-content .eyebrow { margin-bottom: 0; font-size: 9px; }
 .welcome-content .primary { box-shadow: 0 5px 22px #10201944; text-shadow: none; }
@@ -107,7 +108,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
   .workers-panel, .log-box { top: calc(var(--hud-top) + 145px); left: var(--hud-left); width: calc(100% - var(--hud-left) - var(--hud-right) - 42px); max-height: calc(100% - var(--hud-top) - var(--hud-bottom) - 294px); }
   .toast { top: calc(var(--hud-top) + 135px); max-width: 90%; }
   .overlay { padding: calc(var(--hud-top) + 147px) 20px calc(var(--hud-bottom) + 152px); }
-  .welcome-content h2 { font-size: 58px; margin: 12px 0 18px; }
+  .welcome-content h2 { font-size: clamp(32px, 14vw, 58px); margin: 12px 0 18px; }
   .welcome-content p { font-size: 11px; margin-bottom: 20px; }
   .welcome-content .tags { font-size: 7px; margin-top: 16px; }
   .center-overlay { padding: 140px 20px 150px; }
@@ -136,6 +137,6 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
   .account-btn .account-name { max-width: 62px; }
   .resource-card { padding: 5px; }
   .resource-main strong { font-size: 15px; }
-  .welcome-content h2 { font-size: 44px; margin: 8px 0 12px; }
+  .welcome-content h2 { font-size: clamp(28px, 13vw, 44px); margin: 8px 0 12px; }
   .welcome-content .tags { margin-top: 12px; }
 }
