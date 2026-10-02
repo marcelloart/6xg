@@ -76,6 +76,7 @@ function choosePlot(id,plantOnClick=false){
 function chooseLocation(point){
  if(!gate.canPlay||!entered)return;
  if(pendingBuild){const slot=F.LOTS.findIndex(p=>Math.hypot(p.x-point.x,p.y-point.y)<70);if(slot<0){toast('Pilih salah satu tapak bangunan bertanda +.');return;}place(slot);return;}
+ const hit=renderer.pickPlot?.(point);if(hit===-1){selectedPlot=null;renderSelection();return;}if(Number.isInteger(hit)){choosePlot(hit,true);return;}
  const p=F.PLOTS.slice(0,farm.unlocked).find(p=>Math.abs(p.x-point.x)<31&&Math.abs(p.y-point.y)<30);if(p)choosePlot(p.id,true);else{selectedPlot=null;renderSelection();}
 }
 function place(slot){if(!pendingBuild)return;const kind=pendingBuild;if(perform(farm.build(kind,slot),F.BUILDINGS[kind].name+' mulai dibangun.')){pendingBuild=null;closePanel();renderUI();}}
