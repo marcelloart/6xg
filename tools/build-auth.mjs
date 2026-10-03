@@ -21,5 +21,5 @@ for(const file of await readdir(authDir)){
 }
 await mkdir(path.join(root,'assets/js'),{recursive:true});
 await writeFile(path.join(root,'assets/js/auth-entry.js'),
-  "'use strict';\nwindow.BARA_AUTH_ENTRY="+JSON.stringify('./'+path.relative(root,entry).replaceAll('\\','/'))+";\n");
+  "'use strict';\nwindow.BARA_AUTH_ENTRY="+JSON.stringify('/'+path.relative(root,entry).replaceAll('\\','/'))+";\n");
 console.log('Built Privy login with '+Object.keys(result.metafile.outputs).length+' assets');

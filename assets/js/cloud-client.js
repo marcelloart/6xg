@@ -1,7 +1,7 @@
 'use strict';
 // A session belongs to exactly one Privy user. No token is stored by the game.
 class BaraCloudSession {
-  constructor(base,userId,getToken,{fetcher=fetch,onStatus=()=>{},onSaved=()=>{},path='/api/save'}={}) {
+  constructor(base,userId,getToken,{fetcher=(...args)=>fetch(...args),onStatus=()=>{},onSaved=()=>{},path='/api/save'}={}) {
     const url=new URL(base);
     if(url.protocol!=='https:'&&!(['localhost','127.0.0.1'].includes(url.hostname)&&url.protocol==='http:'))throw new Error('Server akun harus menggunakan HTTPS.');
     if(url.username||url.password||url.search||url.hash)throw new Error('Alamat server tidak valid.');

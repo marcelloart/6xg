@@ -6,7 +6,7 @@ import {exportSPKI, generateKeyPair, importSPKI, SignJWT} from 'jose';
 
 const config = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
 const keys = await generateKeyPair('ES256');
-const bindings = {PRIVY_APP_ID: 'test-app', PRIVY_VERIFICATION_KEY: await exportSPKI(keys.publicKey), ALLOWED_ORIGINS: 'https://6xg.online'};
+const bindings = {PRIVY_APP_ID: 'test-app', PRIVY_VERIFICATION_KEY: await exportSPKI(keys.publicKey), ALLOWED_ORIGINS: 'https://6xg.online,https://app.6xg.online'};
 const options = {modules: true, scriptPath: new URL('../dist/worker.js', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'), compatibilityDate: '2026-10-01', bindings, d1Databases: {DB: 'test-bara-saves'}};
 let mf, db;
 // Fixture was exported from new Kingdom().serialize(), using save format version 2.
@@ -172,6 +172,17 @@ test('uploaded profile photo persists privately; invalid images cannot overwrite
  delete save.state.profile.photo;
  assert.equal((await call('PUT',auth,{save,revision:1},{path})).status,200);
  assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,undefined);
+});
+
+test('both exact site and game origins can restore farm progress', async () => {
+  const auth=await token();
+  for(const origin of ['https://6xg.online','https://app.6xg.online']){
+    const result=await call('GET',auth,undefined,{path:'/api/farm-save',headers:{origin}});
+    assert.equal(result.status,200);assert.equal(result.headers.get('access-control-allow-origin'),origin);
+  }
+  for(const origin of ['https://evil.example','https://app.6xg.online.evil.example']){
+    assert.equal((await call('GET',auth,undefined,{path:'/api/farm-save',headers:{origin}})).status,403);
+  }
 });
 
 test('a growing plot moved onto unopened defaults round-trips while occupied plots remain blocked',async()=>{

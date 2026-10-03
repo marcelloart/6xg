@@ -9,7 +9,7 @@
   "vars": {
     "PRIVY_APP_ID": "cmuqjbgfe02a60cjlya6r4t0m",
     "PRIVY_VERIFICATION_KEY": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET0i/0N+17JD3ZFFzNQChCW7gZcOIgwD1ilGSaJ+dxLsXghQEZQSBXLhAZDL565I89l+/1/xE5WIEjw32RRBAtQ==\n-----END PUBLIC KEY-----",
-    "ALLOWED_ORIGINS": "https://6xg.online"
+    "ALLOWED_ORIGINS": "https://6xg.online,https://app.6xg.online"
   },
   "d1_databases": [{
     "binding": "DB",

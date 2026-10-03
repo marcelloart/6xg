@@ -2,14 +2,16 @@ import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createPortal} from 'react-dom';
 import {PrivyProvider,usePrivy,useLogin} from '@privy-io/react-auth';
+import {CHANNEL,createSessionBridge} from './session-bridge.js';
+import {LandingAccount} from './landing-account.jsx';
 
 const cfg=window.BARA_ONLINE;
 const game=window.LadangBara;
 const read=key=>{try{return localStorage.getItem(key);}catch{return null;}};
 const keyFor=id=>'6xg-farm:'+id;
 
-function Account(){
-  const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
+function Account({identity,login}){
+  const {ready,authenticated,user,getAccessToken,logout}=identity;
   const [status,setStatus]=useState({state:'loading',text:'Menyiapkan login Privy…'});
   const [profile,setProfile]=useState(game.profile());
   useEffect(()=>{const update=()=>setProfile(game.profile());window.addEventListener('bara:profile',update);window.addEventListener('bara:save',update);return()=>{window.removeEventListener('bara:profile',update);window.removeEventListener('bara:save',update);};},[]);
@@ -20,11 +22,6 @@ function Account(){
   const userId=authenticated?user?.id:null;
   auth.current={userId,getAccessToken};
   const showStatus=(state,text)=>setStatus({state,text});
-  const {login}=useLogin({
-    onComplete:()=>document.getElementById('accountDialog').showModal(),
-    onError:()=>showStatus('error','Login dibatalkan atau belum berhasil. Anda bisa mencoba kembali.')
-  });
-
   useEffect(()=>{
     if(!ready)return;
     let cancelled=false;
@@ -36,13 +33,20 @@ function Account(){
     }
     try{localStorage.setItem('6xg-account-used','1');}catch{}
     game.pause();
-    const accountKey=keyFor(userId),cached=read(accountKey);
+    const accountKey=keyFor(userId);let cached=read(accountKey);
     const remember=(raw,revision)=>{try{localStorage.setItem(accountKey+':cloud-baseline',JSON.stringify({save:raw,revision}));}catch{}};
-    const apply=raw=>{if(cancelled)return;attached.current=null;game.attach(accountKey,raw);attached.current=accountKey;};
+    const apply=raw=>{if(cancelled)return;attached.current=null;game.attach(accountKey,raw);attached.current=accountKey;if(window.BARA_PAGE==='game')game.enter();};
     (async()=>{
       showStatus('loading','Memuat progres akun…');
       let cloud=null;
       try{
+        if(!cached&&identity.getCache){
+          const previous=await identity.getCache();if(cancelled)return;
+          if(previous?.save&&game.validate(previous.save)){
+            cached=previous.save;
+            try{localStorage.setItem(accountKey,cached);if(previous.baseline)localStorage.setItem(accountKey+':cloud-baseline',previous.baseline);}catch{}
+          }
+        }
         if(cfg.apiBase){
           cloud=new window.BaraCloudSession(cfg.apiBase,userId,async()=>{
             if(auth.current.userId!==userId)throw new Error('Akun berubah');
@@ -67,12 +71,17 @@ function Account(){
           if(cloud){cloud.changed(game.snapshot());await cloud.flush();}
           else showStatus('local','Akun aktif. Progres tersimpan di perangkat ini.');
         }else{
-          setChoice(true);showStatus('choose','Mulai kebun untuk akun baru Anda.');
+          if(window.BARA_PAGE==='game'){
+            apply(null);
+            if(cloud){cloud.changed(game.snapshot());await cloud.flush();}
+            else showStatus('local','Akun aktif. Progres tersimpan di perangkat ini.');
+          }else{setChoice(true);showStatus('choose','Mulai kebun untuk akun baru Anda.');}
         }
       }catch{
         if(cancelled)return;
         cloud?.close();session.current=null;
         showStatus('error','Progres online belum dapat dimuat. Coba lagi, atau lanjutkan di perangkat ini.');
+        if(window.BARA_PAGE==='game')document.getElementById('accountDialog').showModal();
       }
     })();
     return()=>{cancelled=true;clearTimeout(flushTimer.current);session.current?.close();session.current=null;};
@@ -145,12 +154,67 @@ function Account(){
 }
 
 let mounted=false;
+function LegacyAccount(){
+  const identity=usePrivy();
+  const {login}=useLogin({onComplete:()=>document.getElementById('accountDialog').showModal()});
+  return <Account identity={identity} login={login}/>;
+}
+function GameAccount(){
+  const [identity,setIdentity]=useState({ready:false,authenticated:false,user:null});
+  const bridge=useRef(null);
+  useEffect(()=>{
+    try{bridge.current=createSessionBridge({siteOrigin:cfg.siteOrigin,gameOrigin:cfg.gameOrigin,onState:state=>setIdentity(state)});}
+    catch{setIdentity({ready:true,authenticated:false,error:true});}
+    return()=>bridge.current?.close();
+  },[]);
+  const login=()=>{window.location.assign(new URL('/?login=1&next=game',cfg.siteOrigin).href);};
+  return <Account identity={{...identity,getAccessToken:()=>bridge.current.request('token'),getCache:()=>bridge.current.request('farmCache'),logout:()=>bridge.current.request('logout')}} login={login}/>;
+}
+function BridgeAuth(){
+  const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
+  const current=useRef({});
+  // The game needs identity and access tokens, never Privy's persistent session.
+  const state={ready,authenticated,user:authenticated?{id:user?.id,email:user?.email?{address:user.email.address}:undefined,google:user?.google?{email:user.google.email}:undefined}:null};
+  current.current={state,getAccessToken,logout};
+  useEffect(()=>{
+    if(window.parent===window)return;
+    window.parent.postMessage({channel:CHANNEL,type:'state',state},cfg.gameOrigin);
+  },[ready,authenticated,user?.id]);
+  useEffect(()=>{
+    if(window.parent===window)return;
+    const receive=async event=>{
+      const data=event.data;
+      if(event.origin!==cfg.gameOrigin||event.source!==window.parent||data?.channel!==CHANNEL||typeof data.id!=='string'||data.id.length>100)return;
+      if(!['state','token','logout','farmCache'].includes(data.method))return;
+      const reply={channel:CHANNEL,id:data.id};
+      try{
+        if(data.method==='state')reply.result=current.current.state;
+        if(data.method==='token'){
+          if(!current.current.state.ready||!current.current.state.authenticated)throw new Error('No session');
+          reply.result=await current.current.getAccessToken();
+        }
+        if(data.method==='logout'){await current.current.logout();reply.result=true;}
+        if(data.method==='farmCache'){
+          const id=current.current.state.authenticated&&current.current.state.user?.id;
+          if(!id)throw new Error('No session');
+          reply.result={save:read(keyFor(id)),baseline:read(keyFor(id)+':cloud-baseline')};
+        }
+      }catch{reply.error=true;}
+      event.source.postMessage(reply,event.origin);
+    };
+    window.addEventListener('message',receive);return()=>window.removeEventListener('message',receive);
+  },[]);
+  return null;
+}
 export function mountAuth(){
   if(mounted)return;mounted=true;
-  document.getElementById('accountBody').replaceChildren();
+  document.getElementById('accountBody')?.replaceChildren();
+  if(window.BARA_PAGE==='game'){
+    createRoot(document.getElementById('accountRoot')).render(<GameAccount/>);return;
+  }
   createRoot(document.getElementById('accountRoot')).render(
     <PrivyProvider appId={cfg.privyAppId} config={{appearance:{theme:'light',accentColor:'#557c50'},embeddedWallets:{ethereum:{createOnLogin:'off'},solana:{createOnLogin:'off'}}}}>
-      <Account/>
+      {window.BARA_PAGE==='bridge'?<BridgeAuth/>:window.BARA_PAGE==='landing'?<LandingAccount cfg={cfg}/>:<LegacyAccount/>}
     </PrivyProvider>
   );
 }

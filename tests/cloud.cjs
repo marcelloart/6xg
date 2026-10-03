@@ -6,6 +6,10 @@ const tests=[];const raw=n=>JSON.stringify({version:2,state:{time:n}});
 const ok=data=>({ok:true,json:async()=>data});
 async function test(name,fn){await fn();tests.push(name);}
 (async()=>{
+  await test('The default browser fetch keeps its native invocation context',async()=>{
+    context.fetch=function(){assert(!(this instanceof Session));return Promise.resolve(ok({userId:'did:privy:a',save:null,revision:0}));};
+    const s=new Session('https://api.example.test','did:privy:a',async()=>'token');await s.load();s.close();
+  });
   await test('An authenticated save sends the bearer token and expected revision, never a client-chosen user ID',async()=>{
     const requests=[];const s=new Session('https://api.example.test','did:privy:a',async()=>'token',{fetcher:async(url,options)=>{requests.push({url,...options});return ok(options.method==='GET'?{userId:s.userId,save:null,revision:7}:{userId:s.userId,revision:8});}});
     await s.load();s.changed(raw(2));await s.flush();

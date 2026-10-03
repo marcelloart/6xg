@@ -106,3 +106,13 @@ Klik singkat memilih/menanam/memanen. Tahan diam 1,5 detik untuk mengangkat; ind
 Aset realistis dan catatan resolusi: [ASSET_CREDITS.md](ASSET_CREDITS.md). Aset CC0 diproses menjadi tiga tingkat kualitas; model buah, pohon, batu dan peti terpasang secara lokal, dengan HDRI untuk pencahayaan dan pantulan air. Petak yang belum dibuka tidak lagi memblokir pemindahan; posisi petak baru disesuaikan saat dibuka agar tidak bertabrakan.
 
 Kamera awal menghadap utara pada sudut elevasi 30° seperti game kebun mobile, sehingga dinding depan rumah, lumbung, dan tinggi tanaman terlihat lebih jelas; tombol kembali ke kebun memulihkan sudut ini. Jalan berupa satu permukaan melengkung yang tersambung, berada di luar seluruh area penempatan kebun. Sungai memiliki dasar berbatu dari Rock064, pembiasan air dengan IOR 1,333, pantulan HDRI, riak mengalir, warna kedalaman, dan buih tipis di tepian.
+
+## Landing page dan aplikasi game
+
+`site/index.html` adalah landing page untuk `6xg.online`: detail permainan, tanaman, panduan, FAQ, dan akun Privy. `play/index.html` adalah aplikasi game khusus `app.6xg.online`, dengan peta memenuhi viewport dan HUD mengambang. `npm run build:game` menghasilkan `app-static/` untuk Cloudflare Pages; direktori itu hanya berisi HTML game dan aset publik, tanpa server, database, atau konfigurasi rahasia. Pengaturan Pages: branch `main`, perintah `npm run build:game`, output `app-static`, root repository.
+
+Sesi Privy tetap berada pada origin utama. Iframe `auth/bridge.html` memulihkan sesi yang sama untuk aplikasi game melalui postMessage dengan pemeriksaan origin, source, dan request ID. Token akses hanya dikirim dalam memori kepada origin game yang ditentukan, tidak melalui URL atau penyimpanan aplikasi. Logout menonaktifkan kebun. Progres lokal dari origin lama dipulihkan hanya untuk identitas terverifikasi yang sama; konflik revisi cloud tetap menghentikan penimpaan progres. Landing page hanya membaca ringkasan profil dan tidak membuat atau mengubah kebun.
+
+API menerima tepat `https://6xg.online` dan `https://app.6xg.online`. Pengujian `npm run test:session` mencakup isolasi origin, pembatalan sesi, fetch browser, dan namespace progres. Domain `app.6xg.online` perlu dihubungkan melalui Custom domains di Pages, lalu CNAME pada penyedia DNS. Domain utama dapat tetap berada pada GitHub Pages. Setelah subdomain aktif, salin landing page dari `site/index.html` ke `index.html` untuk menyelesaikan peralihan beranda.
+
+Cuplikan pada landing page berasal dari render game sebenarnya dengan kebun contoh lokal. Foto produk berasal dari aset yang diunggah pemilik game.
