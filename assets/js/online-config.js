@@ -6,6 +6,6 @@ window.BARA_ONLINE = Object.freeze({
   apiBase: 'https://6xg-cloud-save.marcelloartis.workers.dev',
   siteOrigin: 'https://6xg.online',
   gameOrigin: 'https://app.6xg.online',
-  // Temporary playable route while the external DNS activates the app subdomain.
-  playUrl: 'https://6xg.online/play/'
+  // Dedicated full-screen game. Authentication stays on the central landing site.
+  playUrl: 'https://app.6xg.online/'
 });
