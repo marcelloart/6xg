@@ -2,6 +2,8 @@ import {importSPKI, jwtVerify} from 'jose';
 import {integer, validateSave} from './save.mjs';
 import {loadFarm, runFarmAction, parseAction} from './farm-actions.mjs';
 
+import {socialData} from './farm-social.mjs';
+
 const MAX_BODY = 49152;
 const requests = new Map();
 let cachedKey;
@@ -66,9 +68,9 @@ export default {
       try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
         farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first(); } catch {}
       const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 7});
+      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 8});
     }
-    if (!['/api/save', '/api/farm-save', '/api/farm-action'].includes(path)) return reply(404, {error: 'not_found'});
+    if (!['/api/save', '/api/farm-save', '/api/farm-action','/api/farm-friends','/api/farm-visit'].includes(path)) return reply(404, {error: 'not_found'});
     const farm = path !== '/api/save';
     // Table names come only from this fixed route allowlist.
     const table = farm ? 'farm_saves' : 'saves';
@@ -78,6 +80,8 @@ export default {
       headers['Access-Control-Max-Age'] = '600';
       return reply(200, {});
     }
+    const social=['/api/farm-friends','/api/farm-visit'].includes(path);
+    if(social&&request.method!=='GET')return reply(405,{error:'method_not_allowed'});
     if (path === '/api/farm-action' ? request.method !== 'POST' : !['GET', 'PUT'].includes(request.method)) return reply(405, {error: 'method_not_allowed'});
     if (!env.PRIVY_APP_ID || !env.PRIVY_VERIFICATION_KEY) return reply(503, {error: 'auth_not_configured'});
     if (!rateAllowed('ip:' + (request.headers.get('cf-connecting-ip') || 'unknown'))) return reply(429, {error: 'rate_limit'});
@@ -86,6 +90,7 @@ export default {
     catch { return reply(401, {error: 'invalid_token'}); }
     if (!rateAllowed('user:' + uid)) return reply(429, {error: 'rate_limit'});
     if (!env.DB) return reply(503, {error: 'storage_unavailable'});
+    if(social){try{const result=await socialData(env.DB,uid,path==='/api/farm-visit'?(new URL(request.url).searchParams.get('code')||''):null);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}}
     if(farm){
       if(request.method==='PUT')return reply(409,{error:'authoritative_actions_required',message:'Perbarui game untuk menggunakan transaksi server.'});
       if(request.method==='GET'){try{return reply(200,await loadFarm(env.DB,uid));}catch{return reply(503,{error:'storage_unavailable'});}}

@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "state": {
     "coins": 0,
     "lastSeen": 1790928660000,
@@ -64,6 +64,19 @@
         "dailies": 0
       },
       "achievements": []
+    },
+    "livestock": {
+      "nextId": 1,
+      "produce": {
+        "egg": 0,
+        "milk": 0
+      },
+      "animals": []
+    },
+    "social": {
+      "enabled": false,
+      "code": null,
+      "friends": []
     },
     "expansions": 6,
     "profile": {

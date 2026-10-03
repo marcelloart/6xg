@@ -12,7 +12,7 @@ class BaraCloudSession {
     this.base=url.href.replace(/\/$/,'');this.userId=userId;this.getToken=getToken;this.fetcher=fetcher;this.onStatus=onStatus;
     this.controller=new AbortController();this.closed=false;this.revision=0;this.pending=null;this.saving=false;this.blocked=false;
   }
-  async request(method,body,path=this.path) {
+  async request(method,body,path=this.path,{social=false}={}) {
     if(this.closed)throw new Error('Sesi telah berakhir.');
     const token=this.cookieSession?null:await this.getToken();
     if(this.closed)throw new Error('Sesi telah berakhir.');
@@ -26,7 +26,7 @@ class BaraCloudSession {
     if(!response.ok){let data;try{data=await response.json();}catch{}const error=new Error(data?.message|| (response.status===409?'Progres berubah di perangkat lain. Coba tindakan lagi.':response.status===401?'Sesi login perlu diperbarui.':'Koneksi server belum tersedia. Transaksi belum dikonfirmasi.'));error.status=response.status;error.data=data;throw error;}
     const data=await response.json();
     if(data.userId!==this.userId)throw new Error('Akun server tidak sesuai dengan akun pemain.');
-    if(!Number.isSafeInteger(data.revision)||data.revision<0)throw new Error('Versi progres server tidak valid.');
+    if(!social&&(!Number.isSafeInteger(data.revision)||data.revision<0))throw new Error('Versi progres server tidak valid.');
     return data;
   }
   async load() {
@@ -57,7 +57,7 @@ window.BaraCloudSession=BaraCloudSession;
 // Commands contain intent only. Balances, rewards and deadlines come from the server.
 class BaraFarmSession extends BaraCloudSession{
  constructor(base,userId,getToken,options={}){super(base,userId,getToken,{...options,path:'/api/farm-save'});this.onState=options.onState||(()=>{});this.command=null;}
- accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||![6,7].includes(data.save?.version)||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error('Perbarui game untuk memakai transaksi server.');this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
+ accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||![6,7,8].includes(data.save?.version)||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error('Perbarui game untuk memakai transaksi server.');this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
  async load(){const data=this.accept(await this.request('GET'));this.onStatus('synced','Progres dan transaksi diperiksa server.');return data;}
  changed(){}
  async action(type,args){if(this.saving||this.command)return{ok:false,message:'Transaksi sebelumnya sedang dikonfirmasi. Tunggu atau tekan Coba lagi.'};this.command={id:crypto.randomUUID(),revision:this.revision,type,args};return this.sendCommand();}
@@ -70,6 +70,8 @@ class BaraFarmSession extends BaraCloudSession{
    this.onStatus('error','Koneksi terputus. Transaksi menunggu konfirmasi; koin belum diubah.');return{ok:false,pending:true,message:'Transaksi belum dikonfirmasi. Coba lagi saat koneksi kembali.'};
   }finally{this.saving=false;}
  }
+ async friends(){return this.request('GET',null,'/api/farm-friends',{social:true});}
+ async visit(code){if(!/^[A-F0-9]{16}$/.test(code))throw new Error('Masukkan kode kebun yang valid.');return this.request('GET',null,'/api/farm-visit?code='+encodeURIComponent(code),{social:true});}
  async flush(){if(this.closed||this.saving)return;if(this.command)return this.sendCommand();try{await this.load();return{ok:true};}catch{this.onStatus('error','Koneksi terputus. Muat kembali sebelum melakukan transaksi.');return{ok:false,message:'Server belum dapat dihubungi.'};}}
  close(){super.close();this.command=null;}
 }

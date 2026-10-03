@@ -151,3 +151,13 @@ Sesi Privy tetap berada pada origin utama. Tombol Mainkan terlebih dahulu mengir
 API menerima tepat `https://6xg.online` dan `https://app.6xg.online`. Pengujian `npm run test:session` mencakup penghubungan sesi, konfirmasi cookie, isolasi identitas, pembatalan sesi, fetch browser, dan namespace progres. `cloudflare/test/game-session.mjs` memakai JWT bertanda tangan dan D1 terisolasi untuk menguji cookie, penolakan token palsu/kedaluwarsa, pembatasan origin, logout, dan pemulihan progres. Domain `app.6xg.online` terhubung melalui Custom domains di Cloudflare Pages dan CNAME `app` → `6xg-game.pages.dev` pada penyedia DNS. Domain utama tetap berada pada GitHub Pages dengan landing page sebagai beranda. `playUrl` mengarah ke `https://app.6xg.online/`; origin sesi tetap `https://6xg.online`. Halaman `/play/` tetap tersedia sebagai rute kompatibilitas untuk pemain yang memakai tautan lama.
 
 Cuplikan pada landing page berasal dari render game sebenarnya dengan kebun contoh lokal. Foto produk berasal dari aset yang diunggah pemilik game.
+
+## Ternak dan kebun teman (1.7)
+
+- Menu **Ternak**: kandang ayam level 3 (4 ayam/kandang) dan kandang sapi level 5 (2 sapi/kandang). Ayam 65 koin, sapi 200 koin; pembelian memerlukan kandang selesai.
+- Ayam: 1 jagung → 3 telur, 30 menit, +4 XP saat diambil. Sapi: 2 wortel +2 jagung → 3 susu, 2 jam, +8 XP saat diambil. Telur 7 koin/unit, susu 14 koin/unit. Hasil ternak memakai tas bersama panen dan olahan.
+- Pakan dibayar sekali per siklus. Saat siap, hasil menunggu sampai diambil; tidak menumpuk tanpa pakan baru. Penempatan kandang memakai pratinjau yang sama, dan memindahkan kandang menjaga identitas serta deadline ternak.
+- Menu **Teman**: sharing dimulai nonaktif. Pemilik mengaktifkan kode acak 16 karakter, menyalin tautan kunjungan, dan dapat menutupnya. Maksimal 30 bookmark teman disimpan per akun. Tidak ada pesan, pengiriman undangan, atau perubahan kebun orang lain.
+- Kunjungan memakai proyeksi tampilan terpisah (nama, avatar emoji, level, petak, bangunan, ternak). Foto profil, saldo, inventori, log, pesanan dan progres misi tidak dibagikan. Semua API kunjungan membutuhkan akun terverifikasi. Ini kunjungan snapshot, bukan multiplayer waktu nyata; kembali ke Kebunku mengembalikan kamera dan kebun sendiri.
+- Snapshot v8 menerima v4–v7 tanpa mereset kebun atau mengulang bibit awal. State `livestock` dan `social` diinisialisasi kosong/private. Semua transaksi tetap CAS dan memakai receipt idempotensi; waktu ternak berasal dari server.
+- Verifikasi: `npm test`, `npm run test:session`, `npm --prefix cloudflare test`, `npm run build:3d`, `npm run build:game`.

@@ -80,3 +80,17 @@ test('only API routes enter authentication, and preflights use exact credentiale
   const r=await call('/api/game-session','OPTIONS',{origin:SITE});assert.equal(r.status,200);assert.equal(r.headers.get('Access-Control-Allow-Origin'),SITE);assert.equal(r.headers.get('Access-Control-Allow-Credentials'),'true');
   assert.equal((await call('/api/unknown')).status,404);assert.equal((await call('/api/game-session','PUT')).status,405);assert.equal(await (await call('/assets/game.css')).text(),'asset');
 });
+
+test('cookie-only visits forward the code through the service binding and stop after sharing is closed',async()=>{
+  const owner=await token('did:privy:visit-owner'),guest=await token('did:privy:visit-guest');
+  const shared=await call('/api/farm-action','POST',{cookie:owner,body:{id:crypto.randomUUID(),revision:0,type:'sharing',args:{enabled:true}}});
+  assert.equal(shared.status,200);const state=await shared.json(),code=state.save.state.social.code;
+  const visit=await mf.dispatchFetch(APP+'/api/farm-visit?code='+code+'&userId=did:privy:ignored',{headers:{Origin:APP,Cookie:'__Host-6xg-game='+guest}});
+  assert.equal(visit.status,200);const data=await visit.json();assert.equal(data.userId,'did:privy:visit-guest');assert.equal(data.code,code);assert(data.view.buildings);assert.equal(data.view.coins,undefined);assert.equal(data.view.social,undefined);
+  const friends=await call('/api/farm-friends','GET',{cookie:guest});assert.equal(friends.status,200);assert.deepEqual((await friends.json()).friends,[]);
+  assert.equal((await call('/api/farm-visit?code='+code,'GET',{auth:guest})).status,401);
+  assert.equal((await call('/api/farm-visit?code='+code,'POST',{cookie:guest,body:{}})).status,405);
+  assert.equal((await call('/api/farm-friends','PUT',{cookie:guest,body:{}})).status,405);
+  const closed=await call('/api/farm-action','POST',{cookie:owner,body:{id:crypto.randomUUID(),revision:state.revision,type:'sharing',args:{enabled:false}}});assert.equal(closed.status,200);
+  assert.equal((await call('/api/farm-visit?code='+code,'GET',{cookie:guest})).status,404);
+});

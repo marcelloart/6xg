@@ -24,6 +24,8 @@
   kitchen:{name:'Dapur kebun',icon:'🍲',seconds:120,cost:{wood:14,stone:8,meat:2},benefit:'Sup wortel dan selai · 3 antrean'},
   juicery:{name:'Rumah jus',icon:'🍊',seconds:150,cost:{wood:22,stone:12,meat:3},benefit:'Jus jeruk · 3 antrean'},
   bakery:{name:'Rumah pai',icon:'🥧',seconds:180,cost:{wood:26,stone:16,meat:4},benefit:'Pai apel · 3 antrean'},
+  coop:{name:'Kandang ayam',icon:'🐔',seconds:80,cost:{wood:12,stone:6,meat:1},benefit:'Rumah untuk 4 ayam · menghasilkan telur'},
+  cowshed:{name:'Kandang sapi',icon:'🐄',seconds:120,cost:{wood:22,stone:12,meat:2},benefit:'Rumah untuk 2 sapi · menghasilkan susu'},
   planter:{name:'Pot bunga hadiah',icon:'🌻',seconds:15,cost:{wood:0,stone:0,meat:0},benefit:'Dekorasi dari pencapaian Panen Bertumbuh'}
  });
  const LOTS=Object.freeze([{x:1230,y:810},{x:1510,y:765},{x:1810,y:805},{x:2050,y:1050},{x:2050,y:1350},{x:1830,y:1540},{x:1470,y:1600},{x:1130,y:1420}]);
@@ -33,13 +35,18 @@
  const keys=Object.keys(CROPS),materialKeys=Object.keys(MATERIALS);
  const LEVEL_XP=Object.freeze([0,30,80,150,260,420,650,950,1400]);
  const CROP_LEVEL=Object.freeze(Object.fromEntries(keys.map((k,i)=>[k,i+1])));
- const BUILDING_LEVEL=Object.freeze({barn:1,house:2,well:3,shed:4,bench:3,kitchen:2,juicery:7,bakery:8,planter:1});
+ const BUILDING_LEVEL=Object.freeze({barn:1,house:2,well:3,shed:4,bench:3,kitchen:2,juicery:7,bakery:8,planter:1,coop:3,cowshed:5});
  const RECIPES=Object.freeze({
   soup:{name:'Sup wortel',icon:'🍲',building:'kitchen',level:2,minutes:10,inputs:{carrot:3},yield:1,sell:16,xp:4},
   jam:{name:'Selai stroberi',icon:'🍓',building:'kitchen',level:4,minutes:30,inputs:{strawberry:3},yield:1,sell:60,xp:9},
   juice:{name:'Jus jeruk',icon:'🥤',building:'juicery',level:7,minutes:45,inputs:{orange:3},yield:1,sell:175,xp:15},
   pie:{name:'Pai apel',icon:'🥧',building:'bakery',level:8,minutes:60,inputs:{apple:3},yield:1,sell:225,xp:20}
  });
+ const ANIMALS=Object.freeze({chicken:{name:'Ayam',icon:'🐔',building:'coop',capacity:4,level:3,price:65,minutes:30,feed:{corn:1},product:'egg',yield:3,xp:4},cow:{name:'Sapi',icon:'🐄',building:'cowshed',capacity:2,level:5,price:200,minutes:120,feed:{carrot:2,corn:2},product:'milk',yield:3,xp:8}});
+ const ANIMAL_PRODUCTS=Object.freeze({egg:{name:'Telur',icon:'🥚',sell:7},milk:{name:'Susu',icon:'🥛',sell:14}});
+ const freshLivestock=()=>({nextId:1,animals:[],produce:{egg:0,milk:0}});
+ const freshSocial=()=>({enabled:false,code:null,friends:[]});
+ const friendCode=code=>typeof code==='string'&&/^[A-F0-9]{16}$/.test(code);
  const DAILY=Object.freeze({
   plant:{name:'Bibit hari ini',text:'Tanam 3 bibit',counter:'planted',target:3,seeds:2,xp:8},
   harvest:{name:'Keranjang pagi',text:'Panen 9 hasil tanaman',counter:'harvested',target:9,seeds:3,xp:12},
@@ -77,12 +84,12 @@
  const complete=(s,kind,now)=>s.buildings.filter(b=>b.kind===kind&&b.readyAt<=now).length;
  const capacity=(s,now=s.lastSeen)=>20+80*complete(s,'barn',now)+40*complete(s,'shed',now);
  const unlocked=(s,now=s.lastSeen)=>Math.min(s.expansions===undefined?45:MAX_PLOTS,9+6*complete(s,'house',now)+3*complete(s,'well',now)+(s.expansions||0));
- const used=s=>keys.reduce((total,k)=>total+s.produce[k],0)+Object.keys(RECIPES).reduce((total,k)=>total+(s.production?.goods[k]||0),0);
+ const used=s=>keys.reduce((total,k)=>total+s.produce[k],0)+Object.keys(RECIPES).reduce((total,k)=>total+(s.production?.goods[k]||0),0)+Object.keys(ANIMAL_PRODUCTS).reduce((total,k)=>total+(s.livestock?.produce[k]||0),0);
  const AVATARS=Object.freeze(['sprout','sunflower','apple','bee']);
  const defaultProfile=()=>({name:'Pekebun',farmName:'Kebunku',avatar:'sprout'});
  const defaultStats=()=>({harvested:0,earned:0});
  const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;if(v.photo!=null){check(typeof v.photo==='string'&&v.photo.length>=128&&v.photo.length<=16384&&/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(v.photo)&&(v.photo.length-23)%4===0);clean.photo=v.photo;}return clean;};
- const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90],bench:[90,60],kitchen:[130,116],juicery:[130,116],bakery:[130,116],planter:[48,48]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
+ const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90],bench:[90,60],kitchen:[130,116],juicery:[130,116],bakery:[130,116],planter:[48,48],coop:[130,136],cowshed:[160,156]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
  const overlaps=(a,b,gap=5)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap;
  const onLand=(p,size)=>integer(p.x,1000+Math.ceil(size.w/2),2190-Math.ceil(size.w/2))&&integer(p.y,630+Math.ceil(size.h/2),1760-Math.ceil(size.h/2));
  const defaultPlot=id=>PLOTS[id]||{id,x:1080+(id-45)%12*68,y:1460+Math.floor((id-45)/12)*74};
@@ -96,7 +103,7 @@
   return{ok:true};
  }
  function validateSave(save){
-  check(object(save)&&[4,5,6,7].includes(save.version)&&object(save.state));const modern=save.version>=5;
+  check(object(save)&&[4,5,6,7,8].includes(save.version)&&object(save.state));const modern=save.version>=5;
   const s=save.state;
   check(integer(s.coins,0,1e9)&&integer(s.lastSeen,1,MAX_TIME));
   const clean={coins:s.coins,lastSeen:s.lastSeen,seeds:inventory(s.seeds,keys,1000),produce:inventory(s.produce,keys,10000),materials:inventory(s.materials,materialKeys,10000)};
@@ -105,7 +112,7 @@
    check(object(b)&&integer(b.slot,0,(modern?MAX_BUILDINGS:LOTS.length)-1)&&!slots.has(b.slot)&&Object.hasOwn(BUILDINGS,b.kind)&&integer(b.startedAt,1,s.lastSeen)&&b.readyAt===b.startedAt+BUILDINGS[b.kind].seconds*1000&&b.readyAt<=MAX_TIME);
    slots.add(b.slot);const base={slot:b.slot,kind:b.kind,startedAt:b.startedAt,readyAt:b.readyAt};if(modern){check(integer(b.rotation,0,3)&&onLand(b,footprint(b.kind,b.rotation)));Object.assign(base,{x:b.x,y:b.y,rotation:b.rotation});}return base;
   });
-  if(save.version===7){
+  if(save.version>=7){
    const p=s.production,c=s.challenges;
    check(object(p)&&integer(p.nextId,1,1e9)&&Array.isArray(p.jobs)&&p.jobs.length<=MAX_BUILDINGS*3);
    clean.production={nextId:p.nextId,goods:inventory(p.goods,Object.keys(RECIPES),10000),jobs:[]};
@@ -114,6 +121,12 @@
    const claims=(v,list)=>{check(Array.isArray(v)&&v.length<=list.length&&new Set(v).size===v.length&&v.every(k=>list.includes(k)));return[...v];};
    check(object(c)&&integer(c.day,0,50000)&&object(c.totals)&&integer(c.totals.crafted,0,1e9)&&integer(c.totals.dailies,0,1e9));
    clean.challenges={day:c.day,counts:inventory(c.counts,['planted','harvested','orders'],1e9),claimed:claims(c.claimed,Object.keys(DAILY)),totals:{crafted:c.totals.crafted,dailies:c.totals.dailies},achievements:claims(c.achievements,Object.keys(ACHIEVEMENTS))};
+  }
+  if(save.version>=8){
+   const l=s.livestock,t=s.social;check(object(l)&&integer(l.nextId,1,1e9)&&Array.isArray(l.animals)&&l.animals.length<=MAX_BUILDINGS*4);
+   clean.livestock={nextId:l.nextId,produce:inventory(l.produce,Object.keys(ANIMAL_PRODUCTS),10000),animals:[]};const ids=new Set(),counts=new Map();
+   for(const a of l.animals){check(object(a)&&Object.hasOwn(ANIMALS,a.kind));const spec=ANIMALS[a.kind],b=clean.buildings.find(b=>b.slot===a.slot);check(integer(a.id,1,l.nextId-1)&&!ids.has(a.id)&&b?.kind===spec.building&&b.readyAt<=s.lastSeen&&((a.fedAt===0&&a.readyAt===0)||(integer(a.fedAt,b.readyAt,s.lastSeen)&&a.readyAt===a.fedAt+spec.minutes*MINUTE&&a.readyAt<=MAX_TIME)));ids.add(a.id);counts.set(a.slot,(counts.get(a.slot)||0)+1);check(counts.get(a.slot)<=spec.capacity);clean.livestock.animals.push({id:a.id,slot:a.slot,kind:a.kind,fedAt:a.fedAt,readyAt:a.readyAt});}
+   check(object(t)&&typeof t.enabled==='boolean'&&(t.code===null||friendCode(t.code))&&(!t.enabled||t.code!==null)&&Array.isArray(t.friends)&&t.friends.length<=30&&new Set(t.friends).size===t.friends.length&&t.friends.every(code=>friendCode(code)&&code!==t.code));clean.social={enabled:t.enabled,code:t.code,friends:[...t.friends]};
   }
   check(used(clean)<=capacity(clean));
   if(modern){check(integer(s.expansions,0,72));clean.expansions=s.expansions;clean.profile=profile(s.profile);check(object(s.stats)&&integer(s.stats.harvested,0,1e9)&&integer(s.stats.earned,0,1e12));clean.stats={harvested:s.stats.harvested,earned:s.stats.earned};}
@@ -147,6 +160,8 @@
    if(!this.s.progress){this.s.progress=freshProgress();if(save){const p=this.s.progress;p.xp=this.s.stats.harvested*2;p.grandfatheredCrops=keys.filter(k=>this.s.seeds[k]||this.s.produce[k]||this.s.plots.some(v=>v.crop===k));p.grandfatheredBuildings=[...new Set(this.s.buildings.map(b=>b.kind))];p.tutorial.planted=this.s.stats.harvested?1:this.s.plots.some(v=>v.crop)?1:0;p.tutorial.harvested=this.s.stats.harvested;p.tutorial.sold=this.s.stats.earned?3:0;}}
    if(!this.s.production)this.s.production=freshProduction();
    if(!this.s.challenges)this.s.challenges=freshChallenges(this.s.lastSeen);
+   if(!this.s.livestock)this.s.livestock=freshLivestock();
+   if(!this.s.social)this.s.social=freshSocial();
    this.allocatedPlots=unlocked(this.s);
    if(!save){this.s.seeds.carrot=6;this.note('Selamat datang! 6 bibit wortel untuk panen pertamamu.');}
   }
@@ -161,7 +176,7 @@
   get unlocked(){this.now();return Math.min(this.s.plots.length,unlocked(this.s));}
   get used(){return used(this.s);}
   note(text){this.s.log.unshift({at:this.now(),text});this.s.log=this.s.log.slice(0,8);}
-  serialize(){this.now();return JSON.stringify({version:7,state:this.s});}
+  serialize(){this.now();return JSON.stringify({version:8,state:this.s});}
   get level(){return levelFor(this.s.progress.xp);}
   cropUnlocked(k){return Object.hasOwn(CROPS,k)&&(this.level>=CROP_LEVEL[k]||this.s.progress.grandfatheredCrops.includes(k));}
   buildingUnlocked(k){return Object.hasOwn(BUILDINGS,k)&&(k==='planter'?this.s.challenges.achievements.includes('harvester'):this.level>=BUILDING_LEVEL[k]||this.s.progress.grandfatheredBuildings.includes(k));}
@@ -241,8 +256,17 @@
   startProduction(slot,key){const q=this.productionQuote(slot,key),p=this.s.production;if(!q.ok)return q;const readyAt=q.startedAt+q.recipe.minutes*MINUTE;if(readyAt>MAX_TIME||p.nextId>=1e9)return{ok:false,message:'Antrean produksi tidak bisa ditambah.'};for(const[crop,n]of Object.entries(q.recipe.inputs))this.s.produce[crop]-=n;const id=p.nextId++;p.jobs.push({id,slot,recipe:key,startedAt:q.startedAt,readyAt});this.note(`Mengolah ${q.recipe.name.toLowerCase()}. Bahan masuk ke antrean.`);return{ok:true,id,readyAt};}
   collectProduction(id){const now=this.now(),p=this.s.production,j=p.jobs.find(j=>j.id===id);if(!j||j.readyAt>now)return{ok:false,message:'Olahan belum selesai atau sudah diambil.'};const r=RECIPES[j.recipe];if(this.used+r.yield>this.capacity||p.goods[j.recipe]+r.yield>10000)return{ok:false,message:'Tas penuh. Jual panen atau olahan sebelum mengambil hasil.'};p.goods[j.recipe]+=r.yield;p.jobs=p.jobs.filter(job=>job.id!==id);this.s.challenges.totals.crafted=Math.min(1e9,this.s.challenges.totals.crafted+r.yield);this.addXP(r.xp);this.note(`Mengambil ${r.name.toLowerCase()} · +${r.xp} XP.`);return{ok:true,xp:r.xp};}
   sellGoods(key,qty=1){const p=this.s.production;if(!Object.hasOwn(RECIPES,key)||!integer(qty,1,10000)||p.goods[key]<qty)return{ok:false,message:'Olahan belum tersedia di tas.'};const earned=RECIPES[key].sell*qty;if(this.s.coins+earned>1e9)return{ok:false,message:'Kapasitas koin sudah penuh.'};p.goods[key]-=qty;this.s.coins+=earned;this.s.stats.earned=Math.min(1e12,this.s.stats.earned+earned);this.note(`Menjual ${qty} ${RECIPES[key].name.toLowerCase()} · +${earned} koin.`);return{ok:true,earned};}
+  animalQuote(slot,kind){const now=this.now();if(!Object.hasOwn(ANIMALS,kind))return{ok:false,message:'Jenis ternak tidak tersedia.'};const spec=ANIMALS[kind],b=this.s.buildings.find(b=>b.slot===slot);if(!b||b.kind!==spec.building||b.readyAt>now)return{ok:false,message:'Bangun dan selesaikan kandang yang sesuai terlebih dahulu.'};if(this.level<spec.level)return{ok:false,message:'Ternak terbuka di level '+spec.level+'.'};if(this.s.livestock.animals.filter(a=>a.slot===slot).length>=spec.capacity)return{ok:false,message:'Kandang penuh. Bangun kandang lain.'};if(this.s.coins<spec.price)return{ok:false,message:'Koin belum cukup untuk membeli ternak.'};const future=this.used||keys.some(k=>this.s.seeds[k])||this.s.plots.some(p=>p.crop);if(!future&&this.s.coins-spec.price<5)return{ok:false,message:'Sisakan 5 koin untuk bibit dan pakan berikutnya.'};if(this.s.livestock.nextId>=1e9)return{ok:false,message:'Ternak tidak bisa ditambah.'};return{ok:true};}
+  buyAnimal(slot,kind){const q=this.animalQuote(slot,kind);if(!q.ok)return q;const spec=ANIMALS[kind],l=this.s.livestock,id=l.nextId++;this.s.coins-=spec.price;l.animals.push({id,kind,slot,fedAt:0,readyAt:0});this.note('Membeli '+spec.name.toLowerCase()+'. Beri pakan untuk memulai produksi.');return{ok:true,id};}
+  feedQuote(id){const now=this.now(),a=this.s.livestock.animals.find(a=>a.id===id);if(!a)return{ok:false,message:'Ternak tidak tersedia.'};if(a.fedAt)return{ok:false,message:a.readyAt<=now?'Ambil hasil ternak sebelum memberi pakan lagi.':'Ternak masih menghasilkan. Pakan tidak perlu ditambah.'};const spec=ANIMALS[a.kind];if(!Object.entries(spec.feed).every(([crop,n])=>this.s.produce[crop]>=n))return{ok:false,message:'Pakan panen belum cukup. Tanam dan panen bahan pakannya.'};return{ok:true};}
+  feedAnimal(id){const q=this.feedQuote(id);if(!q.ok)return q;const a=this.s.livestock.animals.find(a=>a.id===id),spec=ANIMALS[a.kind],now=this.now();if(now+spec.minutes*MINUTE>MAX_TIME)return{ok:false,message:'Produksi ternak tidak dapat dimulai.'};for(const[k,n]of Object.entries(spec.feed))this.s.produce[k]-=n;a.fedAt=now;a.readyAt=now+spec.minutes*MINUTE;this.note('Memberi pakan '+spec.name.toLowerCase()+'. Hasil tersedia dalam '+spec.minutes+' menit.');return{ok:true,readyAt:a.readyAt};}
+  collectAnimal(id){const a=this.s.livestock.animals.find(a=>a.id===id),now=this.now();if(!a?.fedAt||a.readyAt>now)return{ok:false,message:'Hasil ternak belum siap atau sudah diambil.'};const spec=ANIMALS[a.kind],l=this.s.livestock;if(this.used+spec.yield>this.capacity||l.produce[spec.product]+spec.yield>10000)return{ok:false,message:'Tas penuh. Jual sebagian hasil sebelum mengambil hasil ternak.'};l.produce[spec.product]+=spec.yield;a.fedAt=0;a.readyAt=0;this.addXP(spec.xp);this.note('Mengambil '+spec.yield+' '+ANIMAL_PRODUCTS[spec.product].name.toLowerCase()+' · +'+spec.xp+' XP.');return{ok:true,xp:spec.xp};}
+  sellAnimalProduct(key,qty){if(!Object.hasOwn(ANIMAL_PRODUCTS,key)||!integer(qty,1,10000)||this.s.livestock.produce[key]<qty)return{ok:false,message:'Hasil ternak belum tersedia.'};const earned=ANIMAL_PRODUCTS[key].sell*qty;if(this.s.coins+earned>1e9)return{ok:false,message:'Kapasitas koin sudah penuh.'};this.s.livestock.produce[key]-=qty;this.s.coins+=earned;this.s.stats.earned=Math.min(1e12,this.s.stats.earned+earned);this.note('Menjual '+qty+' '+ANIMAL_PRODUCTS[key].name.toLowerCase()+' · +'+earned+' koin.');return{ok:true,earned};}
+  setSharing(enabled,code){if(typeof enabled!=='boolean'||(enabled&&!friendCode(this.s.social.code||code)))return{ok:false,message:'Kode kunjungan belum tersedia.'};this.s.social.enabled=enabled;if(enabled&&!this.s.social.code)this.s.social.code=code;return{ok:true};}
+  addFriend(code){const t=this.s.social;if(!friendCode(code)||code===t.code)return{ok:false,message:'Gunakan kode kebun teman yang valid.'};if(t.friends.includes(code))return{ok:false,message:'Kebun sudah ada di daftar teman.'};if(t.friends.length>=30)return{ok:false,message:'Maksimal 30 kebun teman.'};t.friends.push(code);return{ok:true};}
+  removeFriend(code){const t=this.s.social;if(!t.friends.includes(code))return{ok:false,message:'Kebun tidak ada di daftar teman.'};t.friends=t.friends.filter(c=>c!==code);return{ok:true};}
   updateProfile(value){try{this.s.profile=profile(value);return{ok:true};}catch{return{ok:false,message:'Isi nama hingga 24 karakter dan pilih avatar atau foto JPG yang valid.'};}}
 
  }
- root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,LEVEL_XP,CROP_LEVEL,BUILDING_LEVEL,ORDER_TEMPLATES,RECIPES,DAILY,ACHIEVEMENTS,farmDay,levelFor,footprint,validateSave});
+ root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,LEVEL_XP,CROP_LEVEL,BUILDING_LEVEL,ORDER_TEMPLATES,RECIPES,ANIMALS,ANIMAL_PRODUCTS,friendCode,DAILY,ACHIEVEMENTS,farmDay,levelFor,footprint,validateSave});
 })(globalThis);
