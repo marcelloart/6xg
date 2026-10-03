@@ -57,7 +57,7 @@ window.BaraCloudSession=BaraCloudSession;
 // Commands contain intent only. Balances, rewards and deadlines come from the server.
 class BaraFarmSession extends BaraCloudSession{
  constructor(base,userId,getToken,options={}){super(base,userId,getToken,{...options,path:'/api/farm-save'});this.onState=options.onState||(()=>{});this.command=null;}
- accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||data.save?.version!==6||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error('Perbarui game untuk memakai transaksi server.');this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
+ accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||![6,7].includes(data.save?.version)||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error('Perbarui game untuk memakai transaksi server.');this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
  async load(){const data=this.accept(await this.request('GET'));this.onStatus('synced','Progres dan transaksi diperiksa server.');return data;}
  changed(){}
  async action(type,args){if(this.saving||this.command)return{ok:false,message:'Transaksi sebelumnya sedang dikonfirmasi. Tunggu atau tekan Coba lagi.'};this.command={id:crypto.randomUUID(),revision:this.revision,type,args};return this.sendCommand();}

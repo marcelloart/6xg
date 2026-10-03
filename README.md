@@ -29,6 +29,23 @@ Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kay
 
 Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Bangunan tidak lagi terbatas pada tapak tetap: pilih bangunan dan pratinjau langsung mengikuti kursor, putar dengan R atau tombol arah, lalu klik atau lepaskan di tanah hijau. Tombol **Konfirmasi** tetap tersedia. Pratinjau hijau/merah memeriksa batas tanah, pondok, pohon, bangunan, dan petak lain. Ada maksimal 24 bangunan dan 81 petak. Tahan bangunan atau petak selama **1,5 detik** untuk mengangkatnya. Objek dan tanaman mengikuti kursor dengan preview lokasi hijau/merah; seret lalu lepaskan pada lokasi sah, atau lepas di tempat lalu gerakkan kursor dan klik untuk menempatkan. Lokasi terhalang ditolak, **Batal/Esc** mengembalikan objek. Klik singkat tetap menanam/memanen; dua jari menggeser dan memperbesar peta tanpa membatalkan penempatan. Seret klik kanan atau tombol tengah di komputer, atau arahkan objek ke tepi layar untuk menggulir peta. Melepas gestur navigasi tidak menempatkan objek; klik/tap berikutnya menentukan lokasi. Menu **Atur** juga memindahkan bangunan/petak tanpa biaya; tanaman dan deadline tetap berjalan. Tambahan area 1/3/6 petak berharga 20 koin per petak dan lokasinya dipilih pemain. Petak cadangan yang belum terbuka tidak menghalangi lahan kosong. Saat petak baru terbuka, posisinya disesuaikan tanpa memindahkan tanaman atau bangunan yang sudah ada. Biaya dibayar hanya setelah penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
 
+## Produksi, misi dan pencapaian (v1.6)
+
+Menu **Olah** menyediakan dapur kebun (level 2, pembangunan 120 detik, 14 kayu + 8 batu + 2 daging), rumah jus (level 7, 150 detik, 22 kayu + 12 batu + 3 daging), dan rumah pai (level 8, 180 detik, 26 kayu + 16 batu + 4 daging). Semua dapat ditempatkan dan dipindahkan lewat pratinjau peta yang sama.
+
+| Resep | Level | Bahan | Durasi | Hasil | Harga jual | XP saat diambil |
+| --- | --- | --- | --- | --- | --- | --- |
+| Sup wortel | 2 | 3 wortel | 10 menit | 1 | 16 | 4 |
+| Selai stroberi | 4 | 3 stroberi | 30 menit | 1 | 60 | 9 |
+| Jus jeruk | 7 | 3 jeruk | 45 menit | 1 | 175 | 15 |
+| Pai apel | 8 | 3 apel | 60 menit | 1 | 225 | 20 |
+
+Setiap bangunan memiliki tiga antrean bergiliran. Bahan dibayar saat masuk antrean. Deadline memakai waktu server sehingga berjalan saat tab ditutup; hasil tidak kedaluwarsa. Klik Ambil setelah selesai, lalu jual di Toko → Olahan. Panen dan olahan berbagi kapasitas tas; jika penuh, hasil tetap di antrean. Pemindahan bangunan tidak mengubah identitas atau waktu produksi.
+
+Menu **Tujuan** juga berisi tiga misi harian: tanam 3 bibit (2 bibit wortel + 8 XP), panen 9 hasil (3 bibit + 12 XP), kirim 1 pesanan (2 bibit + 10 XP). Misi berganti tepat pukul 00.00 WIB. Progres dihitung dari aksi server hari itu; hadiah yang belum diambil tidak dibawa ke hari berikutnya.
+
+Lima pencapaian permanen menghitung panen, koin penjualan, bangunan selesai, produksi, dan klaim harian. Hadiah hanya sekali per akun. Panen 30 hasil lalu klaim Panen Bertumbuh untuk membuka pot bunga gratis; dekorasi tersebut tidak memberi XP pembangunan. Akun lama mempertahankan saldo, tanaman, tata letak, foto dan XP, tanpa tambahan modal otomatis.
+
 ## Tutorial, level dan pesanan
 
 Menu **Tujuan** menyatukan panduan interaktif empat langkah (tanam → panen → jual → lumbung), progres level, daftar yang terbuka, dan tiga pesanan pelanggan. Panduan boleh disembunyikan lalu dilanjutkan; progresnya berada di akun server.
@@ -39,7 +56,7 @@ Pesanan mengambil hasil dari tas dan membayar nilai jual panen + 25% (dibulatkan
 
 ## Transaksi server
 
-Snapshot kebun versi 6 mencatat XP, tutorial, dan pesanan. Server membaca saldo yang tersimpan, memvalidasi aksi dari akun bertanda tangan Privy, memakai waktu server, lalu menyimpan hasil dan tanda terima secara atomik dalam D1. Klien hanya mengirim maksud tindakan ke **POST /api/farm-action**, dengan ID transaksi, revisi, jenis aksi, dan argumen yang dibatasi. Klien tidak boleh mengunggah saldo, hasil panen, hadiah, XP atau waktu panen melalui PUT /api/farm-save. GET /api/farm-save mengembalikan snapshot resmi dan waktu server.
+Snapshot kebun versi 7 mencatat XP, tutorial, dan pesanan. Server membaca saldo yang tersimpan, memvalidasi aksi dari akun bertanda tangan Privy, memakai waktu server, lalu menyimpan hasil dan tanda terima secara atomik dalam D1. Klien hanya mengirim maksud tindakan ke **POST /api/farm-action**, dengan ID transaksi, revisi, jenis aksi, dan argumen yang dibatasi. Klien tidak boleh mengunggah saldo, hasil panen, hadiah, XP atau waktu panen melalui PUT /api/farm-save. GET /api/farm-save mengembalikan snapshot resmi dan waktu server.
 
 Transaksi dengan ID sama dapat dicoba lagi ketika respons hilang tanpa biaya atau hadiah ganda. Konflik revisi memuat kondisi server terkini. Saat koneksi putus, tindakan belum dikonfirmasi tidak mengubah saldo; bermain membutuhkan koneksi untuk transaksi. Cache perangkat bukan sumber saldo. Waktu tumbuh tetap berjalan meskipun game ditutup. Kebun versi 4/5 dimigrasikan sambil mempertahankan saldo, tanaman, lokasi, profil, dan akses pada tanaman/bangunan yang sudah dimiliki. Endpoint /api/save untuk kampanye RTS lama tetap terpisah.
 
@@ -65,7 +82,7 @@ Sumber suara: `assets/js/farm-audio.js`. Semua suara disintesis untuk Ladang Bar
 
 ## Progres online
 
-Landing GitHub Pages menggunakan SDK resmi Privy; game Cloudflare Pages memakai sesi cookie dan backend Workers + D1. `GET /api/farm-save` memuat progres; `POST /api/farm-action` menerima perintah yang diperiksa server. ID akun berasal dari token ES256 terverifikasi. Revisi atomik mencegah perangkat lama menimpa progres. CORS dibatasi ke origin landing dan game. Snapshot versi 6 menambahkan XP, tutorial, dan pesanan; versi 4/5 yang sudah tersimpan dimigrasikan tanpa mengulang bibit gratis. Profil memiliki nama pekebun, nama kebun, dan empat avatar; nama dibatasi 24 karakter dan ditampilkan sebagai teks. Statistik mencatat panen/penjualan sejak pembaruan ini. Snapshot memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.
+Landing GitHub Pages menggunakan SDK resmi Privy; game Cloudflare Pages memakai sesi cookie dan backend Workers + D1. `GET /api/farm-save` memuat progres; `POST /api/farm-action` menerima perintah yang diperiksa server. ID akun berasal dari token ES256 terverifikasi. Revisi atomik mencegah perangkat lama menimpa progres. CORS dibatasi ke origin landing dan game. Snapshot versi 7 menambahkan produksi, misi harian dan pencapaian; versi 4/5/6 yang sudah tersimpan dimigrasikan tanpa mengulang bibit gratis. Profil memiliki nama pekebun, nama kebun, dan empat avatar; nama dibatasi 24 karakter dan ditampilkan sebagai teks. Statistik mencatat panen/penjualan sejak pembaruan ini. Snapshot memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.
 
 Data kebun menggunakan tabel `farm_saves` dan slot lokal `6xg-farm:<DID>`. Progres Benteng Bara tetap di tabel `saves` dan slot `6xg-account:<DID>`; tidak direset atau diimpor menjadi kebun. Sumber serta pengujian game perang dipertahankan untuk kompatibilitas, tetapi tidak dimuat oleh halaman utama.
 

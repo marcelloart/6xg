@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "state": {
     "coins": 0,
     "lastSeen": 1790928660000,
@@ -41,6 +41,30 @@
         "rotation": 1
       }
     ],
+    "production": {
+      "nextId": 1,
+      "goods": {
+        "soup": 0,
+        "jam": 0,
+        "juice": 0,
+        "pie": 0
+      },
+      "jobs": []
+    },
+    "challenges": {
+      "day": 20728,
+      "counts": {
+        "planted": 1,
+        "harvested": 0,
+        "orders": 0
+      },
+      "claimed": [],
+      "totals": {
+        "crafted": 0,
+        "dailies": 0
+      },
+      "achievements": []
+    },
     "expansions": 6,
     "profile": {
       "name": "Pekebun Uji",

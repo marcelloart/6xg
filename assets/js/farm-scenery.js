@@ -15,6 +15,7 @@ class FarmRenderer{
  house(c,x,y,kind='house',scale=1){
   c.save();c.translate(x,y);c.scale(scale,scale);this.ellipse(c,12,12,74,24,'#49694628');
   const barn=kind==='barn',shed=kind==='shed';
+  if(kind==='planter'){this.rect(c,-14,-15,28,23,'#a78158',4);for(const dx of[-9,0,9]){this.line(c,[[dx,-8],[dx,-32]],'#628543',2);this.ellipse(c,dx,-32,7,7,'#e5bf64');this.ellipse(c,dx,-32,3,3,'#7d5936');}c.restore();return;}
   if(kind==='bench'){this.rect(c,-32,-12,64,13,'#a68554',2);this.rect(c,-32,-29,64,12,'#987747',2);for(const dx of[-25,25])this.line(c,[[dx,-24],[dx,15]],'#604b35',5);c.restore();return;}
   if(kind==='well'){
    this.ellipse(c,0,4,26,14,'#7e9a8b');this.ellipse(c,0,-2,20,11,'#487d89');this.rect(c,-27,-48,5,47,'#987554');this.rect(c,22,-48,5,47,'#987554');this.line(c,[[-36,-47],[0,-65],[36,-47]],'#9a7451',9);this.line(c,[[-2,-52],[-2,-11]],'#e2c288',2);this.rect(c,-8,-15,13,13,'#be9760',2);
@@ -22,7 +23,7 @@ class FarmRenderer{
    this.rect(c,-52,-63,102,72,barn?'#b87c67':'#e4d6a4',4);this.rect(c,14,-64,38,74,barn?'#9d6858':'#c8c496',2);
    c.fillStyle=barn?'#886355':'#be8b64';c.beginPath();c.moveTo(-63,-60);c.lineTo(-8,-106);c.lineTo(65,-61);c.lineTo(8,-67);c.closePath();c.fill();c.fillStyle=barn?'#b38c76':'#d6a777';c.beginPath();c.moveTo(-63,-60);c.lineTo(-8,-106);c.lineTo(8,-67);c.closePath();c.fill();
    if(!shed){this.rect(c,29,-98,12,23,'#d0bf99',2);this.rect(c,-37,-42,19,19,'#638981',2);this.line(c,[[-27,-42],[-27,-23]],'#ecdfb3',2);}
-   this.rect(c,-6,-30,barn?29:19,40,barn?'#715548':'#79806a',2);if(barn){this.line(c,[[-3,-27],[20,7]],'#cba17c',2);this.line(c,[[20,-27],[-3,7]],'#cba17c',2);}this.rect(c,-57,8,115,7,'#ccc2a0',2);
+   this.rect(c,-6,-30,barn?29:19,40,barn?'#715548':'#79806a',2);if(barn){this.line(c,[[-3,-27],[20,7]],'#cba17c',2);this.line(c,[[20,-27],[-3,7]],'#cba17c',2);}this.rect(c,-57,8,115,7,'#ccc2a0',2);if(['kitchen','juicery','bakery'].includes(kind)){this.rect(c,-46,-21,92,8,kind==='juicery'?'#729650':'#c48469',2);this.rect(c,-34,-74,68,14,'#eee2b9',2);c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#536e43';c.fillText({kitchen:'DAPUR',juicery:'JUS',bakery:'PAI'}[kind],0,-64);}
   }c.restore();
  }
  fence(c,x,y,w,h){

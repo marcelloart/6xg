@@ -66,7 +66,7 @@ export default {
       try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
         farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first(); } catch {}
       const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 6});
+      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 7});
     }
     if (!['/api/save', '/api/farm-save', '/api/farm-action'].includes(path)) return reply(404, {error: 'not_found'});
     const farm = path !== '/api/save';

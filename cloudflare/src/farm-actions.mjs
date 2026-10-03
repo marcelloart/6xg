@@ -17,7 +17,12 @@ const specs={
  expand:[['point','count','rotation'],a=>point(a.point)&&[1,3,6].includes(a.count)&&int(a.rotation,0,3),f=>a=>f.expandGarden(a.point,a.count,a.rotation)],
  profile:[['profile'],a=>object(a.profile)&&Object.keys(a.profile).every(k=>['name','farmName','avatar','photo'].includes(k)),f=>a=>f.updateProfile(a.profile)],
  order:[['id'],a=>typeof a.id==='string'&&/^\d:\d{1,10}:\d{1,2}$/.test(a.id),f=>a=>f.deliverOrder(a.id)],
- tutorial:[['dismissed'],a=>typeof a.dismissed==='boolean',f=>a=>f.tutorialDismiss(a.dismissed)]
+ tutorial:[['dismissed'],a=>typeof a.dismissed==='boolean',f=>a=>f.tutorialDismiss(a.dismissed)],
+ production:[['slot','recipe'],a=>int(a.slot,0,23)&&Object.hasOwn(F.RECIPES,a.recipe),f=>a=>f.startProduction(a.slot,a.recipe)],
+ collect:[['id'],a=>int(a.id,1,1e9),f=>a=>f.collectProduction(a.id)],
+ goods:[['recipe','qty'],a=>Object.hasOwn(F.RECIPES,a.recipe)&&int(a.qty,1,10000),f=>a=>f.sellGoods(a.recipe,a.qty)],
+ daily:[['id'],a=>typeof a.id==='string'&&/^\d{1,5}:(plant|harvest|order)$/.test(a.id),f=>a=>f.claimDaily(a.id)],
+ achievement:[['key'],a=>Object.hasOwn(F.ACHIEVEMENTS,a.key),f=>a=>f.claimAchievement(a.key)]
 };
 export function parseAction(p){
  if(!exact(p,['id','revision','type','args'])||typeof p.id!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(p.id)||!int(p.revision,0,Number.MAX_SAFE_INTEGER-1)||!Object.hasOwn(specs,p.type))throw new TypeError('Invalid action');
@@ -26,7 +31,7 @@ export function parseAction(p){
 export function serverFarm(save,now){
  const farm=new F.Farm({save,clock:()=>now});
  // A legacy snapshot cannot dictate the server clock after migration.
- if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);p.readyAt=p.plantedAt+F.CROPS[p.crop].minutes*60000;}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;}for(const e of farm.s.log)e.at=Math.min(now,e.at);}
+ if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);p.readyAt=p.plantedAt+F.CROPS[p.crop].minutes*60000;}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;}const tails=new Map();for(const j of farm.s.production.jobs){j.startedAt=Math.max(1,j.startedAt-shift,farm.s.buildings.find(b=>b.slot===j.slot).readyAt,tails.get(j.slot)||0);j.readyAt=j.startedAt+F.RECIPES[j.recipe].minutes*60000;tails.set(j.slot,j.readyAt);}for(const e of farm.s.log)e.at=Math.min(now,e.at);}
  farm.now();return farm;
 }
 const snapshot=(uid,row,now)=>({userId:uid,save:JSON.parse(serverFarm(row?JSON.parse(row.save):null,now).serialize()),revision:row?.revision||0,savedAt:row?.saved_at||null,serverTime:now,authoritative:true});

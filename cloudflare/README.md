@@ -1,3 +1,5 @@
+Produksi v1.6 memakai snapshot kebun versi 7: antrean, olahan, misi harian dan pencapaian berada di JSON akun yang sama. Aksi `production`, `collect`, `goods`, `daily`, dan `achievement` memakai validasi argumen, waktu server, revisi atomik dan tanda terima `farm_actions`. Tidak ada tabel baru. Hadiah, bahan dan olahan tidak bisa diunggah dari klien.
+
 # Progres online — Cloudflare Workers + D1
 
 ## Ladang Bara
