@@ -30,10 +30,12 @@ export async function handleGameRequest(request,env,{cloudFetch=fetch}={}){
     // one another; a public workers.dev fetch is not a reliable server route.
     const send=env.CLOUD_SAVE?(url,init)=>env.CLOUD_SAVE.fetch(url,init):cloudFetch;
     const remote=await send(CLOUD+'/api/farm-save',{
-      method:path==='/api/farm-save'?request.method:'GET',redirect:'error',
+      method:path==='/api/farm-save'?request.method:'GET',redirect:'manual',
       headers:{Authorization:'Bearer '+token,Origin:APP,'Content-Type':request.headers.get('Content-Type')||'application/json'},
       ...(path==='/api/farm-save'&&request.method==='PUT'?{body:request.body}:{}),
     });
+    // Never follow an upstream redirect or forward credentials to another host.
+    if(remote.status>=300&&remote.status<400)return reply(502,{error:'storage_unavailable'});
     if(path==='/api/farm-save')return new Response(remote.body,{status:remote.status,headers:{...headers,...(remote.status===401?clear:{})}});
     if(!remote.ok)return reply(remote.status,{error:remote.status===401?'session_expired':'storage_unavailable'},remote.status===401?clear:{});
     const data=await remote.json();
