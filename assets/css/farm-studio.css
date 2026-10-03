@@ -26,3 +26,6 @@
 .asset-loading[hidden]{display:none}
 
 .resource-art{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden}.resource-art img{width:100%;height:100%;object-fit:cover}.resource-art img[hidden]{display:none}
+
+/* Original player-supplied produce photographs also serve the seed and harvest catalogue. */
+.trade-art img.uploaded-produce,.product-art img.uploaded-produce,.seed-art img.uploaded-produce{display:block;background:#fff;object-fit:contain}
