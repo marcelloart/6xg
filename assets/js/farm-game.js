@@ -32,7 +32,7 @@ function openPanel(view){
  renderPanel();
 }
 const storeKinds=()=>shop==='materials'?F.MATERIALS:shop==='buildings'?F.BUILDINGS:F.CROPS;
-const productPhotos=Object.freeze({carrot:'./assets/produce/carrot.jpg?v=8f8faa693e',tomato:'./assets/produce/tomato.jpg?v=c66d03f75b',corn:'./assets/produce/corn.jpg?v=e09aa88ddf',strawberry:'./assets/produce/strawberry.jpg?v=94e3f3b8e8',potato:'./assets/produce/potato.jpg?v=1be4f87202',chili:'./assets/produce/chili.jpg?v=edf173b6ea',orange:'./assets/produce/orange.jpg?v=60bbd6d5b4'});
+const productPhotos=Object.freeze({carrot:'./assets/produce/carrot.jpg?v=8f8faa693e',tomato:'./assets/produce/tomato.jpg?v=c66d03f75b',corn:'./assets/produce/corn.jpg?v=e09aa88ddf',strawberry:'./assets/produce/strawberry.jpg?v=94e3f3b8e8',potato:'./assets/produce/potato.jpg?v=1be4f87202',chili:'./assets/produce/chili.jpg?v=edf173b6ea',orange:'./assets/produce/orange.jpg?v=60bbd6d5b4',apple:'./assets/produce/apple.jpg?v=ae9b5a5fb6',avocado:'./assets/produce/avocado.jpg?v=3e02a2d3be'});
 const productImage=key=>productPhotos[key]||renderer.catalogue?.[key];
 const picture=(key,icon)=>{const source=productImage(key);return`<img data-art="${key}" ${productPhotos[key]?'class="uploaded-produce" ':''}${source?'src="'+source+'"':'hidden'} alt="" loading="lazy" decoding="async">${source?'':'<span class="product-emoji" aria-hidden="true">'+icon+'</span>'}`;};
 const stock=(key)=>shop==='sell'?farm.s.produce[key]:shop==='materials'?farm.s.materials[key]:shop==='buildings'?farm.s.buildings.filter(b=>b.kind===key).length:farm.s.seeds[key];
