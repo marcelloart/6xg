@@ -55,7 +55,7 @@ function renderPanel(){
  }else if(panel==='shop'){
   $('panelLabel').textContent='PASAR LEMBAH';$('panelTitle').textContent=shop==='sell'?'Hasilmu punya nilai.':shop==='buildings'?'Bangun dunia milikmu.':shop==='materials'?'Bekal untuk membangun.':'Ada yang ingin ditanam?';$('panelCopy').textContent=shop==='sell'?'Pilih panen, atur jumlah, lalu jual untuk mendapatkan koin.':shop==='buildings'?'Beli bahan yang kurang, lalu tentukan sendiri lokasi bangunan.':'Pilih produk dan jumlahnya. Semua harga menggunakan koin kebun.';body.innerHTML=renderStore();
  }else if(panel==='build'){
-  $('panelLabel').textContent='ARSITEKTUR KEBUN';$('panelTitle').textContent='Tempat untuk bertumbuh.';$('panelCopy').textContent='Bangunan bebas ditempatkan di tanah terbuka. Putar, tinjau, lalu konfirmasi.';
+  $('panelLabel').textContent='ARSITEKTUR KEBUN';$('panelTitle').textContent='Tempat untuk bertumbuh.';$('panelCopy').textContent='Pilih bangunan, geser pratinjau ke tanah hijau, lalu klik atau lepaskan untuk membangun.';
   body.innerHTML='<div class="building-grid">'+Object.entries(F.BUILDINGS).map(([key,b])=>`<article class="building-card"><div class="building-art">${picture(key,b.icon)}</div><div class="building-copy"><h3>${b.name}</h3><p>${b.benefit} · ${b.seconds} detik</p><div class="cost-list">${buildingCosts(key)}</div><div class="item-actions">${action('Pilih tempat','build',key,1,!farm.canBuild(key)||s.buildings.length>=F.MAX_BUILDINGS)}${action('Belanja bahan','building-shop',key,1,false,true)}</div></div></article>`).join('')+'</div><div class="item-actions">'+action('Pindahkan bangunan / petak','panel','layout',1,false,true)+'</div>';
  }else if(panel==='layout'){
   $('panelLabel').textContent='STUDIO TATA LETAK';$('panelTitle').textContent='Kebun sesuai caramu.';$('panelCopy').textContent='Tahan bangunan atau petak di peta selama 1,5 detik untuk mengangkatnya. Geser ke lokasi hijau, lalu lepaskan. Tanaman tetap tumbuh.';
@@ -76,7 +76,7 @@ function renderSelection(){
 function renderUI(){
  const s=farm.s;$('coinsValue').textContent=format(s.coins);for(const k of Object.keys(F.MATERIALS))$(k+'Value').textContent=format(s.materials[k]);
  $('storageValue').textContent=farm.used+' / '+farm.capacity;$('storageFill').style.width=100*farm.used/farm.capacity+'%';
- $('mapNote').textContent=placement?.followPointer?'GESER KE AREA HIJAU · LEPASKAN / KLIK UNTUK MENEMPATKAN':placement?'KLIK TANAH · R PUTAR · KONFIRMASI UNTUK MENEMPATKAN':selectedCrop?'KLIK UNTUK MENANAM · TAHAN 1,5 DETIK UNTUK MEMINDAHKAN':'SERET PETA UNTUK MENJELAJAH ↔';
+ $('mapNote').textContent=placement?.followPointer?'R PUTAR · ESC BATAL':placement?'KLIK TANAH · R PUTAR · KONFIRMASI UNTUK MENEMPATKAN':selectedCrop?'KLIK UNTUK MENANAM · TAHAN 1,5 DETIK UNTUK MEMINDAHKAN':'SERET PETA UNTUK MENJELAJAH ↔';
  $('farmName').textContent=s.profile.farmName;renderPlacement();renderProfile();renderPanel();renderSelection();
 }
 function perform(result,success){if(!result.ok){toast(result.message);return false;}save();renderUI();if(success)toast(success);return true;}
@@ -89,7 +89,7 @@ function choosePlot(id,plantOnClick=false){
 }
 function placementResult(){if(!placement?.point)return{ok:false,message:'Klik tanah di peta untuk memilih posisi.'};const p=placement;return p.kind==='garden'?farm.gardenPlacement(p.point,p.count,p.rotation):farm.checkPlacement(p.kind,p.point,p.rotation,{ignoreBuilding:p.moveBuilding??null,ignorePlots:p.movePlot===undefined?[]:[p.movePlot]});}
 function renderPlacement(){const dock=$('placementDock');dock.hidden=!placement;dock.dataset.follow=String(Boolean(placement?.followPointer));$('map').classList.toggle('is-carrying',Boolean(placement?.followPointer));if(!placement)return;const valid=placementResult();placement.valid=valid.ok;$('placementTitle').textContent=placement.kind==='garden'?'Area '+placement.count+' petak baru':placement.kind==='plot'?'Pindahkan petak '+(placement.movePlot+1):(placement.moveBuilding!==undefined?'Pindahkan ':'Bangun ')+F.BUILDINGS[placement.kind].name;$('placementCopy').textContent=placement.point?(valid.ok?(placement.followPointer?'Lokasi tersedia · lepaskan atau klik untuk menempatkan.':'Lokasi tersedia · klik Konfirmasi untuk menempatkan.'):valid.message):'Klik tanah kosong untuk memilih lokasi. Seret peta untuk melihat area lain.';$('confirmPlacement').disabled=!valid.ok;$('rotatePlacement').hidden=placement.kind==='plot';dock.dataset.valid=String(valid.ok);$('placementAngle').textContent=placement.rotation*90+'°';}
-function beginPlacement(value){placement={rotation:0,point:null,...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();renderUI();if(!value.followPointer)toast('Klik posisi pilihanmu di peta, lalu konfirmasi.');}
+function beginPlacement(value){placement={rotation:0,point:camera.screenToWorld(camera.width/2,camera.height/2),followPointer:true,lifted:true,offset:{x:0,y:0},...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();if(!value.lifted){const p=camera.worldToScreen(placement.point.x,placement.point.y);pickup.follow(p.x,p.y);}renderUI();canvas.focus();if(!value.lifted)toast('Geser bangunan ke area hijau, lalu klik / lepaskan. Geser peta dengan 2 jari, klik kanan, atau tepi layar.');}
 function cancelPlacement(){pickup.reset();placement=null;pendingBuild=null;renderUI();}
 function confirmPlacement(){if(!placement||!gate.canPlay||!entered)return;const valid=placementResult();if(!valid.ok){toast(valid.message);return;}const p=placement,result=p.kind==='garden'?farm.expandGarden(p.point,p.count,p.rotation):p.kind==='plot'?farm.movePlot(p.movePlot,p.point):p.moveBuilding!==undefined?farm.moveBuilding(p.moveBuilding,p.point,p.rotation):farm.build(p.kind,p.point,p.rotation);if(perform(result,p.kind==='garden'?'Area tanam baru siap digunakan.':p.moveBuilding!==undefined||p.kind==='plot'?'Tata letak berhasil diperbarui.':'Pembangunan dimulai.')){cancelPlacement();}}
 function chooseLocation(point){
@@ -112,8 +112,8 @@ function onAction(event){
  else if(type==='material')perform(farm.buyMaterial(key,qty),'Membeli '+qty+' '+F.MATERIALS[key].name.toLowerCase()+'.');
  else if(type==='build')beginPlacement({kind:key});
  else if(type==='expand')beginPlacement({kind:'garden',count:qty});
- else if(type==='move-plot'){const p=farm.s.plots[Number(key)];camera.focus(p.x,p.y);beginPlacement({kind:'plot',movePlot:p.id});}
- else if(type==='move-building'){const b=farm.s.buildings.find(v=>v.slot===Number(key));camera.focus(b.x,b.y);beginPlacement({kind:b.kind,moveBuilding:b.slot,rotation:b.rotation});}
+ else if(type==='move-plot'){const p=farm.s.plots[Number(key)];camera.focus(p.x,p.y);beginPlacement({kind:'plot',movePlot:p.id,point:{x:p.x,y:p.y}});}
+ else if(type==='move-building'){const b=farm.s.buildings.find(v=>v.slot===Number(key));camera.focus(b.x,b.y);beginPlacement({kind:b.kind,moveBuilding:b.slot,rotation:b.rotation,point:{x:b.x,y:b.y}});}
  else if(type==='inspect'){storeItem=key;tradeQty=1;renderPanel();$('panelBody').parentElement.scrollTop=0;}
  else if(type==='quantity'){tradeQty=Math.max(1,Math.min(shop==='sell'?Math.max(1,stock(storeItem)):100,tradeQty+qty));renderPanel();}
  else if(type==='preset'){tradeQty=qty;renderPanel();}
@@ -146,12 +146,13 @@ const pickup=new FarmPickupGesture(camera,gestures,{
  active:()=>Boolean(placement?.followPointer),pick:pickMovable,
  hold:p=>{const hint=$('pickupHint');hint.hidden=!p;if(p){hint.style.left=p.x+'px';hint.style.top=p.y+'px';}},
  lift:(target,point)=>{if(!gate.canPlay||!entered)return false;beginPlacement({...target,point:target.origin,followPointer:true,lifted:true,offset:{x:target.origin.x-point.x,y:target.origin.y-point.y}});toast('Objek terangkat. Geser ke area hijau, lalu lepaskan atau klik untuk menempatkan.');return true;},
- move:point=>{if(!placement?.followPointer||!gate.canPlay||!entered)return;placement.point={x:Math.round(point.x+placement.offset.x),y:Math.round(point.y+placement.offset.y)};renderPlacement();},
+ move:point=>{if(!placement?.followPointer||!gate.canPlay||!entered)return;const next={x:Math.round(point.x+placement.offset.x),y:Math.round(point.y+placement.offset.y)};if(placement.point?.x===next.x&&placement.point?.y===next.y)return;placement.point=next;renderPlacement();},
  drop:confirmPlacement,cancel:cancelPlacement
 });
 const pointer=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
-canvas.addEventListener('pointerdown',e=>{if(!entered||e.button!==0)return;const p=pointer(e);canvas.setPointerCapture(e.pointerId);pickup.down(e.pointerId,p.x,p.y);});
-canvas.addEventListener('pointermove',e=>{const p=pointer(e);pickup.move(e.pointerId,p.x,p.y);});
+canvas.addEventListener('pointerdown',e=>{if(!entered||![0,1,2].includes(e.button))return;const p=pointer(e);if(e.button)e.preventDefault();canvas.setPointerCapture(e.pointerId);pickup.down(e.pointerId,p.x,p.y,{pan:e.button!==0,pointerType:e.pointerType});});
+canvas.addEventListener('pointermove',e=>{const p=pointer(e);pickup.move(e.pointerId,p.x,p.y,{pointerType:e.pointerType});});
+canvas.addEventListener('pointerleave',()=>pickup.leave());
 canvas.addEventListener('pointerup',e=>{const p=pointer(e);pickup.up(e.pointerId,p.x,p.y);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);});
 canvas.addEventListener('pointercancel',e=>pickup.cancel(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('blur',()=>{if(placement?.followPointer)cancelPlacement();else pickup.reset();});
@@ -165,7 +166,8 @@ $('miniMap').addEventListener('click',e=>{if(!entered)return;const r=e.currentTa
 for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='q'||e.key==='Q')camera.rotate?.(-Math.PI/8);else if(e.key==='e'||e.key==='E')camera.rotate?.(Math.PI/8);else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelPlacement();selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){placement.rotation=(placement.rotation+1)%4;renderPlacement();}});
 const resize=()=>{const r=$('map').getBoundingClientRect();camera.resize(r.width,r.height);};new ResizeObserver(resize).observe($('map'));resize();center();
-function draw(){renderer.draw(farm,{selectedPlot,pendingBuild,placement,selectedCrop,now:farm.now(),welcome:!entered});renderer.mini($('miniMap'),farm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
+let lastPlacementFrame=performance.now();
+function draw(){const tick=performance.now();pickup.update((tick-lastPlacementFrame)/1000);lastPlacementFrame=tick;renderer.draw(farm,{selectedPlot,pendingBuild,placement,selectedCrop,now:farm.now(),welcome:!entered});renderer.mini($('miniMap'),farm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
 setInterval(()=>{const now=farm.now(),signature=farm.unlocked+'|'+farm.capacity+'|'+farm.s.plots.filter(p=>p.crop&&p.readyAt<=now).map(p=>p.id).join(',')+'|'+farm.s.buildings.filter(b=>b.readyAt<=now).length;if(signature!==uiSignature){uiSignature=signature;renderUI();}else if(selectedPlot!==null){const p=farm.s.plots[selectedPlot];if(p?.crop&&p.readyAt>now)$('plotCopy').textContent='Sedang tumbuh · '+countdown(p.readyAt-now)+' lagi';}},1000);
 window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden){save();if(placement?.followPointer)cancelPlacement();else pickup.reset();}else renderUI();});setInterval(save,60000);
 const AVATAR_ICONS={sprout:'🌱',sunflower:'🌻',apple:'🍎',bee:'🐝'};
