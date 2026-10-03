@@ -20,8 +20,9 @@ before(async () => {
   db = await mf.getD1Database('DB');
   await db.exec((await readFile(new URL('../migrations/0001_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
   await db.exec((await readFile(new URL('../migrations/0002_farm_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
+  await db.exec((await readFile(new URL('../migrations/0003_farm_actions.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
 });
-beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); await db.prepare('DELETE FROM farm_saves').run(); });
+beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); await db.prepare('DELETE FROM farm_saves').run(); await db.prepare('DELETE FROM farm_actions').run(); });
 after(async () => { await mf?.dispose(); });
 async function token(uid = 'did:privy:a', updates = {}, privateKey = keys.privateKey) {
   const now = Math.floor(Date.now() / 1000);
@@ -113,65 +114,12 @@ test('only the configured game origin receives CORS permission', async () => {
   assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
 });
 test('health checks the migration and missing auth fails closed', async () => {
-  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:5});
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:6});
   const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
   try {
     const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});
     assert.equal(res.status, 503);
   } finally { await unconfigured.dispose(); }
-});
-
-test('farm seed purchases, crops and construction round-trip in a separate D1 table', async () => {
-  const auth=await token(), path='/api/farm-save', save=structuredClone(farmFixture);
-  const now=Date.now();save.state.lastSeen=now;save.state.seeds.carrot=5;
-  save.state.plots[0]={id:0,crop:'carrot',plantedAt:now,readyAt:now+300000};
-  save.state.buildings.push({slot:0,kind:'house',startedAt:now,readyAt:now+60000});
-  await call('PUT',auth,{save:fresh(),revision:0});
-  assert.equal((await call('GET',auth,undefined,{path})).body.save,null);
-  assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
-  assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
-  assert.equal((await call('GET',auth)).body.save.version,2);
-  assert.equal((await call('GET',await token('did:privy:b'),undefined,{path})).body.save,null);
-});
-test('farm endpoints reject anonymous requests, wrong namespaces and invalid crop deadlines', async()=>{
-  const auth=await token(),path='/api/farm-save';
-  assert.equal((await call('GET',null,undefined,{path})).status,401);
-  assert.equal((await call('PUT',auth,{save:fresh(),revision:0},{path})).status,400);
-  assert.equal((await call('PUT',auth,{save:farmFixture,revision:0})).status,400);
-  const save=structuredClone(farmFixture),now=Date.now();save.state.lastSeen=now;
-  save.state.plots[0]={id:0,crop:'apple',plantedAt:now,readyAt:now+300000};
-  assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,400);
-  assert.equal((await call('GET',auth,undefined,{path})).body.save,null);
-});
-test('farm revision conflicts cannot overwrite a newer device save',async()=>{
-  const auth=await token(),path='/api/farm-save',save=structuredClone(farmFixture);
-  const responses=await Promise.all([call('PUT',auth,{save,revision:0},{path}),call('PUT',auth,{save,revision:0},{path})]);
-  assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);
-  const changed=structuredClone(save);changed.state.seeds.carrot=4;
-  assert.equal((await call('PUT',auth,{save:changed,revision:0},{path})).status,409);
-  assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
-});
-
-test('version 5 chosen layout and profile round-trip while version 4 remains accepted',async()=>{
- const auth=await token(),path='/api/farm-save',studio=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8'));
- assert.equal((await call('PUT',auth,{save:farmFixture,revision:0},{path})).status,200);
- assert.equal((await call('PUT',auth,{save:studio,revision:1},{path})).status,200);
- assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,studio);
- for(const mutate of[s=>s.plots[0].x=650,s=>Object.assign(s.plots[0],{x:s.plots[1].x,y:s.plots[1].y}),s=>s.profile.avatar='invalid']){const bad=structuredClone(studio);mutate(bad.state);assert.equal((await call('PUT',auth,{save:bad,revision:2},{path})).status,400);}
- assert.equal((await call('GET',auth,undefined,{path})).body.revision,2);
-});
-
-test('uploaded profile photo persists privately; invalid images cannot overwrite it',async()=>{
- const auth=await token(),path='/api/farm-save',save=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8')),photo=JSON.parse(await readFile(new URL('../../tests/profile-photo.json',import.meta.url),'utf8')).photo;
- save.state.profile.photo=photo;
- assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
- assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,photo);
- assert.equal((await call('GET',await token('did:privy:b'),undefined,{path})).body.save,null);
- for(const image of ['https://example.com/a.jpg','data:image/svg+xml;base64,PHN2Zz4=',photo+'A'.repeat(16384)]){const bad=structuredClone(save);bad.state.profile.photo=image;assert.equal((await call('PUT',auth,{save:bad,revision:1},{path})).status,400);}
- assert.equal((await call('GET',auth,undefined,{path})).body.revision,1);
- delete save.state.profile.photo;
- assert.equal((await call('PUT',auth,{save,revision:1},{path})).status,200);
- assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,undefined);
 });
 
 test('both exact site and game origins can restore farm progress', async () => {
@@ -185,14 +133,3 @@ test('both exact site and game origins can restore farm progress', async () => {
   }
 });
 
-test('a growing plot moved onto unopened defaults round-trips while occupied plots remain blocked',async()=>{
- const auth=await token(),path='/api/farm-save',save=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8'));
- const destination=save.state.plots[35],deadline=save.state.plots[0].readyAt;
- Object.assign(save.state.plots[0],{x:destination.x,y:destination.y});
- assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
- const restored=(await call('GET',auth,undefined,{path})).body.save;
- assert.deepEqual(restored,save);assert.equal(restored.state.plots[0].readyAt,deadline);
- const bad=structuredClone(save);Object.assign(bad.state.plots[0],{x:bad.state.plots[1].x,y:bad.state.plots[1].y});
- assert.equal((await call('PUT',auth,{save:bad,revision:1},{path})).status,400);
- assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
-});

@@ -12,7 +12,7 @@ before(async()=>{
     {name:'game',routes:['app.6xg.online/*'],modules:true,script:(await readFile(new URL('../../src/game-api.mjs',import.meta.url),'utf8')).replace('export async function handleGameRequest','async function handleGameRequest'),compatibilityDate:'2026-10-03',serviceBindings:{CLOUD_SAVE:'backend'}},
   ],cf:false,telemetry:{enabled:false}}));
   db=await mf.getD1Database('DB','backend');
-  for(const file of ['0001_saves.sql','0002_farm_saves.sql'])await db.exec((await readFile(new URL('../migrations/'+file,import.meta.url),'utf8')).replaceAll('\n',' '));
+  for(const file of ['0001_saves.sql','0002_farm_saves.sql','0003_farm_actions.sql'])await db.exec((await readFile(new URL('../migrations/'+file,import.meta.url),'utf8')).replaceAll('\n',' '));
 });
 after(async()=>mf?.dispose());
 async function token(uid='did:privy:session-a',updates={},key=keys.privateKey){const now=Math.floor(Date.now()/1000);return new SignJWT({sub:uid,sid:'test-session',iss:'privy.io',aud:'test-app',iat:now,exp:now+3600,...updates}).setProtectedHeader({alg:'ES256'}).sign(key);}
@@ -46,11 +46,10 @@ test('the deployed service binding reaches signed-token verification without a p
   const cookie=deployed.headers.get('Set-Cookie').split(';')[0];
   const restored=await mf.dispatchFetch(APP+'/api/game-session',{headers:{Origin:APP,Cookie:cookie}});
   assert.equal(restored.status,200);assert.equal((await restored.json()).user.id,'did:privy:binding-account');
-  const save=JSON.parse(await readFile(new URL('../../tests/farm-save.json',import.meta.url),'utf8'));
-  const saved=await mf.dispatchFetch(APP+'/api/farm-save',{method:'PUT',headers:{Origin:APP,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({revision:0,save})});
-  assert.equal(saved.status,200);
+  const saved=await mf.dispatchFetch(APP+'/api/farm-action',{method:'POST',headers:{Origin:APP,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),revision:0,type:'plant',args:{id:0,crop:'carrot'}})});
+  assert.equal(saved.status,200);const planted=await saved.json();assert.equal(planted.save.state.seeds.carrot,5);assert.equal(planted.save.state.plots[0].crop,'carrot');
   const progress=await mf.dispatchFetch(APP+'/api/farm-save',{headers:{Origin:APP,Cookie:cookie}});
-  assert.deepEqual((await progress.json()).save,save);
+  assert.deepEqual((await progress.json()).save.state.plots[0],planted.save.state.plots[0]);
   const rejected=await mf.dispatchFetch(APP+'/api/game-session',{method:'POST',headers:{Origin:SITE,Authorization:'Bearer a.b.c'}});
   assert.equal(rejected.status,401);assert.equal((await rejected.json()).error,'session_expired');
 });
@@ -64,12 +63,13 @@ test('foreign and absent origins cannot establish or delete an account session',
   }
   assert.equal((await call('/api/game-session','GET',{cookie:jwt,origin:'https://evil.example'})).status,403);
 });
-test('cookie transport saves and restores the existing account progress and isolates another account',async()=>{
-  const jwt=await token(),save=JSON.parse(await readFile(new URL('../../tests/farm-save.json',import.meta.url),'utf8'));
-  const r=await call('/api/farm-save','PUT',{cookie:jwt,auth:await token('did:privy:ignored-header'),body:{revision:0,save}});assert.equal(r.status,200);
-  const restored=await call('/api/farm-save','GET',{cookie:jwt});assert.deepEqual((await restored.json()).save,save);
-  const other=await call('/api/farm-save','GET',{cookie:await token('did:privy:session-b')});assert.equal((await other.json()).save,null);
-  const stale=await call('/api/farm-save','PUT',{cookie:jwt,body:{revision:0,save}});assert.equal(stale.status,409);
+test('cookie commands restore server progress and isolate another account',async()=>{
+ const jwt=await token(),body={id:crypto.randomUUID(),revision:0,type:'plant',args:{id:0,crop:'carrot'}};
+ const r=await call('/api/farm-action','POST',{cookie:jwt,auth:await token('did:privy:ignored-header'),body});assert.equal(r.status,200);
+ const restored=await call('/api/farm-save','GET',{cookie:jwt});assert.equal((await restored.json()).save.state.seeds.carrot,5);
+ const other=await call('/api/farm-save','GET',{cookie:await token('did:privy:session-b')});assert.equal((await other.json()).save.state.seeds.carrot,6);
+ assert.equal((await call('/api/farm-save','PUT',{cookie:jwt,body:{revision:0,save:{coins:99999}}})).status,409);
+ assert.equal((await call('/api/farm-action','POST',{cookie:jwt,body,origin:null})).status,403);
 });
 test('logout clears the game cookie and backend outages do not clear a valid session',async()=>{
   const jwt=await token();const r=await call('/api/game-session/logout','POST',{cookie:jwt});assert.equal(r.status,200);assert(r.headers.get('Set-Cookie').includes('Max-Age=0'));

@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "state": {
     "coins": 0,
     "lastSeen": 1790928660000,
@@ -50,6 +50,30 @@
     "stats": {
       "harvested": 0,
       "earned": 0
+    },
+    "progress": {
+      "xp": 1410,
+      "grandfatheredCrops": [],
+      "grandfatheredBuildings": [],
+      "tutorial": {
+        "planted": 1,
+        "harvested": 0,
+        "sold": 0,
+        "dismissed": false
+      },
+      "orders": {
+        "completed": 0,
+        "rounds": [
+          0,
+          0,
+          0
+        ],
+        "offers": [
+          0,
+          1,
+          2
+        ]
+      }
     },
     "plots": [
       {

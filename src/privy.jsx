@@ -41,47 +41,20 @@ function Account({identity,login}){
       showStatus('loading','Memuat progres akun…');
       let cloud=null;
       try{
-        if(!cached&&identity.getCache){
-          const previous=await identity.getCache();if(cancelled)return;
-          if(previous?.save&&game.validate(previous.save)){
-            cached=previous.save;
-            try{localStorage.setItem(accountKey,cached);if(previous.baseline)localStorage.setItem(accountKey+':cloud-baseline',previous.baseline);}catch{}
-          }
-        }
-        if(cfg.apiBase){
-          cloud=new window.BaraCloudSession(identity.apiBase||cfg.apiBase,userId,async()=>{
-            if(auth.current.userId!==userId)throw new Error('Akun berubah');
-            const token=await auth.current.getAccessToken();
-            if(auth.current.userId!==userId)throw new Error('Akun berubah');
-            return token;
-          },{path:'/api/farm-save',cookieSession:identity.cookieSession===true,...(identity.fetcher?{fetcher:identity.fetcher}:{}),onSaved:remember,onStatus:(state,text)=>{if(!cancelled)showStatus(state,text);}});
-          session.current=cloud;
-          const data=await cloud.load();if(cancelled)return;
-          if(data.save){
-            const raw=JSON.stringify(data.save);if(!game.validate(raw))throw new Error('Progres tidak valid');
-            let baseline=null;try{baseline=JSON.parse(read(accountKey+':cloud-baseline'));}catch{}
-            if(cached&&game.validate(cached)&&baseline?.revision===data.revision&&baseline.save!==cached){
-              apply(cached);cloud.changed(game.snapshot());await cloud.flush();return;
-            }
-            remember(raw,data.revision);
-            apply(raw);showStatus('synced','Progres tersimpan online.');return;
-          }
-        }
-        if(cached&&game.validate(cached)){
-          apply(cached);
-          if(cloud){cloud.changed(game.snapshot());await cloud.flush();}
-          else showStatus('local','Akun aktif. Progres tersimpan di perangkat ini.');
-        }else{
-          if(window.BARA_PAGE==='game'){
-            apply(null);
-            if(cloud){cloud.changed(game.snapshot());await cloud.flush();}
-            else showStatus('local','Akun aktif. Progres tersimpan di perangkat ini.');
-          }else{setChoice(true);showStatus('choose','Mulai kebun untuk akun baru Anda.');}
-        }
+        if(!cfg.apiBase)throw new Error('Server diperlukan');
+        cloud=new window.BaraFarmSession(identity.apiBase||cfg.apiBase,userId,async()=>{
+          if(auth.current.userId!==userId)throw new Error('Akun berubah');
+          const token=await auth.current.getAccessToken();if(auth.current.userId!==userId)throw new Error('Akun berubah');return token;
+        },{cookieSession:identity.cookieSession===true,...(identity.fetcher?{fetcher:identity.fetcher}:{}),onSaved:remember,
+          onState:data=>{if(!cancelled&&attached.current===accountKey)game.receiveState(data);},onStatus:(state,text)=>{if(!cancelled)showStatus(state,text);}});
+        session.current=cloud;
+        const data=await cloud.load();if(cancelled)return;
+        const raw=JSON.stringify(data.save);if(!game.validate(raw))throw new Error('Progres tidak valid');
+        apply(raw);game.connectActions(cloud);game.receiveState(data);showStatus('synced','Progres dan transaksi diperiksa server.');
       }catch{
         if(cancelled)return;
         cloud?.close();session.current=null;
-        showStatus('error','Progres online belum dapat dimuat. Coba lagi, atau lanjutkan di perangkat ini.');
+        showStatus('error','Progres online belum dapat dimuat. Kebun tetap aman di akunmu. Coba lagi setelah terhubung.');
         if(window.BARA_PAGE==='game')document.getElementById('accountDialog').showModal();
       }
     })();
@@ -91,39 +64,23 @@ function Account({identity,login}){
   useEffect(()=>{
     const onSave=event=>{
       if(event.detail.key!==attached.current)return;
-      session.current?.changed(event.detail.save);
-      clearTimeout(flushTimer.current);flushTimer.current=setTimeout(()=>session.current?.flush(),1200);
-      // Local saving runs first; the status remains honest about cloud availability.
+      // This event caches a confirmed server state; it never uploads balances.
       queueMicrotask(updateBadge);
     };
     function updateBadge(){
       if(!attached.current)return;
       const synced=status.state==='synced';
-      game.setSaveStatus(synced?'TERSIMPAN ONLINE':'TERSIMPAN DI PERANGKAT');
-      game.setSaveNote(cfg.apiBase&&status.state!=='local'?'Progres disimpan ke akun saat koneksi tersedia. Jika bermain di perangkat lain, masuk dengan akun yang sama.':'Akun Privy aktif. Progres saat ini tersimpan di perangkat ini; sinkronisasi lintas perangkat belum tersambung.');
+      game.setSaveStatus(synced?'TERSIMPAN ONLINE':status.state==='saving'?'MEMERIKSA TRANSAKSI':'MENUNGGU SERVER');
+      game.setSaveNote('Koin, hasil panen, pesanan, dan waktu tumbuh ditentukan server. Gunakan akun yang sama untuk melanjutkan di perangkat lain.');
     }
     window.addEventListener('bara:save',onSave);
-    const onHide=()=>{if(document.hidden)session.current?.flush();};
+    const onHide=()=>{if(!document.hidden)session.current?.flush();};
     document.addEventListener('visibilitychange',onHide);
     const interval=setInterval(()=>{session.current?.flush();updateBadge();},15000);
     updateBadge();
     return()=>{window.removeEventListener('bara:save',onSave);document.removeEventListener('visibilitychange',onHide);clearInterval(interval);};
   },[status.state,userId]);
 
-  function choose(){
-    if(!userId)return;
-    attached.current=null;
-    game.attach(keyFor(userId),null);
-    attached.current=keyFor(userId);setChoice(false);
-    if(session.current){session.current.changed(game.snapshot());session.current.flush();}
-    else showStatus('local','Akun aktif. Progres tersimpan di perangkat ini.');
-  }
-  function continueLocal(){
-    if(!userId)return;
-    const raw=read(keyFor(userId));attached.current=null;
-    game.attach(keyFor(userId),raw&&game.validate(raw)?raw:null);attached.current=keyFor(userId);
-    showStatus('local','Progres tersimpan di perangkat ini. Sinkronisasi belum tersambung.');
-  }
   async function signOut(){
     setBusy(true);game.pause();
     try{await session.current?.flush();await logout();}
@@ -143,9 +100,9 @@ function Account({identity,login}){
       {!cfg.apiBase&&<div className="account-notice"><p className="account-copy">Penyimpanan online belum aktif.</p><p className="account-meta">Progres tetap tersimpan di browser perangkat ini. Akun belum menyinkronkan kebun ke perangkat lain.</p></div>}
       <div className="account-actions">
         {!authenticated&&<button className="primary" disabled={!ready||busy} onClick={()=>{document.getElementById('accountDialog').close();login({disableSignup:false});}}>{!ready?'Menyiapkan login…':identity.error?'Hubungkan akun kembali ↗':'Daftar / Masuk dengan Privy ↗'}</button>}
-        {authenticated&&choice&&<button className="primary" onClick={choose}>Mulai kebun baru</button>}
+        
         {authenticated&&game.canPlay()&&<button className="primary" onClick={()=>{document.getElementById('accountDialog').close();game.enter();}}>Mainkan Ladang Bara ↗</button>}
-        {authenticated&&['error','local'].includes(status.state)&&cfg.apiBase&&<><button className="primary" onClick={()=>setRetry(n=>n+1)}>Coba sinkronkan lagi</button>{status.state==='error'&&<button className="secondary" onClick={continueLocal}>Lanjutkan di perangkat ini</button>}</>}
+        {authenticated&&['error','local'].includes(status.state)&&cfg.apiBase&&<><button className="primary" onClick={()=>setRetry(n=>n+1)}>Coba sinkronkan lagi</button></>}
         {authenticated&&status.state==='conflict'&&<button className="primary" onClick={()=>setRetry(n=>n+1)}>Muat progres online</button>}
         {authenticated&&<button className="secondary" disabled={busy||status.state==='loading'} onClick={signOut}>{busy?'Keluar…':'Keluar dari akun'}</button>}
       </div>

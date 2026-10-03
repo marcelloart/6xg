@@ -12,18 +12,18 @@ class BaraCloudSession {
     this.base=url.href.replace(/\/$/,'');this.userId=userId;this.getToken=getToken;this.fetcher=fetcher;this.onStatus=onStatus;
     this.controller=new AbortController();this.closed=false;this.revision=0;this.pending=null;this.saving=false;this.blocked=false;
   }
-  async request(method,body) {
+  async request(method,body,path=this.path) {
     if(this.closed)throw new Error('Sesi telah berakhir.');
     const token=this.cookieSession?null:await this.getToken();
     if(this.closed)throw new Error('Sesi telah berakhir.');
     if(!this.cookieSession&&!token)throw new Error('Silakan masuk kembali.');
-    const response=await this.fetcher(this.base+this.path,{
-      method,signal:this.controller.signal,cache:'no-store',credentials:this.cookieSession?'include':'omit',
+    const response=await this.fetcher(this.base+path,{
+      method,signal:typeof AbortSignal!=='undefined'&&typeof AbortSignal.any==='function'&&typeof AbortSignal.timeout==='function'?AbortSignal.any([this.controller.signal,AbortSignal.timeout(15000)]):this.controller.signal,cache:'no-store',credentials:this.cookieSession?'include':'omit',
       headers:{...(!this.cookieSession?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},
       ...(body?{body:JSON.stringify(body)}:{})
     });
     if(this.closed)throw new Error('Sesi telah berakhir.');
-    if(!response.ok){const error=new Error(response.status===409?'Progres berubah di perangkat lain.':response.status===401?'Sesi login perlu diperbarui.':'Server belum dapat menyimpan progres.');error.status=response.status;throw error;}
+    if(!response.ok){let data;try{data=await response.json();}catch{}const error=new Error(data?.message|| (response.status===409?'Progres berubah di perangkat lain. Coba tindakan lagi.':response.status===401?'Sesi login perlu diperbarui.':'Koneksi server belum tersedia. Transaksi belum dikonfirmasi.'));error.status=response.status;error.data=data;throw error;}
     const data=await response.json();
     if(data.userId!==this.userId)throw new Error('Akun server tidak sesuai dengan akun pemain.');
     if(!Number.isSafeInteger(data.revision)||data.revision<0)throw new Error('Versi progres server tidak valid.');
@@ -54,3 +54,23 @@ class BaraCloudSession {
   close(){this.closed=true;this.pending=null;this.controller.abort();}
 }
 window.BaraCloudSession=BaraCloudSession;
+// Commands contain intent only. Balances, rewards and deadlines come from the server.
+class BaraFarmSession extends BaraCloudSession{
+ constructor(base,userId,getToken,options={}){super(base,userId,getToken,{...options,path:'/api/farm-save'});this.onState=options.onState||(()=>{});this.command=null;}
+ accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||data.save?.version!==6||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error('Perbarui game untuk memakai transaksi server.');this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
+ async load(){const data=this.accept(await this.request('GET'));this.onStatus('synced','Progres dan transaksi diperiksa server.');return data;}
+ changed(){}
+ async action(type,args){if(this.saving||this.command)return{ok:false,message:'Transaksi sebelumnya sedang dikonfirmasi. Tunggu atau tekan Coba lagi.'};this.command={id:crypto.randomUUID(),revision:this.revision,type,args};return this.sendCommand();}
+ async sendCommand(){
+  if(this.saving||!this.command)return{ok:false,message:'Menunggu konfirmasi server.'};this.saving=true;this.onStatus('saving','Memeriksa transaksi…');
+  try{const data=this.accept(await this.request('POST',this.command,'/api/farm-action'));this.command=null;this.onStatus('synced','Progres tersimpan online.');return data.result;}
+  catch(error){
+   if(this.closed)return{ok:false,message:'Sesi telah berakhir.'};
+   if(error.status&&error.status<500&&error.status!==429){this.command=null;if(error.data?.save)this.accept(error.data);else if(error.status===409)await this.load().catch(()=>{});this.onStatus('synced',error.message);return{ok:false,message:error.message};}
+   this.onStatus('error','Koneksi terputus. Transaksi menunggu konfirmasi; koin belum diubah.');return{ok:false,pending:true,message:'Transaksi belum dikonfirmasi. Coba lagi saat koneksi kembali.'};
+  }finally{this.saving=false;}
+ }
+ async flush(){if(this.closed||this.saving)return;if(this.command)return this.sendCommand();try{await this.load();return{ok:true};}catch{this.onStatus('error','Koneksi terputus. Muat kembali sebelum melakukan transaksi.');return{ok:false,message:'Server belum dapat dihubungi.'};}}
+ close(){super.close();this.command=null;}
+}
+window.BaraFarmSession=BaraFarmSession;

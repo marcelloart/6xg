@@ -29,6 +29,22 @@ Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kay
 
 Peta 3.200 × 2.200 memenuhi layar browser dan dapat digeser, diperbesar, serta dinavigasi melalui peta kecil. Bangunan tidak lagi terbatas pada tapak tetap: pilih bangunan dan pratinjau langsung mengikuti kursor, putar dengan R atau tombol arah, lalu klik atau lepaskan di tanah hijau. Tombol **Konfirmasi** tetap tersedia. Pratinjau hijau/merah memeriksa batas tanah, pondok, pohon, bangunan, dan petak lain. Ada maksimal 24 bangunan dan 81 petak. Tahan bangunan atau petak selama **1,5 detik** untuk mengangkatnya. Objek dan tanaman mengikuti kursor dengan preview lokasi hijau/merah; seret lalu lepaskan pada lokasi sah, atau lepas di tempat lalu gerakkan kursor dan klik untuk menempatkan. Lokasi terhalang ditolak, **Batal/Esc** mengembalikan objek. Klik singkat tetap menanam/memanen; dua jari menggeser dan memperbesar peta tanpa membatalkan penempatan. Seret klik kanan atau tombol tengah di komputer, atau arahkan objek ke tepi layar untuk menggulir peta. Melepas gestur navigasi tidak menempatkan objek; klik/tap berikutnya menentukan lokasi. Menu **Atur** juga memindahkan bangunan/petak tanpa biaya; tanaman dan deadline tetap berjalan. Tambahan area 1/3/6 petak berharga 20 koin per petak dan lokasinya dipilih pemain. Petak cadangan yang belum terbuka tidak menghalangi lahan kosong. Saat petak baru terbuka, posisinya disesuaikan tanpa memindahkan tanaman atau bangunan yang sudah ada. Biaya dibayar hanya setelah penempatan sah. Pondok kebun awal adalah bagian pemandangan dan tidak menambah kapasitas.
 
+## Tutorial, level dan pesanan
+
+Menu **Tujuan** menyatukan panduan interaktif empat langkah (tanam → panen → jual → lumbung), progres level, daftar yang terbuka, dan tiga pesanan pelanggan. Panduan boleh disembunyikan lalu dilanjutkan; progresnya berada di akun server.
+
+Level 1–9 membutuhkan XP kumulatif **0, 30, 80, 150, 260, 420, 650, 950, 1400**. Wortel sampai alpukat terbuka berurutan pada level tersebut. Panen memberi 2 XP per hasil, memulai pembangunan 10 XP, dan pesanan 8 + 4 × level pesanan. Lumbung tersedia di level 1, rumah di 2, sumur dan dekorasi bangku kebun di 3, gudang di 4. Bangku memerlukan 4 kayu + 2 batu dan 30 detik pembangunan.
+
+Pesanan mengambil hasil dari tas dan membayar nilai jual panen + 25% (dibulatkan ke atas), beserta XP. Kebutuhan pesanan tetap sampai selesai, kemudian slot tersebut mendapat pesanan baru yang sesuai level. Satu pesanan tidak dapat diklaim dua kali.
+
+## Transaksi server
+
+Snapshot kebun versi 6 mencatat XP, tutorial, dan pesanan. Server membaca saldo yang tersimpan, memvalidasi aksi dari akun bertanda tangan Privy, memakai waktu server, lalu menyimpan hasil dan tanda terima secara atomik dalam D1. Klien hanya mengirim maksud tindakan ke **POST /api/farm-action**, dengan ID transaksi, revisi, jenis aksi, dan argumen yang dibatasi. Klien tidak boleh mengunggah saldo, hasil panen, hadiah, XP atau waktu panen melalui PUT /api/farm-save. GET /api/farm-save mengembalikan snapshot resmi dan waktu server.
+
+Transaksi dengan ID sama dapat dicoba lagi ketika respons hilang tanpa biaya atau hadiah ganda. Konflik revisi memuat kondisi server terkini. Saat koneksi putus, tindakan belum dikonfirmasi tidak mengubah saldo; bermain membutuhkan koneksi untuk transaksi. Cache perangkat bukan sumber saldo. Waktu tumbuh tetap berjalan meskipun game ditutup. Kebun versi 4/5 dimigrasikan sambil mempertahankan saldo, tanaman, lokasi, profil, dan akses pada tanaman/bangunan yang sudah dimiliki. Endpoint /api/save untuk kampanye RTS lama tetap terpisah.
+
+Migrasi **0003_farm_actions.sql** harus diterapkan sebelum Worker versi ini diluncurkan; skrip deploy menjalankan migrasi D1 dahulu. Jangan mengganti data pemain dengan fixture pengujian.
+
 ## Kontrol
 
 Pilih bibit di **Kebun**, lalu klik petak kosong. Wortel dipilih secara awal. Klik tanaman matang untuk memanen. Tombol petak dalam panel Kebun menyediakan alternatif keyboard: pilih petak kemudian tekan **Tanam**. Seret peta, gunakan panah saat canvas fokus, gulir/cubit untuk zoom, Home untuk kembali, dan Escape untuk menutup panel atau membatalkan penempatan.

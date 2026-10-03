@@ -15,6 +15,7 @@ class FarmRenderer{
  house(c,x,y,kind='house',scale=1){
   c.save();c.translate(x,y);c.scale(scale,scale);this.ellipse(c,12,12,74,24,'#49694628');
   const barn=kind==='barn',shed=kind==='shed';
+  if(kind==='bench'){this.rect(c,-32,-12,64,13,'#a68554',2);this.rect(c,-32,-29,64,12,'#987747',2);for(const dx of[-25,25])this.line(c,[[dx,-24],[dx,15]],'#604b35',5);c.restore();return;}
   if(kind==='well'){
    this.ellipse(c,0,4,26,14,'#7e9a8b');this.ellipse(c,0,-2,20,11,'#487d89');this.rect(c,-27,-48,5,47,'#987554');this.rect(c,22,-48,5,47,'#987554');this.line(c,[[-36,-47],[0,-65],[36,-47]],'#9a7451',9);this.line(c,[[-2,-52],[-2,-11]],'#e2c288',2);this.rect(c,-8,-15,13,13,'#be9760',2);
   }else{

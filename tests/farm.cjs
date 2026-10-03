@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/js/farm-engine.js'),'utf8'),context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/js/session-gate.js'),'utf8'),context);
 const F=context.BaraFarm,tests=[],start=1790928000000;let now=start;
-const fresh=()=>{now=start;return new F.Farm({clock:()=>now});};
+const fresh=()=>{now=start;const g=new F.Farm({clock:()=>now});g.s.progress.xp=1400;return g;};
 const test=(name,fn)=>{fn();tests.push(name);};
 const copy=game=>JSON.parse(game.serialize());
 test('new players start with zero coins and materials and exactly six carrot seeds',()=>{const g=fresh();assert.equal(g.s.coins,0);assert.equal(Object.values(g.s.materials).reduce((a,b)=>a+b),0);assert.equal(g.s.seeds.carrot,6);assert.equal(Object.values(g.s.seeds).reduce((a,b)=>a+b),6);assert.equal(g.unlocked,9);assert.equal(g.capacity,20);});

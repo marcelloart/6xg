@@ -18,7 +18,7 @@ const pick = (value, keys) => Object.fromEntries(keys.map(key => [key, value[key
 // Farm v5 also allows a bounded JPEG profile thumbnail (original upload stays local).
 // Solo saves are bounded and whitelisted. They are not an authoritative PvP economy.
 export function validateSave(save) {
-  if ([4,5].includes(save?.version)) return globalThis.BaraFarm.validateSave(save);
+  if ([4,5,6].includes(save?.version)) return globalThis.BaraFarm.validateSave(save);
   if (save?.version === 3) return globalThis.BaraRTS.validateSave(save);
   require(object(save) && save.version === 2 && object(save.state));
   const s = save.state, levels = s.levels;

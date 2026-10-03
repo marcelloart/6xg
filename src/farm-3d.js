@@ -130,6 +130,7 @@ class FarmRenderer3D {
   block(group,m.darkWood,0,baseHeight+peakHeight+2,0,5,5,depth+24);
  }
  building(kind,finished=true){const group=new THREE.Group(),m=this.materials,w=kind==='barn'?108:kind==='shed'?84:96,d=kind==='barn'?92:74,h=kind==='barn'?68:58;
+  if(kind==='bench'&&finished){for(const x of[-30,30]){block(group,m.stone,x,8,0,10,16,28);block(group,m.darkWood,x,26,-13,4,35,4);}for(const z of[-9,0,9])block(group,m.wood,0,18,z,76,4,7);for(const y of[29,39])block(group,m.wood,0,y,-14,76,7,3);for(const x of[-36,36])block(group,m.darkWood,x,28,0,5,4,32);return mergeStatic(group);}
   if(!finished){block(group,m.stone,0,3,0,w+12,6,d+12);for(const x of[-w/2,w/2])for(const z of[-d/2,d/2])block(group,m.wood,x,34,z,5,66,5);for(const z of[-d/2,d/2]){beam(group,m.wood,[-w/2,10,z],[w/2,56,z],2);block(group,m.wood,0,51,z,w+18,4,4);}block(group,m.straw,20,10,0,28,14,26);return mergeStatic(group);}
   if(kind==='well'){group.add(mesh(new THREE.CylinderGeometry(27,30,25,20,1,true),m.stone,0,13,0));group.add(mesh(new THREE.CylinderGeometry(26,26,3,20),m.glass,0,7,0));for(let a=0;a<TAU;a+=Math.PI/9)block(group,m.stone,29*Math.cos(a),27,29*Math.sin(a),11,7,10,0,-a);for(const x of[-36,36])block(group,m.wood,x,38,0,5,76,5);block(group,m.wood,0,59,0,77,7,7);this.roof(group,76,58,78,25);beam(group,m.straw,[0,59,0],[0,20,0],.6);group.add(mesh(cylinder,m.iron,0,20,0,7,12,7));return mergeStatic(group);}
   block(group,m.stone,0,6,0,w+14,12,d+14);block(group,kind==='house'?m.plaster:m.wood,0,h/2+12,0,w,h,d);
