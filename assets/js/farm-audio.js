@@ -10,9 +10,11 @@ class FarmAudio {
  }
  init(context){
   this.ctx=context;const c=this.ctx;
-  this.master=c.createGain();this.effects=c.createGain();this.ambience=c.createGain();this.limiter=c.createDynamicsCompressor();
+  this.master=c.createGain();this.effects=c.createGain();this.ambience=c.createGain();this.boost=c.createGain();this.limiter=c.createDynamicsCompressor();
+  // Lift the quiet foley by 12 dB before compression; saved volume and mute still apply.
+  this.boost.gain.value=4;
   this.limiter.threshold.value=-12;this.limiter.knee.value=18;this.limiter.ratio.value=5;this.limiter.attack.value=.003;this.limiter.release.value=.18;
-  this.effects.connect(this.master);this.ambience.connect(this.master);this.master.connect(this.limiter);this.limiter.connect(c.destination);
+  this.effects.connect(this.master);this.ambience.connect(this.master);this.master.connect(this.boost);this.boost.connect(this.limiter);this.limiter.connect(c.destination);
   this.noiseBuffer=this.makeNoise(2,false);this.updateGains();
  }
  async unlock(){
