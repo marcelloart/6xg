@@ -39,6 +39,14 @@ Tanah, rumah, lumbung, gudang, sumur, dan sembilan jenis tanaman memiliki bentuk
 
 Tekstur **Grass005**, **Ground112**, dan **Wood096** berasal dari [ambientCG](https://ambientcg.com), berlisensi [CC0 1.0](https://docs.ambientcg.com/license/). Map warna dan normal asli 1K dikompres ke 512px untuk pengiriman browser; sumber tercatat di `assets/textures/sources.json`. Model, tata letak, dan geometri tanaman dibuat untuk game ini. Grafik mengarah ke tampilan alam realistis ringan untuk browser, bukan kualitas fotorealistik AAA.
 
+## Suara permainan
+
+Efek suara orisinal menggunakan Web Audio: menanam, memanen, membeli/menjual, mengangkat, memutar, menempatkan, membangun, selesai membangun, pembatalan, dan lokasi/transaksi yang ditolak. Suasana alam berisi angin, burung, air sungai yang semakin terdengar saat kamera mendekati sungai, dan ketukan alat pada bangunan yang sedang dikerjakan. Efek pendek dibatasi agar klik cepat tidak menumpuk; node audio dilepas setelah selesai.
+
+Suara baru diaktifkan setelah interaksi pemain sesuai aturan autoplay browser. Ikon pengeras suara di header dapat mematikan/mengaktifkan suara. **Menu → Suara kebun** mengatur volume utama, efek permainan, dan suasana alam secara terpisah, dengan tombol contoh. Pilihan tersimpan lokal per perangkat; tidak mengubah progres akun. Saat tab tersembunyi audio berhenti dan sumber lingkungan dilepas, sementara timer tanaman tetap berdasarkan waktu nyata. Suasana kebun berhenti setelah keluar akun. Browser tanpa Web Audio tetap dapat bermain tanpa suara. Tidak ada unduhan audio atau permintaan mikrofon.
+
+Sumber suara: `assets/js/farm-audio.js`. Semua suara disintesis untuk Ladang Bara; tidak menggunakan rekaman pihak ketiga.
+
 ## Progres online
 
 Frontend GitHub Pages menggunakan SDK resmi Privy dan backend Cloudflare Workers + D1. Endpoint kebun `GET/PUT /api/farm-save` memverifikasi token ES256 dan mengambil ID akun dari token. Revisi atomik menolak penyimpanan dari perangkat lama. CORS dibatasi ke origin game. Snapshot versi 5 menambahkan posisi petak/bangunan, rotasi, perluasan, profil, dan statistik panen/penjualan. Snapshot versi 4 tetap diterima dan dimigrasikan tanpa mereset inventori atau deadline. Profil memiliki nama pekebun, nama kebun, dan empat avatar; nama dibatasi 24 karakter dan ditampilkan sebagai teks. Statistik mencatat panen/penjualan sejak pembaruan ini. Snapshot memiliki validator yang dibagikan antara browser dan Cloudflare; body dibatasi 48 KiB.

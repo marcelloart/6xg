@@ -2,6 +2,7 @@
 const F=BaraFarm,$=id=>document.getElementById(id),gate=new AccountGate('6xg-farm:');
 const {camera,renderer}=typeof Farm3D!=='undefined'?Farm3D.create($('worldCanvas')):(()=>{const camera=new MapCamera();$('rotateLeft').hidden=true;$('rotateRight').hidden=true;$('cameraPosition').textContent='TAMPILAN 2D';return{camera,renderer:new FarmRenderer($('worldCanvas'),camera)};})();
 let farm=new F.Farm(),activeSaveKey=null,entered=false,selectedCrop='carrot',selectedPlot=null,pendingBuild=null,panel=null,shop='seeds',storeItem='carrot',tradeQty=1,placement=null,selectedBuilding=null,toastTimer=null,uiSignature='';
+const audio=new FarmAudio({onChange:syncSoundUI});
 const format=n=>new Intl.NumberFormat('id-ID').format(n);
 const duration=m=>m<60?m+' menit':m===1440?'1 hari':m/60+' jam';
 const countdown=ms=>{const seconds=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=seconds%60;return h?h+'j '+String(m).padStart(2,'0')+'m':String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');};
@@ -15,6 +16,7 @@ function save(){
  if(!stored)toast('Penyimpanan perangkat penuh. Pastikan progres tersimpan online.');return stored;
 }
 function refreshGate(){
+ audio.setActive(gate.canPlay&&entered);
  document.body.classList.toggle('account-locked',!gate.canPlay);document.body.classList.toggle('welcome-active',!(entered&&gate.canPlay));$('welcome').hidden=entered&&gate.canPlay;
  $('startButton').textContent=gate.canPlay?'Mainkan kebunmu ↗':'Masuk / Daftar ↗';
  $('welcomeCopy').innerHTML=gate.canPlay?'Kebunmu menunggu.<br>Tanaman tetap tumbuh saat kamu pergi.':'Tanam harapan. Petik hasilnya.<br>Kembangkan kebun kecilmu menjadi dunia milikmu.';
@@ -79,19 +81,19 @@ function renderUI(){
  $('mapNote').textContent=placement?.followPointer?'R PUTAR · ESC BATAL':placement?'KLIK TANAH · R PUTAR · KONFIRMASI UNTUK MENEMPATKAN':selectedCrop?'KLIK UNTUK MENANAM · TAHAN 1,5 DETIK UNTUK MEMINDAHKAN':'SERET PETA UNTUK MENJELAJAH ↔';
  $('farmName').textContent=s.profile.farmName;renderPlacement();renderProfile();renderPanel();renderSelection();
 }
-function perform(result,success){if(!result.ok){toast(result.message);return false;}save();renderUI();if(success)toast(success);return true;}
+function perform(result,success,cue){if(!result.ok){audio.play('error');toast(result.message);return false;}if(cue)audio.play(cue);save();renderUI();if(success)toast(success);return true;}
 function choosePlot(id,plantOnClick=false){
  if(!gate.canPlay||!entered||id>=farm.unlocked)return;
  selectedBuilding=null;selectedPlot=id;const p=farm.s.plots[id];
- if(p.crop&&p.readyAt<=farm.now()){perform(farm.harvest(id),'Panen masuk ke tas. Jual hasilnya di toko.');}
- else if(!p.crop&&plantOnClick&&farm.s.seeds[selectedCrop]){perform(farm.plant(id,selectedCrop),F.CROPS[selectedCrop].name+' mulai tumbuh.');}
+ if(p.crop&&p.readyAt<=farm.now()){perform(farm.harvest(id),'Panen masuk ke tas. Jual hasilnya di toko.','harvest');}
+ else if(!p.crop&&plantOnClick&&farm.s.seeds[selectedCrop]){perform(farm.plant(id,selectedCrop),F.CROPS[selectedCrop].name+' mulai tumbuh.','plant');}
  closePanel();renderSelection();
 }
 function placementResult(){if(!placement?.point)return{ok:false,message:'Klik tanah di peta untuk memilih posisi.'};const p=placement;return p.kind==='garden'?farm.gardenPlacement(p.point,p.count,p.rotation):farm.checkPlacement(p.kind,p.point,p.rotation,{ignoreBuilding:p.moveBuilding??null,ignorePlots:p.movePlot===undefined?[]:[p.movePlot]});}
 function renderPlacement(){const dock=$('placementDock');dock.hidden=!placement;dock.dataset.follow=String(Boolean(placement?.followPointer));$('map').classList.toggle('is-carrying',Boolean(placement?.followPointer));if(!placement)return;const valid=placementResult();placement.valid=valid.ok;$('placementTitle').textContent=placement.kind==='garden'?'Area '+placement.count+' petak baru':placement.kind==='plot'?'Pindahkan petak '+(placement.movePlot+1):(placement.moveBuilding!==undefined?'Pindahkan ':'Bangun ')+F.BUILDINGS[placement.kind].name;$('placementCopy').textContent=placement.point?(valid.ok?(placement.followPointer?'Lokasi tersedia · lepaskan atau klik untuk menempatkan.':'Lokasi tersedia · klik Konfirmasi untuk menempatkan.'):valid.message):'Klik tanah kosong untuk memilih lokasi. Seret peta untuk melihat area lain.';$('confirmPlacement').disabled=!valid.ok;$('rotatePlacement').hidden=placement.kind==='plot';dock.dataset.valid=String(valid.ok);$('placementAngle').textContent=placement.rotation*90+'°';}
-function beginPlacement(value){placement={rotation:0,point:camera.screenToWorld(camera.width/2,camera.height/2),followPointer:true,lifted:true,offset:{x:0,y:0},...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();if(!value.lifted){const p=camera.worldToScreen(placement.point.x,placement.point.y);pickup.follow(p.x,p.y);}renderUI();canvas.focus();if(!value.lifted)toast('Geser bangunan ke area hijau, lalu klik / lepaskan. Geser peta dengan 2 jari, klik kanan, atau tepi layar.');}
-function cancelPlacement(){pickup.reset();placement=null;pendingBuild=null;renderUI();}
-function confirmPlacement(){if(!placement||!gate.canPlay||!entered)return;const valid=placementResult();if(!valid.ok){toast(valid.message);return;}const p=placement,result=p.kind==='garden'?farm.expandGarden(p.point,p.count,p.rotation):p.kind==='plot'?farm.movePlot(p.movePlot,p.point):p.moveBuilding!==undefined?farm.moveBuilding(p.moveBuilding,p.point,p.rotation):farm.build(p.kind,p.point,p.rotation);if(perform(result,p.kind==='garden'?'Area tanam baru siap digunakan.':p.moveBuilding!==undefined||p.kind==='plot'?'Tata letak berhasil diperbarui.':'Pembangunan dimulai.')){cancelPlacement();}}
+function beginPlacement(value){audio.play('lift');placement={rotation:0,point:camera.screenToWorld(camera.width/2,camera.height/2),followPointer:true,lifted:true,offset:{x:0,y:0},...value};pendingBuild=value.kind;selectedPlot=null;selectedBuilding=null;closePanel();if(!value.lifted){const p=camera.worldToScreen(placement.point.x,placement.point.y);pickup.follow(p.x,p.y);}renderUI();canvas.focus();if(!value.lifted)toast('Geser bangunan ke area hijau, lalu klik / lepaskan. Geser peta dengan 2 jari, klik kanan, atau tepi layar.');}
+function cancelPlacement(silent=false){if(placement&&silent!==true)audio.play('cancel');pickup.reset();placement=null;pendingBuild=null;renderUI();}
+function confirmPlacement(){if(!placement||!gate.canPlay||!entered)return;const valid=placementResult();if(!valid.ok){audio.play('error');toast(valid.message);return;}const p=placement,result=p.kind==='garden'?farm.expandGarden(p.point,p.count,p.rotation):p.kind==='plot'?farm.movePlot(p.movePlot,p.point):p.moveBuilding!==undefined?farm.moveBuilding(p.moveBuilding,p.point,p.rotation):farm.build(p.kind,p.point,p.rotation);if(perform(result,p.kind==='garden'?'Area tanam baru siap digunakan.':p.moveBuilding!==undefined||p.kind==='plot'?'Tata letak berhasil diperbarui.':'Pembangunan dimulai.',p.kind==='garden'||p.kind==='plot'||p.moveBuilding!==undefined?'place':'build')){cancelPlacement(true);}}
 function chooseLocation(point){
  if(!gate.canPlay||!entered)return;
  if(placement){placement.point={x:Math.round(point.x),y:Math.round(point.y)};renderPlacement();return;}
@@ -105,11 +107,11 @@ function onAction(event){
  const {action:type,key}=b.dataset,qty=Number(b.dataset.qty||1);
  if(type==='select'){selectedCrop=key;pendingBuild=null;placement=null;closePanel();toast('Bibit '+F.CROPS[key].name.toLowerCase()+' dipilih. Klik petak kosong.');renderUI();}
  else if(type==='plot')choosePlot(Number(key));
- else if(type==='plant')perform(farm.plant(selectedPlot,key),F.CROPS[key].name+' mulai tumbuh.');
- else if(type==='harvest')perform(farm.harvest(Number(key)),'Hasil panen masuk ke tas.');
- else if(type==='seed')perform(farm.buySeed(key,qty),'Membeli '+qty+' bibit '+F.CROPS[key].name.toLowerCase()+'.');
- else if(type==='sell'){const result=farm.sell(key,qty);perform(result,result.ok?'Penjualan berhasil · +'+result.earned+' koin.':'');}
- else if(type==='material')perform(farm.buyMaterial(key,qty),'Membeli '+qty+' '+F.MATERIALS[key].name.toLowerCase()+'.');
+ else if(type==='plant')perform(farm.plant(selectedPlot,key),F.CROPS[key].name+' mulai tumbuh.','plant');
+ else if(type==='harvest')perform(farm.harvest(Number(key)),'Hasil panen masuk ke tas.','harvest');
+ else if(type==='seed')perform(farm.buySeed(key,qty),'Membeli '+qty+' bibit '+F.CROPS[key].name.toLowerCase()+'.','buy');
+ else if(type==='sell'){const result=farm.sell(key,qty);perform(result,result.ok?'Penjualan berhasil · +'+result.earned+' koin.':'','sell');}
+ else if(type==='material')perform(farm.buyMaterial(key,qty),'Membeli '+qty+' '+F.MATERIALS[key].name.toLowerCase()+'.','buy');
  else if(type==='build')beginPlacement({kind:key});
  else if(type==='expand')beginPlacement({kind:'garden',count:qty});
  else if(type==='move-plot'){const p=farm.s.plots[Number(key)];camera.focus(p.x,p.y);beginPlacement({kind:'plot',movePlot:p.id,point:{x:p.x,y:p.y}});}
@@ -117,7 +119,7 @@ function onAction(event){
  else if(type==='inspect'){storeItem=key;tradeQty=1;renderPanel();$('panelBody').parentElement.scrollTop=0;}
  else if(type==='quantity'){tradeQty=Math.max(1,Math.min(shop==='sell'?Math.max(1,stock(storeItem)):100,tradeQty+qty));renderPanel();}
  else if(type==='preset'){tradeQty=qty;renderPanel();}
- else if(type==='kit')perform(farm.buyBuildKit(key),'Bahan bangunan sudah masuk ke tas.');
+ else if(type==='kit')perform(farm.buyBuildKit(key),'Bahan bangunan sudah masuk ke tas.','buy');
  else if(type==='building-shop'){shop='buildings';storeItem=key;panel=null;openPanel('shop');}
  
  else if(type==='cancel')cancelPlacement();
@@ -155,7 +157,7 @@ canvas.addEventListener('pointermove',e=>{const p=pointer(e);pickup.move(e.point
 canvas.addEventListener('pointerleave',()=>pickup.leave());
 canvas.addEventListener('pointerup',e=>{const p=pointer(e);pickup.up(e.pointerId,p.x,p.y);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);});
 canvas.addEventListener('pointercancel',e=>pickup.cancel(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());
-window.addEventListener('blur',()=>{if(placement?.followPointer)cancelPlacement();else pickup.reset();});
+window.addEventListener('blur',()=>{if(placement?.followPointer)cancelPlacement(true);else pickup.reset();});
 canvas.addEventListener('wheel',e=>{if(!entered)return;e.preventDefault();const p=pointer(e);camera.zoomAt(Math.exp(-e.deltaY*.0015),p.x,p.y);},{passive:false});
 $('zoomIn').addEventListener('click',()=>camera.zoomAt(1.2));$('zoomOut').addEventListener('click',()=>camera.zoomAt(1/1.2));$('centerFarm').addEventListener('click',center);
 $('rotateLeft').addEventListener('click',()=>camera.rotate?.(-Math.PI/8));$('rotateRight').addEventListener('click',()=>camera.rotate?.(Math.PI/8));
@@ -164,12 +166,12 @@ $('graphicsQuality').addEventListener('change',e=>{save();try{localStorage.setIt
 try{$('graphicsQuality').value=localStorage.getItem('6xg:graphics')||'auto';}catch{}
 $('miniMap').addEventListener('click',e=>{if(!entered)return;const r=e.currentTarget.getBoundingClientRect();camera.focus((e.clientX-r.left)/r.width*3200,(e.clientY-r.top)/r.height*2200);});
 for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='q'||e.key==='Q')camera.rotate?.(-Math.PI/8);else if(e.key==='e'||e.key==='E')camera.rotate?.(Math.PI/8);else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelPlacement();selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){placement.rotation=(placement.rotation+1)%4;renderPlacement();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelPlacement();selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){placement.rotation=(placement.rotation+1)%4;audio.play('rotate');renderPlacement();}});
 const resize=()=>{const r=$('map').getBoundingClientRect();camera.resize(r.width,r.height);};new ResizeObserver(resize).observe($('map'));resize();center();
 let lastPlacementFrame=performance.now();
 function draw(){const tick=performance.now();pickup.update((tick-lastPlacementFrame)/1000);lastPlacementFrame=tick;renderer.draw(farm,{selectedPlot,pendingBuild,placement,selectedCrop,now:farm.now(),welcome:!entered});renderer.mini($('miniMap'),farm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
-setInterval(()=>{const now=farm.now(),signature=farm.unlocked+'|'+farm.capacity+'|'+farm.s.plots.filter(p=>p.crop&&p.readyAt<=now).map(p=>p.id).join(',')+'|'+farm.s.buildings.filter(b=>b.readyAt<=now).length;if(signature!==uiSignature){uiSignature=signature;renderUI();}else if(selectedPlot!==null){const p=farm.s.plots[selectedPlot];if(p?.crop&&p.readyAt>now)$('plotCopy').textContent='Sedang tumbuh · '+countdown(p.readyAt-now)+' lagi';}},1000);
-window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden){save();if(placement?.followPointer)cancelPlacement();else pickup.reset();}else renderUI();});setInterval(save,60000);
+setInterval(()=>{const now=farm.now();audio.observe(farm,camera,now);const signature=farm.unlocked+'|'+farm.capacity+'|'+farm.s.plots.filter(p=>p.crop&&p.readyAt<=now).map(p=>p.id).join(',')+'|'+farm.s.buildings.filter(b=>b.readyAt<=now).length;if(signature!==uiSignature){uiSignature=signature;renderUI();}else if(selectedPlot!==null){const p=farm.s.plots[selectedPlot];if(p?.crop&&p.readyAt>now)$('plotCopy').textContent='Sedang tumbuh · '+countdown(p.readyAt-now)+' lagi';}},1000);
+window.addEventListener('pagehide',()=>{save();audio.setVisible(false);});document.addEventListener('visibilitychange',()=>{audio.setVisible(!document.hidden);if(document.hidden){save();if(placement?.followPointer)cancelPlacement();else pickup.reset();}else renderUI();});setInterval(save,60000);
 const AVATAR_ICONS={sprout:'🌱',sunflower:'🌻',apple:'🍎',bee:'🐝'};
 let photoDraft,photoBusy=false,photoGeneration=0,profileDirty=false;
 function resetPhotoDraft(){photoGeneration++;photoDraft=undefined;photoBusy=false;profileDirty=false;$('profileBody').replaceChildren();}
@@ -183,8 +185,21 @@ $('profileBody').addEventListener('click',e=>{if(e.target.closest('#profilePlay'
 $('profileBody').addEventListener('input',()=>{if(gate.canPlay)profileDirty=true;});
 $('profileBody').addEventListener('submit',e=>{e.preventDefault();if(!gate.canPlay||photoBusy)return;const form=e.target,data=new FormData(form),result=farm.updateProfile({name:data.get('name'),farmName:data.get('farmName'),avatar:data.get('avatar'),photo:photoDraft!==undefined?photoDraft:farm.s.profile.photo});if(result.ok){photoDraft=undefined;profileDirty=false;save();renderUI();window.dispatchEvent(new Event('bara:profile'));$('profileFeedback').textContent='Profil diperbarui.';}else $('profileFeedback').textContent=result.message;});
 $('profileBody').addEventListener('change',async e=>{if(!gate.canPlay)return;profileDirty=true;if(e.target.name==='avatar'){photoGeneration++;photoDraft=null;photoBusy=false;$('profilePhoto').value='';previewAvatar(null,e.target.value);$('profileSubmit').disabled=false;$('removePhoto').disabled=true;return;}if(e.target.id!=='profilePhoto'||!e.target.files[0])return;const currentFarm=farm,key=activeSaveKey,generation=++photoGeneration,form=$('profileForm');photoBusy=true;$('profileSubmit').disabled=true;$('removePhoto').disabled=true;$('profileFeedback').textContent='Menyiapkan foto…';try{const photo=await prepareFarmPhoto(e.target.files[0]);if(generation!==photoGeneration||farm!==currentFarm||activeSaveKey!==key||!gate.canPlay||!form.isConnected)return;photoDraft=photo;previewAvatar(photo,form.elements.avatar.value);$('profileFeedback').textContent='Foto siap. Klik Simpan profil.';}catch(error){if(generation===photoGeneration&&farm===currentFarm&&form.isConnected)$('profileFeedback').textContent=error.message||'Gambar tidak bisa dibaca. Pilih foto lain.';}finally{if(generation===photoGeneration&&farm===currentFarm&&form.isConnected){photoBusy=false;$('profileSubmit').disabled=false;$('removePhoto').disabled=!(photoDraft!==undefined?photoDraft:farm.s.profile.photo);e.target.value='';}}});
-$('confirmPlacement').addEventListener('click',confirmPlacement);$('cancelPlacement').addEventListener('click',cancelPlacement);$('rotatePlacement').addEventListener('click',()=>{if(placement){placement.rotation=(placement.rotation+1)%4;renderPlacement();}});
+$('confirmPlacement').addEventListener('click',confirmPlacement);$('cancelPlacement').addEventListener('click',cancelPlacement);$('rotatePlacement').addEventListener('click',()=>{if(placement){placement.rotation=(placement.rotation+1)%4;audio.play('rotate');renderPlacement();}});
 window.addEventListener('bara:art',()=>{for(const img of document.querySelectorAll('img[data-art]')){const source=productImage(img.dataset.art);if(source){img.src=source;img.hidden=false;img.parentElement.querySelector('.product-emoji')?.remove();}}});
+
+function syncSoundUI(){
+ const s=audio.settings,muted=!s.enabled||s.volume===0;$('soundToggle').textContent=muted?'🔇':'🔊';$('soundToggle').setAttribute('aria-pressed',String(muted));$('soundToggle').setAttribute('aria-label',muted?'Aktifkan suara permainan':'Matikan suara permainan');$('soundToggle').title=muted?'Aktifkan suara permainan':'Matikan suara permainan';$('soundEnabled').checked=s.enabled;
+ for(const[key,id]of[['volume','soundVolume'],['effects','effectsVolume'],['ambience','ambienceVolume']]){$(id).value=Math.round(s[key]*100);$(id+'Value').textContent=Math.round(s[key]*100)+'%';}
+ $('soundStatus').textContent=audio.unavailable?'Suara tidak didukung perangkat ini.':muted?'Suara dimatikan.':audio.unlocked?'Suara aktif · pengaturan tersimpan.':'Ketuk layar atau Dengarkan contoh untuk mengaktifkan suara.';$('soundPreview').disabled=muted||audio.unavailable;
+}
+for(const type of['pointerdown','keydown'])document.addEventListener(type,e=>{if(e.isTrusted)audio.unlock();},{capture:true});
+$('soundToggle').addEventListener('click',()=>{const s=audio.settings;audio.configure({enabled:!s.enabled||s.volume===0,...(s.volume===0?{volume:.65}:{})});audio.unlock();});
+$('soundEnabled').addEventListener('change',e=>{audio.configure({enabled:e.target.checked});audio.unlock();});
+for(const[key,id]of[['volume','soundVolume'],['effects','effectsVolume'],['ambience','ambienceVolume']]){$(id).addEventListener('input',e=>{audio.configure({[key]:Number(e.target.value)/100});audio.unlock();});$(id).addEventListener('change',()=>audio.play('tap',{preview:true}));}
+$('soundPreview').addEventListener('click',()=>audio.preview());
+document.addEventListener('click',e=>{if(e.target.closest('.toolbar button,.topbar nav #helpButton,.topbar nav #menuButton,#shopTabs button,[data-close],#zoomIn,#zoomOut,#rotateLeft,#rotateRight,#centerFarm'))audio.play('tap');});
+audio.setVisible(!document.hidden);syncSoundUI();
 
 // Narrow account adapter; no anonymous game save is attached or exported.
 window.LadangBara={
@@ -195,4 +210,3 @@ window.LadangBara={
  profile:()=>gate.canPlay?{...farm.s.profile}:null,canPlay:()=>gate.canPlay,enter,pause:save,setSaveStatus:text=>{$('saveStatus').textContent=text;},setSaveNote:text=>{$('saveNote').textContent=text;}
 };
 refreshGate();renderUI();
-
