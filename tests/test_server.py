@@ -141,6 +141,19 @@ class CloudTests(unittest.TestCase):
         self.app.store = module.Store(Path(self.temp.name) / "save.sqlite3")
         self.assertEqual(self.call(token=self.token())["body"]["save"], self.save)
 
+    def test_unopened_defaults_do_not_block_a_growing_plot_but_active_plots_still_do(self):
+        token, path = self.token(), '/api/farm-save'
+        save = json.loads((ROOT / 'tests/farm-studio-save.json').read_text(encoding='utf-8'))
+        destination = save['state']['plots'][35]
+        deadline = save['state']['plots'][0]['readyAt']
+        save['state']['plots'][0].update(x=destination['x'], y=destination['y'])
+        self.assertEqual(self.call('PUT', token, {'save': save, 'revision': 0}, path=path)['status'], 200)
+        self.assertEqual(self.call(token=token, path=path)['body']['save'], save)
+        self.assertEqual(self.call(token=token, path=path)['body']['save']['state']['plots'][0]['readyAt'], deadline)
+        bad = copy.deepcopy(save)
+        bad['state']['plots'][0].update(x=bad['state']['plots'][1]['x'], y=bad['state']['plots'][1]['y'])
+        self.assertEqual(self.call('PUT', token, {'save': bad, 'revision': 1}, path=path)['status'], 400)
+
     def test_uploaded_profile_photo_is_private_and_invalid_images_are_rejected(self):
         token = self.token()
         path = '/api/farm-save'

@@ -4,13 +4,13 @@
 <meta name="description" content="Ladang Bara di 6XG: tanam bibit, panen buah dan sayuran, jual hasil kebun, serta bangun rumah dan lumbung. Kebunmu terus tumbuh saat kamu pergi.">
 <title>6XG — Ladang Bara</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23283e32'/%3E%3Cpath d='M32 51V29C10 32 8 10 8 10s24-1 24 19C32 8 55 8 55 8s3 22-23 21' fill='%23e3be75'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="./assets/css/farm.css?v=8475355899"><link rel="stylesheet" href="./assets/css/farm-studio.css?v=17294a81b2"></head>
+<link rel="stylesheet" href="./assets/css/farm.css?v=8475355899"><link rel="stylesheet" href="./assets/css/farm-studio.css?v=fe91666ff6"></head>
 <body class="account-locked">
 <header class="topbar"><a href="./" class="brand" aria-label="6XG beranda">6XG<span>.</span></a><span class="brand-caption">A LITTLE SEED.<br>A WORLD OF POSSIBILITIES.</span><nav aria-label="Navigasi utama"><button id="helpButton">Panduan</button><button id="menuButton">Menu</button></nav><span id="saveStatus" class="save-status">MASUK UNTUK BERMAIN</span><div id="accountRoot"><button class="account-btn" id="accountButton">Daftar / Masuk</button></div></header>
 <main class="map" id="map" aria-label="Permainan Ladang Bara">
 <div id="pickupHint" class="pickup-hint" hidden aria-hidden="true"><span>Tahan 1,5 dtk untuk angkat · Lepas untuk klik</span></div>
 <canvas id="worldCanvas" tabindex="0" aria-label="Peta kebun. Tahan petak atau bangunan selama 1,5 detik untuk memindahkan. Seret untuk menjelajah, gulir atau cubit untuk memperbesar. Panah menggeser peta. Q dan E memutar kamera. Gunakan panel Kebun untuk memilih petak dengan keyboard."></canvas>
-<section class="resource-bar" aria-label="Koin dan bahan pembangunan"><div class="resource coins"><span>◉</span><div><small>KOIN</small><b id="coinsValue">0</b></div></div><div class="resource"><span>🪵</span><div><small>KAYU</small><b id="woodValue">0</b></div></div><div class="resource"><span>🪨</span><div><small>BATU</small><b id="stoneValue">0</b></div></div><div class="resource"><span>🥩</span><div><small>DAGING</small><b id="meatValue">0</b></div></div></section>
+<section class="resource-bar" aria-label="Koin dan bahan pembangunan"><div class="resource coins"><span>◉</span><div><small>KOIN</small><b id="coinsValue">0</b></div></div><div class="resource"><span class="resource-art"><img data-art="wood" hidden alt=""><span class="product-emoji">🪵</span></span><div><small>KAYU</small><b id="woodValue">0</b></div></div><div class="resource"><span class="resource-art"><img data-art="stone" hidden alt=""><span class="product-emoji">🪨</span></span><div><small>BATU</small><b id="stoneValue">0</b></div></div><div class="resource"><span class="resource-art"><img data-art="meat" hidden alt=""><span class="product-emoji">🥩</span></span><div><small>DAGING</small><b id="meatValue">0</b></div></div></section>
 <div class="map-location">LADANG BARA <span>·</span> <b id="farmName">Kebunku</b> · <span id="cameraPosition">KEBUN MILIKMU</span></div>
 <div class="zoom-tools" role="group" aria-label="Navigasi peta"><button id="zoomIn" aria-label="Perbesar peta">+</button><span id="zoomLabel">100%</span><button id="zoomOut" aria-label="Perkecil peta">−</button><button id="rotateLeft" aria-label="Putar kamera ke kiri" title="Putar ke kiri (Q)">↶</button><button id="rotateRight" aria-label="Putar kamera ke kanan" title="Putar ke kanan (E)">↷</button><button id="centerFarm" aria-label="Kembali ke kebun">⌂</button></div>
 <aside class="selection" id="plotInfo" hidden aria-label="Petak terpilih"><span class="eyebrow" id="plotLabel">PETAK 01</span><h2 id="plotTitle"></h2><p id="plotCopy"></p><div id="plotActions"></div></aside>
@@ -29,12 +29,12 @@
 <div class="sr-only" id="announcer" role="status" aria-live="polite"></div>
 <script defer src="./assets/js/farm-world.js?v=5a8d69e9e4"></script>
 <script defer src="./assets/js/camera.js?v=9d1ded72b5"></script>
-<script defer src="./assets/js/farm-engine.js?v=66b783be6c"></script>
+<script defer src="./assets/js/farm-engine.js?v=b895cc6d35"></script>
 <script defer src="./assets/js/session-gate.js?v=1b853bcd68"></script>
 <script defer src="./assets/js/farm-scenery.js?v=70b7f9dc6c"></script>
 <script defer src="./assets/js/farm-pickup.js?v=e793a53b53"></script>
-<script defer src="./assets/js/farm-camera.js?v=fe25c995b6"></script>
-<script defer src="./assets/js/farm-3d.js?v=4386c01970"></script>
+<script defer src="./assets/js/farm-camera.js?v=fea0a6e7ad"></script>
+<script defer src="./assets/js/farm-3d.js?v=af5c881f96"></script>
 <script defer src="./assets/js/farm-photo.js?v=c4f517db79"></script>
 <script defer src="./assets/js/farm-game.js?v=6ee4f29e4e"></script>
 <script defer src="./assets/js/online-config.js?v=fbedc97d21"></script>

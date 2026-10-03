@@ -46,7 +46,8 @@
   const size=footprint(kind,rotation),rect={...point,...size};
   if(!integer(rotation,0,3)||!onLand(point,size))return{ok:false,message:'Pilih tanah terbuka di lembah, jauh dari sungai dan tepi hutan.'};
   if(s.buildings.some(b=>b.slot!==ignoreBuilding&&overlaps(rect,{...b,...footprint(b.kind,b.rotation)})))return{ok:false,message:'Posisi bertabrakan dengan bangunan lain.'};
-  if(s.plots.some(p=>!ignorePlots.includes(p.id)&&overlaps(rect,{...p,...footprint('plot')})))return{ok:false,message:'Posisi bertabrakan dengan petak tanam atau petak cadangan.'};
+  // Unopened entries are future defaults, not occupied land. Only active plots block placement.
+  if(s.plots.some(p=>p.id<unlocked(s)&&!ignorePlots.includes(p.id)&&overlaps(rect,{...p,...footprint('plot')})))return{ok:false,message:'Posisi bertabrakan dengan petak tanam.'};
   if(props&&(overlaps(rect,{x:1593,y:872,w:112,h:100})||[[1408,867],[1788,859],[1050,910],[1108,1650],[2130,870],[2180,1570]].some(([x,y])=>overlaps(rect,{x,y,w:58,h:58}))))return{ok:false,message:'Sisakan ruang untuk pondok dan pepohonan.'};
   return{ok:true};
  }
@@ -71,7 +72,7 @@
   });
   check(Array.isArray(s.log)&&s.log.length<=8);
   clean.log=s.log.map(e=>{check(object(e)&&integer(e.at,1,s.lastSeen)&&typeof e.text==='string'&&e.text.length<=180);return{at:e.at,text:e.text};});
-  if(modern){for(const p of clean.plots)check(placement(clean,'plot',p,0,{ignorePlots:[p.id],props:false}).ok);for(const b of clean.buildings)check(placement(clean,b.kind,b,b.rotation,{ignoreBuilding:b.slot,props:false}).ok);}
+  if(modern){for(const p of clean.plots.slice(0,unlocked(clean)))check(placement(clean,'plot',p,0,{ignorePlots:[p.id],props:false}).ok);for(const b of clean.buildings)check(placement(clean,b.kind,b,b.rotation,{ignoreBuilding:b.slot,props:false}).ok);}
   return{version:save.version,state:clean};
  }
  class Farm{
@@ -82,10 +83,16 @@
    if(this.s.expansions===undefined){this.s.expansions=0;this.s.profile=defaultProfile();this.s.stats=defaultStats();}
    this.s.plots.forEach((p,id)=>{if(p.x===undefined)Object.assign(p,{x:PLOTS[id].x,y:PLOTS[id].y});});
    this.s.buildings.forEach(b=>{if(b.x===undefined)Object.assign(b,{...LOTS[b.slot],rotation:0});});
+   this.allocatedPlots=unlocked(this.s);
    if(!save){this.s.seeds.carrot=6;this.note('Selamat datang! 6 bibit wortel untuk panen pertamamu.');}
   }
   now(){this.s.lastSeen=Math.max(this.s.lastSeen,this.clock());this.ensurePlots();return this.s.lastSeen;}
-  ensurePlots(){while(this.s.plots.length<unlocked(this.s)){const id=this.s.plots.length;let pos=null;for(let y=670;y<=1720&&!pos;y+=74)for(let x=1040;x<=2150;x+=68){if(placement(this.s,'plot',{x,y}).ok){pos={x,y};break;}}if(!pos)break;this.s.plots.push({id,...pos,crop:null,plantedAt:0,readyAt:0});}}
+  ensurePlots(){const count=unlocked(this.s),start=this.allocatedPlots;this.allocatedPlots=count;for(let id=start;id<count;id++){
+   const p=this.s.plots[id],ignorePlots=Array.from({length:MAX_PLOTS-id},(_,i)=>id+i);
+   if(p&&placement(this.s,'plot',p,0,{ignorePlots}).ok)continue;
+   let pos=null;for(let y=670;y<=1720&&!pos;y+=74)for(let x=1040;x<=2150;x+=68){if(placement(this.s,'plot',{x,y},0,{ignorePlots}).ok){pos={x,y};break;}}
+   if(!pos)break;if(p)Object.assign(p,pos);else this.s.plots.push({id,...pos,crop:null,plantedAt:0,readyAt:0});
+  }}
   get capacity(){return capacity(this.s,this.now());}
   get unlocked(){this.now();return Math.min(this.s.plots.length,unlocked(this.s));}
   get used(){return used(this.s);}
@@ -140,7 +147,7 @@
    const startedAt=this.now();this.s.buildings.push({kind,slot,x:point.x,y:point.y,rotation,startedAt,readyAt:startedAt+BUILDINGS[kind].seconds*1000});this.note(`Mulai membangun ${BUILDINGS[kind].name.toLowerCase()}.`);return{ok:true};
   }
   moveBuilding(slot,point,rotation=0){const b=this.s.buildings.find(b=>b.slot===slot);if(!b)return{ok:false,message:'Pilih bangunan yang ingin dipindahkan.'};const valid=placement(this.s,b.kind,point,rotation,{ignoreBuilding:slot});if(!valid.ok)return valid;Object.assign(b,{x:point.x,y:point.y,rotation});this.note(`Memindahkan ${BUILDINGS[b.kind].name.toLowerCase()}.`);return{ok:true};}
-  movePlot(id,point){const p=this.s.plots[id];if(!p)return{ok:false,message:'Petak tidak tersedia.'};const valid=placement(this.s,'plot',point,0,{ignorePlots:[id]});if(!valid.ok)return valid;Object.assign(p,{x:point.x,y:point.y});this.note(`Memindahkan petak ${id+1}. Tanaman tetap tumbuh.`);return{ok:true};}
+  movePlot(id,point){const p=this.s.plots[id];if(!p||id>=this.unlocked)return{ok:false,message:'Petak tidak tersedia.'};const valid=placement(this.s,'plot',point,0,{ignorePlots:[id]});if(!valid.ok)return valid;Object.assign(p,{x:point.x,y:point.y});this.note(`Memindahkan petak ${id+1}. Tanaman tetap tumbuh.`);return{ok:true};}
   gardenQuote(count=6){if(![1,3,6].includes(count)||this.unlocked+count>MAX_PLOTS)return{ok:false,message:'Maksimal 81 petak di kebun.'};return{ok:true,cost:count*20,count};}
   gardenPoints(point,count=6,rotation=0){return Array.from({length:count},(_,i)=>{const dx=((i%3)-(Math.min(count,3)-1)/2)*68,dy=(Math.floor(i/3)-(Math.ceil(count/3)-1)/2)*74;return{x:Math.round(point.x+(rotation%2?dy:dx)),y:Math.round(point.y+(rotation%2?dx:dy))};});}
   gardenPlacement(point,count=6,rotation=0){const quote=this.gardenQuote(count);if(!quote.ok)return quote;const ids=Array.from({length:count},(_,i)=>this.unlocked+i);for(const p of this.gardenPoints(point,count,rotation)){const valid=placement(this.s,'plot',p,0,{ignorePlots:ids});if(!valid.ok)return valid;}return{ok:true};}

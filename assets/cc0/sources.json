@@ -1,0 +1,2103 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrls": {
+    "ambientCG": "https://docs.ambientcg.com/license/",
+    "Poly Haven": "https://polyhaven.com/license"
+  },
+  "assets": [
+    {
+      "id": "Grass005",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Grass005",
+      "download": "https://ambientcg.com/get?file=Grass005_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Grass005/color-ultra.jpg",
+          "bytes": 4916953,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "bba92f9a97390c060d5b9352bb8f99f9ef7ec0119c15315a94a140019f7b1422"
+        },
+        {
+          "path": "assets/cc0/Grass005/normal-ultra.jpg",
+          "bytes": 2527271,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "d141d42da8089d43c4846dd0ac2ef2adaacfe78a9883b4cb48d23ea65880041b"
+        },
+        {
+          "path": "assets/cc0/Grass005/arm-ultra.jpg",
+          "bytes": 543424,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "899711cf4e9f51a59a85cfbf5737de6731e2d3f1bbe0f46ce05e86ffab9bfbd7"
+        },
+        {
+          "path": "assets/cc0/Grass005/color-high.jpg",
+          "bytes": 1822731,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "c2488cd91d919e6b91ca0422a7fbaacfa8dfbe21c3b312020e9ec19340dbee4b"
+        },
+        {
+          "path": "assets/cc0/Grass005/normal-high.jpg",
+          "bytes": 2527271,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "d141d42da8089d43c4846dd0ac2ef2adaacfe78a9883b4cb48d23ea65880041b"
+        },
+        {
+          "path": "assets/cc0/Grass005/arm-high.jpg",
+          "bytes": 107380,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "1f8784c2e70063779fb00ec23c741a20fb97978883367b37afd9fc11be5e97b5"
+        },
+        {
+          "path": "assets/cc0/Grass005/color-low.jpg",
+          "bytes": 109293,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "a830182dd2541868cbd3b00564c2d920b0d125b7c74a07e2c15e4632769be395"
+        },
+        {
+          "path": "assets/cc0/Grass005/normal-low.jpg",
+          "bytes": 106308,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "68bd7bdc3665e4b4e862bb36ad98d7078b5348cda1f3840f4a04f1c6303576cc"
+        },
+        {
+          "path": "assets/cc0/Grass005/arm-low.jpg",
+          "bytes": 18984,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "e465da5bc35738710dda38284adf9126da897d5344bdee797181e9a317b6e7a2"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Ground112",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Ground112",
+      "download": "https://ambientcg.com/get?file=Ground112_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Ground112/color-ultra.jpg",
+          "bytes": 4214734,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "dafcdd3e73bd63710c4e8d963d13e72ab2cc289220d35e238b76b1b117cfda5c"
+        },
+        {
+          "path": "assets/cc0/Ground112/normal-ultra.jpg",
+          "bytes": 1727563,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "7130a52f03faf54242610d536ebcce79d77c0b39353c5ca7191e6c5122ee6c49"
+        },
+        {
+          "path": "assets/cc0/Ground112/arm-ultra.jpg",
+          "bytes": 594084,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "6d8616fd39d9922c104f0509010e47afbf3448e5177c7a5920dcad22970a8356"
+        },
+        {
+          "path": "assets/cc0/Ground112/color-high.jpg",
+          "bytes": 1600343,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "824cb5f0d3db0bcc773602104523ee4ca1fb2027d52b3c7d80db6686a14000aa"
+        },
+        {
+          "path": "assets/cc0/Ground112/normal-high.jpg",
+          "bytes": 1727563,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "7130a52f03faf54242610d536ebcce79d77c0b39353c5ca7191e6c5122ee6c49"
+        },
+        {
+          "path": "assets/cc0/Ground112/arm-high.jpg",
+          "bytes": 139208,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "736950e31bba9d1bc39c1ee578973cd96a64589a778cc169bbcd19403a37d5f6"
+        },
+        {
+          "path": "assets/cc0/Ground112/color-low.jpg",
+          "bytes": 118896,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "37be5a3239905e09cf4a3ef1426d2f1bed22f5ed6d051c47d397896f6f775fc5"
+        },
+        {
+          "path": "assets/cc0/Ground112/normal-low.jpg",
+          "bytes": 114960,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "c4d75e0b4afbdc44eb7a1f52e8bd8bb5a1cc5286effcbc2f17329983e4b6e26b"
+        },
+        {
+          "path": "assets/cc0/Ground112/arm-low.jpg",
+          "bytes": 29865,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "461c97c73b0bb76c31e8348a3b37cfa98ff25329409b0616f8cc223bd5db8ecf"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Wood096",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Wood096",
+      "download": "https://ambientcg.com/get?file=Wood096_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Wood096/color-ultra.jpg",
+          "bytes": 1266024,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "347e0bd5bf5d9af59cc179fd5b65cdd8684cb25a034e9e231544f21b02f0522c"
+        },
+        {
+          "path": "assets/cc0/Wood096/normal-ultra.jpg",
+          "bytes": 392302,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "9101278562bb2c255cdf4dba4a7fec5ae78267e23c2eb759e3e69348b62f6fdc"
+        },
+        {
+          "path": "assets/cc0/Wood096/arm-ultra.jpg",
+          "bytes": 195855,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "0ca40e7e83b0c7383ca459bc90f8b71243e897d22da908feab00c63bc52d0774"
+        },
+        {
+          "path": "assets/cc0/Wood096/color-high.jpg",
+          "bytes": 550677,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "ad6b101c04ce955417864fd8f2a0b10d5a12d6b9547d89e4cabbf142abf98427"
+        },
+        {
+          "path": "assets/cc0/Wood096/normal-high.jpg",
+          "bytes": 392302,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "9101278562bb2c255cdf4dba4a7fec5ae78267e23c2eb759e3e69348b62f6fdc"
+        },
+        {
+          "path": "assets/cc0/Wood096/arm-high.jpg",
+          "bytes": 31599,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "3364f8ad54ad53ba2779c90ae4a596c95681a7bd6b76a7e90aa0c2c18052a90f"
+        },
+        {
+          "path": "assets/cc0/Wood096/color-low.jpg",
+          "bytes": 40880,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "da55ba6b69381d9dbea3fd7493bd6b684174dd4f938735675e68743aaf2b184e"
+        },
+        {
+          "path": "assets/cc0/Wood096/normal-low.jpg",
+          "bytes": 9077,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "08779c420ee7d7973ae5c39347f34cc37d49cd4516d018b2f3383221e6fbe6de"
+        },
+        {
+          "path": "assets/cc0/Wood096/arm-low.jpg",
+          "bytes": 5343,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "acf9912df223ba3aba41c39c003bf2009b1690f8b97e9c46e61a238c2cf53de0"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Bark012",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Bark012",
+      "download": "https://ambientcg.com/get?file=Bark012_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Bark012/color-ultra.jpg",
+          "bytes": 6255429,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "bcd918acbcad7028748a510d09800ab2fafb489123f3e2c12abf65fc314639b2"
+        },
+        {
+          "path": "assets/cc0/Bark012/normal-ultra.jpg",
+          "bytes": 2928144,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "b9dd0d007570cd3e5ccbcbe4cdc4bb44e6edad34e5ef66e39bea847a29dae0cb"
+        },
+        {
+          "path": "assets/cc0/Bark012/arm-ultra.jpg",
+          "bytes": 455470,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "1289f8c94656c29b9e7ec8d1cc79354187d5ae8fbbc06c8e4e793623d3eee222"
+        },
+        {
+          "path": "assets/cc0/Bark012/color-high.jpg",
+          "bytes": 1905338,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "00491508ba4c82ea842b9862fb2490f5b226e3163147eaaa985046303ab78e3b"
+        },
+        {
+          "path": "assets/cc0/Bark012/normal-high.jpg",
+          "bytes": 2928144,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "b9dd0d007570cd3e5ccbcbe4cdc4bb44e6edad34e5ef66e39bea847a29dae0cb"
+        },
+        {
+          "path": "assets/cc0/Bark012/arm-high.jpg",
+          "bytes": 122952,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "fca20912aff621154cf62f6cdefc0300eb9f58cd1b59d5fe7c70c7e00f2cb539"
+        },
+        {
+          "path": "assets/cc0/Bark012/color-low.jpg",
+          "bytes": 112925,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "c80ec430af2c3e78a77958a02edbd22d9fdb0448cee11f206fb8a54e82760ce7"
+        },
+        {
+          "path": "assets/cc0/Bark012/normal-low.jpg",
+          "bytes": 202863,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "e3fcc829134768408d4e9654f861b8e8c77445ffd50272c58f886dd0ecff6108"
+        },
+        {
+          "path": "assets/cc0/Bark012/arm-low.jpg",
+          "bytes": 30079,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "5bebe95a9b3dbec02b876f964345ac027c69c5be7a87fe7c506eb19990741eec"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Plaster001",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Plaster001",
+      "download": "https://ambientcg.com/get?file=Plaster001_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Plaster001/color-ultra.jpg",
+          "bytes": 2375423,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "e75bf14dde0cafded4e71861e995819c8ab2e03d057ebad10ef2fbc056f44b4d"
+        },
+        {
+          "path": "assets/cc0/Plaster001/normal-ultra.jpg",
+          "bytes": 2733438,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "2035a1191d6cbfc1ea016e73e93284bdaf25b7785462b6229adf2bd4e0e57d65"
+        },
+        {
+          "path": "assets/cc0/Plaster001/arm-ultra.jpg",
+          "bytes": 90542,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "b65f80ecce909f75428e3c4280d045da201190a41c382790f8c18d29b14f8e60"
+        },
+        {
+          "path": "assets/cc0/Plaster001/color-high.jpg",
+          "bytes": 655106,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "3be5ee0a8f0d22d68a94a28e46e7a738bc383f180fee993b31d8ac8ef740388c"
+        },
+        {
+          "path": "assets/cc0/Plaster001/normal-high.jpg",
+          "bytes": 2733438,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "2035a1191d6cbfc1ea016e73e93284bdaf25b7785462b6229adf2bd4e0e57d65"
+        },
+        {
+          "path": "assets/cc0/Plaster001/arm-high.jpg",
+          "bytes": 24951,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "94fb9c88abf97da2021677fa3af23140d29b801e186185d3a7b71e220b52b1c1"
+        },
+        {
+          "path": "assets/cc0/Plaster001/color-low.jpg",
+          "bytes": 26702,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "7fd83131e7458da07ccc2d0fce32b7fd382bc02323dd4ad2a9581cf556ec813a"
+        },
+        {
+          "path": "assets/cc0/Plaster001/normal-low.jpg",
+          "bytes": 83582,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "a161ffafe330bfb47ce183dc72c5c7e494b94d3d34ec8df287e82998b6cb4c0e"
+        },
+        {
+          "path": "assets/cc0/Plaster001/arm-low.jpg",
+          "bytes": 6985,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "d8260a1d370fe1c37e9d235bfdc5a0b61a0e456459401c236f3c895386342dd9"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "RoofingTiles013A",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/RoofingTiles013A",
+      "download": "https://ambientcg.com/get?file=RoofingTiles013A_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/RoofingTiles013A/color-ultra.jpg",
+          "bytes": 974246,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "a7565e1d1e363e789a658682eaebfa3cd75b66f8ab1d935c610846c5530c884e"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/normal-ultra.jpg",
+          "bytes": 527803,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "ceb99808cb547596ddaa9a996617ddf845f06ffb628cbd042ee0e6e7c8f51628"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/arm-ultra.jpg",
+          "bytes": 240275,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "8088639f1434c113912d6ee2c7f72a89cda88c7ef1bc745194782fd2dc59c064"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/color-high.jpg",
+          "bytes": 289283,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "5aa0cbc3d811722780ed237daab45cee5757c60fd6bf4120d2037b901185cb32"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/normal-high.jpg",
+          "bytes": 527803,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "ceb99808cb547596ddaa9a996617ddf845f06ffb628cbd042ee0e6e7c8f51628"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/arm-high.jpg",
+          "bytes": 73964,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "4efdbf9073290261fb557e90d472eb500edef64f3ee24ea83c71a0b8bf0ae67e"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/color-low.jpg",
+          "bytes": 19980,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "118e240ba93e6e1e7bc81d805546ed772d7f74ad6fe89c9178f78c3f13774c11"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/normal-low.jpg",
+          "bytes": 66132,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "7c062b075246a70d5b2dcccc31d815630fded73693444717151dd422f344624e"
+        },
+        {
+          "path": "assets/cc0/RoofingTiles013A/arm-low.jpg",
+          "bytes": 24770,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "ea0b951c9541de2e1d2907eb13306ef97a66e84e7588d638b438779e336c3dc0"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Rock064",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Rock064",
+      "download": "https://ambientcg.com/get?file=Rock064_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Rock064/color-ultra.jpg",
+          "bytes": 7207472,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "f79a7c123d66a5272d20aff52c578455c8d6d92e4a2a0986871cd326cb1d77ec"
+        },
+        {
+          "path": "assets/cc0/Rock064/normal-ultra.jpg",
+          "bytes": 1684726,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "637e714e8aaae8d69ce31a7b691da7822b841f26a34d0ae9aef5c69f74a934da"
+        },
+        {
+          "path": "assets/cc0/Rock064/arm-ultra.jpg",
+          "bytes": 316434,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "e7142f94905914ed852242c98b2effae852fec44ed031a535f7d14c73f17df7c"
+        },
+        {
+          "path": "assets/cc0/Rock064/color-high.jpg",
+          "bytes": 1890212,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "c235f47d95a394ad7dce07130dc9e3977d17497f4e6c264b7eeff60bdad0d1c7"
+        },
+        {
+          "path": "assets/cc0/Rock064/normal-high.jpg",
+          "bytes": 1684726,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "637e714e8aaae8d69ce31a7b691da7822b841f26a34d0ae9aef5c69f74a934da"
+        },
+        {
+          "path": "assets/cc0/Rock064/arm-high.jpg",
+          "bytes": 78908,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "ab37a904cd14a2c1be8344c1759830ae0f63588d067631bacf42a3e4844b50b6"
+        },
+        {
+          "path": "assets/cc0/Rock064/color-low.jpg",
+          "bytes": 116757,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "b8461eebc567eff1f564c8ec1ccd658d379c429c5a8e64404e8bd05061c40075"
+        },
+        {
+          "path": "assets/cc0/Rock064/normal-low.jpg",
+          "bytes": 90083,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "f5ec6c68ab0f8937f60f0c575580945aa885096d0937aa6ff0da07772c15dfb3"
+        },
+        {
+          "path": "assets/cc0/Rock064/arm-low.jpg",
+          "bytes": 20412,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "3ce8f60d3a1892d98e7cfef9a656ee4bd1cb42a9cbc1df7a9df0c0a9ddabfa09"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "Metal055A",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/Metal055A",
+      "download": "https://ambientcg.com/get?file=Metal055A_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Metal055A/color-ultra.jpg",
+          "bytes": 2112653,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "717af0494c510e07106258de8131073e3b99feb6dbd74be52e5eab8cb36d1b61"
+        },
+        {
+          "path": "assets/cc0/Metal055A/normal-ultra.jpg",
+          "bytes": 202514,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "670d1ccf2ef82f81b1fc81e6addc1b65c9a677d6954524df638b4385ff2831a0"
+        },
+        {
+          "path": "assets/cc0/Metal055A/arm-ultra.jpg",
+          "bytes": 159058,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "f9df29ba689be21029110546b3dc2a02b6f43812d32397dd0c0bbf1d4ffde1ea"
+        },
+        {
+          "path": "assets/cc0/Metal055A/color-high.jpg",
+          "bytes": 543194,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "660ca0a08e43c833f430671f4f1bf8c4de92c36a9774a103948b24cc0df89827"
+        },
+        {
+          "path": "assets/cc0/Metal055A/normal-high.jpg",
+          "bytes": 202514,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "670d1ccf2ef82f81b1fc81e6addc1b65c9a677d6954524df638b4385ff2831a0"
+        },
+        {
+          "path": "assets/cc0/Metal055A/arm-high.jpg",
+          "bytes": 44483,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "cd89fe0311cd13afd551406718ad1d4916b0944ec11e05367c7141d2624b5fe9"
+        },
+        {
+          "path": "assets/cc0/Metal055A/color-low.jpg",
+          "bytes": 35131,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "63220ad0156fe2e1ea5fabd3f2498761ec92a60333a4bf3b350ee44c3a44ebd2"
+        },
+        {
+          "path": "assets/cc0/Metal055A/normal-low.jpg",
+          "bytes": 4775,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "c48ce5fa38e13fc73c98968954035b699a2dee7365fd4f224a19100563f03ffb"
+        },
+        {
+          "path": "assets/cc0/Metal055A/arm-low.jpg",
+          "bytes": 11865,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "f476fc54e0beb3f5992f62ea9c8090f5aa1f7ee4c4568d3e17dfbac5df4fbafe"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "ThatchedRoof001A",
+      "provider": "ambientCG",
+      "type": "material",
+      "source": "https://ambientcg.com/a/ThatchedRoof001A",
+      "download": "https://ambientcg.com/get?file=ThatchedRoof001A_4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/ThatchedRoof001A/color-ultra.jpg",
+          "bytes": 4552490,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "8674c97c81bf80cfc652918f7fad9fa55a0b561aceef2f5160ef9225917e4bee"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/normal-ultra.jpg",
+          "bytes": 2831489,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "03e213bdc977e85842f65e07206971b0cf6a22a8c7701e4ab6cd7b69ed84012a"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/arm-ultra.jpg",
+          "bytes": 538793,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "b798be36808eef86be4ebe34d65751052885972a83e68f50c43722209e8128b9"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/color-high.jpg",
+          "bytes": 1110906,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "6470e2a16e6da1c02fcb8971e19ae13f8dd19e8d833e1288babc68f8eece9398"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/normal-high.jpg",
+          "bytes": 2831489,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "03e213bdc977e85842f65e07206971b0cf6a22a8c7701e4ab6cd7b69ed84012a"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/arm-high.jpg",
+          "bytes": 105439,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "9d9f9b89900f61c85637de4668f951d980fb01ff12788e26b82e3d53430dc1b2"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/color-low.jpg",
+          "bytes": 58168,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "4cb833f4060da36a3c20aa42d07378011951f1fd4d986caaaf83b62c55d71073"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/normal-low.jpg",
+          "bytes": 112751,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "c890c4448d56444f795ff9226411ef8da71164dca1ada425beec934f60935b33"
+        },
+        {
+          "path": "assets/cc0/ThatchedRoof001A/arm-low.jpg",
+          "bytes": 18867,
+          "resolution": [
+            256,
+            256
+          ],
+          "sha256": "50db0bade31e274ba1d1beb212f3917fdc6cfc0f4e01665b3fd8ce397ee7ff97"
+        }
+      ],
+      "processing": "JPEG recompression; 4K source colour retained for Ultra, lower presets resized; AO/roughness/metalness packed in RGB."
+    },
+    {
+      "id": "LeafSet004",
+      "provider": "ambientCG",
+      "type": "atlas",
+      "source": "https://ambientcg.com/a/LeafSet004",
+      "download": "https://ambientcg.com/get?file=LeafSet004_4K-PNG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/LeafSet004/color-ultra.webp",
+          "bytes": 95022,
+          "resolution": [
+            1187,
+            1925
+          ],
+          "sha256": "387e7ee25aa3442cce0a18bd6be58e52344a14a3511a852d3aceaeb7fda8701e"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/normal-ultra.jpg",
+          "bytes": 80196,
+          "resolution": [
+            631,
+            1024
+          ],
+          "sha256": "8729c125b2a257aa00109df9f033a7ae24cb842a08e2ea58d3e59a6fdccfa6f2"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/rough-ultra.jpg",
+          "bytes": 43299,
+          "resolution": [
+            631,
+            1024
+          ],
+          "sha256": "caea4427f825e30255b9a7f9d9c3ea803fa30c82be368ec0530b325669ff9569"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/color-high.webp",
+          "bytes": 50114,
+          "resolution": [
+            631,
+            1024
+          ],
+          "sha256": "e26a890782ef45f772ecc2d5fe0777269945f19129288a4389f53b9e48bd5bed"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/normal-high.jpg",
+          "bytes": 80196,
+          "resolution": [
+            631,
+            1024
+          ],
+          "sha256": "8729c125b2a257aa00109df9f033a7ae24cb842a08e2ea58d3e59a6fdccfa6f2"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/rough-high.jpg",
+          "bytes": 43299,
+          "resolution": [
+            631,
+            1024
+          ],
+          "sha256": "caea4427f825e30255b9a7f9d9c3ea803fa30c82be368ec0530b325669ff9569"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/color-low.webp",
+          "bytes": 19966,
+          "resolution": [
+            316,
+            512
+          ],
+          "sha256": "6c05402886872c01c7e3f269eea595e15cac0bc0c5c2b1cef96f14196b224da9"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/normal-low.jpg",
+          "bytes": 25023,
+          "resolution": [
+            316,
+            512
+          ],
+          "sha256": "48130b8dc1fc832dc32ad8e253aff594a451fe0353e744aa87e27dc1a2b9a1a4"
+        },
+        {
+          "path": "assets/cc0/LeafSet004/rough-low.jpg",
+          "bytes": 10490,
+          "resolution": [
+            316,
+            512
+          ],
+          "sha256": "fdbe062d68fdf8f4ffb5ed25a17be245f86b129e1144a2219b42d1fc33e593af"
+        }
+      ],
+      "processing": "Opacity merged into WebP alpha; source leaf or food slice cropped where specified. No generated image content."
+    },
+    {
+      "id": "Foliage008",
+      "provider": "ambientCG",
+      "type": "atlas",
+      "source": "https://ambientcg.com/a/Foliage008",
+      "download": "https://ambientcg.com/get?file=Foliage008_4K-PNG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/Foliage008/color-ultra.webp",
+          "bytes": 192718,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "bccc3fc8a831a532e2f2382a206d3ee60982d4d446e499c71d5ff84409780cc4"
+        },
+        {
+          "path": "assets/cc0/Foliage008/normal-ultra.jpg",
+          "bytes": 54239,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9e5afa92025596490191747932c1db4f549d21930e6db4ff7f52576218d01a27"
+        },
+        {
+          "path": "assets/cc0/Foliage008/rough-ultra.jpg",
+          "bytes": 31142,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "f36c06dfd64d1626548b5bdd3952cc1219a9f2aca02f269d0a079dc60263f603"
+        },
+        {
+          "path": "assets/cc0/Foliage008/color-high.webp",
+          "bytes": 83054,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "c69f26f5612be4a773c3cf3402b5125754d2e97282bb46fdcda0115ca0a8e17e"
+        },
+        {
+          "path": "assets/cc0/Foliage008/normal-high.jpg",
+          "bytes": 54239,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9e5afa92025596490191747932c1db4f549d21930e6db4ff7f52576218d01a27"
+        },
+        {
+          "path": "assets/cc0/Foliage008/rough-high.jpg",
+          "bytes": 31142,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "f36c06dfd64d1626548b5bdd3952cc1219a9f2aca02f269d0a079dc60263f603"
+        },
+        {
+          "path": "assets/cc0/Foliage008/color-low.webp",
+          "bytes": 37880,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "1b220945a54705894ffd82fdd2ad66da729943ceeecd523fd56be4930249bf25"
+        },
+        {
+          "path": "assets/cc0/Foliage008/normal-low.jpg",
+          "bytes": 17153,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "df2e05fab5f777f9d047e2b817a092ff4de85f3a2e3d3672b96d731c67450501"
+        },
+        {
+          "path": "assets/cc0/Foliage008/rough-low.jpg",
+          "bytes": 10297,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "f7b5e178def68933d1f554405bda12a667ccbd308e214118efdbe78f0ea1569a"
+        }
+      ],
+      "processing": "Opacity merged into WebP alpha; source leaf or food slice cropped where specified. No generated image content."
+    },
+    {
+      "id": "ColdCutsSet002",
+      "provider": "ambientCG",
+      "type": "atlas",
+      "source": "https://ambientcg.com/a/ColdCutsSet002",
+      "download": "https://ambientcg.com/get?file=ColdCutsSet002_2K-PNG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/ColdCutsSet002/color-ultra.webp",
+          "bytes": 267636,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "a84dce6cfb54ff3968db2b3a5f92b41a9f0b4b4835aa40db575329ae86517972"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/normal-ultra.jpg",
+          "bytes": 144158,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "d6f21a861e18f22546fc8e78f7c0f2a1b7366b8afbfa0d73d06b00919eb88e89"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/rough-ultra.jpg",
+          "bytes": 79026,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "7dea8fa5f088e4bd4bc58414b6c71e4a73f93735c4282266a62058be548f888d"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/color-high.webp",
+          "bytes": 128136,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "5fa912c214d77888bca3b2a96f9379b87604fd8f6298f7d094f6bb4399594174"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/normal-high.jpg",
+          "bytes": 144158,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "d6f21a861e18f22546fc8e78f7c0f2a1b7366b8afbfa0d73d06b00919eb88e89"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/rough-high.jpg",
+          "bytes": 79026,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "7dea8fa5f088e4bd4bc58414b6c71e4a73f93735c4282266a62058be548f888d"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/color-low.webp",
+          "bytes": 50688,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "ad3cb16e28fe2b78d29c7d698369ff00320ef3bbdd00144989103bbd9c7ac355"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/normal-low.jpg",
+          "bytes": 32765,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "05da0d29f87fcd2bf7463e8fd07ea1e832fa66ffcff5523d179e4fc80babcee4"
+        },
+        {
+          "path": "assets/cc0/ColdCutsSet002/rough-low.jpg",
+          "bytes": 25312,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "20baa7d17b1804c339a6fd86911598a4e2caa067664df4f6531285763acb933b"
+        }
+      ],
+      "processing": "Opacity merged into WebP alpha; source leaf or food slice cropped where specified. No generated image content."
+    },
+    {
+      "id": "FoodCrossSectionSet001",
+      "provider": "ambientCG",
+      "type": "atlas",
+      "source": "https://ambientcg.com/a/FoodCrossSectionSet001",
+      "download": "https://ambientcg.com/get?file=FoodCrossSectionSet001_2K-PNG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/color-ultra.webp",
+          "bytes": 156362,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "c16e60cf22873ed09d9fc12cef66eb6daaa301043e09e4e7b8f2851293de4e58"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/normal-ultra.jpg",
+          "bytes": 58520,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "1e9a11f506fd7fff4d7612fea96b186487583f66a4370beece3844f63c837409"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/rough-ultra.jpg",
+          "bytes": 69726,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "a5948a73ae6d8a24855cc872aa781f25a9e5426dc6bbf0d8d044b21ba061a498"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/color-high.webp",
+          "bytes": 112118,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "8354648a030c7370baa1c3b062aaf9c8450811ea8d22d63f02266b46135ee44e"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/normal-high.jpg",
+          "bytes": 58520,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "1e9a11f506fd7fff4d7612fea96b186487583f66a4370beece3844f63c837409"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/rough-high.jpg",
+          "bytes": 69726,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "a5948a73ae6d8a24855cc872aa781f25a9e5426dc6bbf0d8d044b21ba061a498"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/color-low.webp",
+          "bytes": 49124,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "db11357952cea96b77e223adc3e02163a40e0882ec8c00ddeb6833d140f22654"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/normal-low.jpg",
+          "bytes": 10787,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "20d6e8cdbe1e151c85b86daa536a47be3c0cf797916c3cc02c7efc25f4189c96"
+        },
+        {
+          "path": "assets/cc0/FoodCrossSectionSet001/rough-low.jpg",
+          "bytes": 23435,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "7a01705ed3d707dcfac1ef876ce5b3ac9634b5c8448b9f45e3e2c0ff3c66b716"
+        }
+      ],
+      "processing": "Opacity merged into WebP alpha; source leaf or food slice cropped where specified. No generated image content."
+    },
+    {
+      "id": "3DApple002",
+      "provider": "ambientCG",
+      "type": "3d-model",
+      "source": "https://ambientcg.com/a/3DApple002",
+      "download": "https://ambientcg.com/get?file=3DApple002_LQ-4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/3DApple002/color-ultra.jpg",
+          "bytes": 1098657,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "293482ff32583c06451aaff5564494bc7eb3b9bcb1c2611087251986dbc006f6"
+        },
+        {
+          "path": "assets/cc0/3DApple002/normal-ultra.jpg",
+          "bytes": 119449,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "4153fd700571dfb3d90a454f64986e3da6c58f85b42ced6b0a992817220b090f"
+        },
+        {
+          "path": "assets/cc0/3DApple002/rough-ultra.jpg",
+          "bytes": 42712,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9a3932e65bb27830664e9b53fa9e61b75ba3bf52c562b4274cf84f0bc706e9e8"
+        },
+        {
+          "path": "assets/cc0/3DApple002/color-high.jpg",
+          "bytes": 384130,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "eab25c5ecd1fee4dbdff66dee94722b7398c5595765870e050160a7543d750d3"
+        },
+        {
+          "path": "assets/cc0/3DApple002/normal-high.jpg",
+          "bytes": 119449,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "4153fd700571dfb3d90a454f64986e3da6c58f85b42ced6b0a992817220b090f"
+        },
+        {
+          "path": "assets/cc0/3DApple002/rough-high.jpg",
+          "bytes": 42712,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9a3932e65bb27830664e9b53fa9e61b75ba3bf52c562b4274cf84f0bc706e9e8"
+        },
+        {
+          "path": "assets/cc0/3DApple002/color-low.jpg",
+          "bytes": 40376,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "ba95394a23a283ecbcd6012c16b8b7a70ca880a4e6ae8170e79da4acea62e345"
+        },
+        {
+          "path": "assets/cc0/3DApple002/normal-low.jpg",
+          "bytes": 27392,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "b5e1e65b2546bb4ea34dee6e4e9cc1e4cbe35d4fb86515de37497945f5e85566"
+        },
+        {
+          "path": "assets/cc0/3DApple002/rough-low.jpg",
+          "bytes": 13703,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "226d21de8186a9ab00479644930ca1ede06ebe26a055d2fafaafbe12be0b57b6"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-ultra.bin",
+          "bytes": 24772,
+          "sha256": "299af477db57c55e1993bf803ce2c483b77aed3d458709c9848c5001ed70eafe"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-ultra.gltf",
+          "bytes": 1385,
+          "sha256": "4ad5ba4ced5c4d23c080995bbb07ec10b2c6f4c250ea6e561f5ce4f2a392a688"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-high.bin",
+          "bytes": 20508,
+          "sha256": "ebc6c055864824c991535a30fb37856312baf0cdfa9d366952a7915ec867133a"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-high.gltf",
+          "bytes": 1384,
+          "sha256": "34a4bffa5b0ef7248ffc095d3081b9ac5c5b30998c503a474c841f2018cc13f5"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-low.bin",
+          "bytes": 6064,
+          "sha256": "523cf2328b39ad1ce450ff4b8c4175b7aa0fe9055fb0c66344144861f94edc16"
+        },
+        {
+          "path": "assets/cc0/3DApple002/model-low.gltf",
+          "bytes": 1414,
+          "sha256": "a9ac74490a7c2bb1e9e36c3dab7617ceea9816f0a614b6f36158ae9d2c9542ba"
+        }
+      ],
+      "processing": "Original LQ OBJ mesh converted to indexed glTF; genuine 4K colour scan plus normal map; lower presets resized."
+    },
+    {
+      "id": "3DAvocado001",
+      "provider": "ambientCG",
+      "type": "3d-model",
+      "source": "https://ambientcg.com/a/3DAvocado001",
+      "download": "https://ambientcg.com/get?file=3DAvocado001_LQ-4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/3DAvocado001/color-ultra.jpg",
+          "bytes": 1935036,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "8927292b192b6b73a26ffa90055d865d76e959872109905ade9fe3ed324567a1"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/normal-ultra.jpg",
+          "bytes": 237230,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "5f55ea8bdfb9ef34063ba8127f19ffc256b6633858a4ab5efd0fadc88c414870"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/color-high.jpg",
+          "bytes": 661379,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "c9527e2df9976c07a240ebc16b9372f2d938759cbcbd626bb1b75dd07b1b3429"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/normal-high.jpg",
+          "bytes": 237230,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "5f55ea8bdfb9ef34063ba8127f19ffc256b6633858a4ab5efd0fadc88c414870"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/color-low.jpg",
+          "bytes": 57501,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "711f7c5840c21e6688f637202275c171c6f926187c6ef7b4739ca862e26a4bb6"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/normal-low.jpg",
+          "bytes": 76173,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "10a016d689ad5d56e8672155a0ef9f2512d2cad08ac4af14ca0e7d7589b44ed5"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-ultra.bin",
+          "bytes": 12120,
+          "sha256": "baf8e9094dafd810db49112601a232bf7ed498bd2a4fd82f3337b2a376c0cb7b"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-ultra.gltf",
+          "bytes": 1313,
+          "sha256": "047076b43a9ae49b85d55c5084a598b61edd8291347cab6f1b6e97a78d67cc65"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-high.bin",
+          "bytes": 12120,
+          "sha256": "baf8e9094dafd810db49112601a232bf7ed498bd2a4fd82f3337b2a376c0cb7b"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-high.gltf",
+          "bytes": 1312,
+          "sha256": "050ef02b02f699c5135463983ca2fb55c43fbadf53efecc9d38386980982092b"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-low.bin",
+          "bytes": 5520,
+          "sha256": "2280140bde890678eff435f9751641de5e104f51bd6f592e96cee6f6cafd89ff"
+        },
+        {
+          "path": "assets/cc0/3DAvocado001/model-low.gltf",
+          "bytes": 1324,
+          "sha256": "843da66de19baa5e0341d103b81b78f3b3f809766fa249c347e2d0f8f79531f1"
+        }
+      ],
+      "processing": "Original LQ OBJ mesh converted to indexed glTF; genuine 4K colour scan plus normal map; lower presets resized."
+    },
+    {
+      "id": "3DTreeStump001",
+      "provider": "ambientCG",
+      "type": "3d-model",
+      "source": "https://ambientcg.com/a/3DTreeStump001",
+      "download": "https://ambientcg.com/get?file=3DTreeStump001_LQ-4K-JPG.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/3DTreeStump001/color-ultra.jpg",
+          "bytes": 4213946,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "a1109238b9d2c4fb6280a99a28d54dd685a2337d7db19c5c610c290c314b140e"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/normal-ultra.jpg",
+          "bytes": 527211,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "2c754a32bb194f5f4941d077ef13c0d7774ddd6e8af9fd5d9e42c132c3aebdd4"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/color-high.jpg",
+          "bytes": 1175674,
+          "resolution": [
+            2048,
+            2048
+          ],
+          "sha256": "0ed66fcc11a69c616f3dfe1b96962e49f2c91983994a2514037474653bd4b734"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/normal-high.jpg",
+          "bytes": 527211,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "2c754a32bb194f5f4941d077ef13c0d7774ddd6e8af9fd5d9e42c132c3aebdd4"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/color-low.jpg",
+          "bytes": 78759,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "6f37237ee00ee55fc015ef6f6f4cff8ace1589b68222a515c0b9e2bd8299dd4b"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/normal-low.jpg",
+          "bytes": 124903,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "95c32466b0e0fb856048b3be9daeccb6c2598c4bdc053dfb0dcb7a8dbc659dac"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-ultra.bin",
+          "bytes": 43052,
+          "sha256": "3cf866f5bb8ff9800c98aaad3b5a4d27c861971924510e877e182a7cafa0ddf6"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-ultra.gltf",
+          "bytes": 1346,
+          "sha256": "9bec14f700d9b395565ad536106f57c8c96838686095a688d4cf4f73a3e13fa9"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-high.bin",
+          "bytes": 19520,
+          "sha256": "ceade6f8514e58f71a8e3d3ee2faa72eaf39a81b0ea7510b86ae9a92158e3eab"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-high.gltf",
+          "bytes": 1337,
+          "sha256": "84da8007c56b4d30c1e752e7e4d04be4eb3ebbff9243f07721639fb93ed45a0b"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-low.bin",
+          "bytes": 5552,
+          "sha256": "dee6ba214b7106a4228ee523a5841fabb25ae688397ec32bf6d414a690fc3ba2"
+        },
+        {
+          "path": "assets/cc0/3DTreeStump001/model-low.gltf",
+          "bytes": 1329,
+          "sha256": "41e3a50a6f08f6113bafb02eeabe2e159ee2ca6020911c758f539caad89dc5ab"
+        }
+      ],
+      "processing": "Original LQ OBJ mesh converted to indexed glTF; genuine 4K colour scan plus normal map; lower presets resized."
+    },
+    {
+      "id": "island_tree_02",
+      "provider": "Poly Haven",
+      "type": "3d-model",
+      "source": "https://polyhaven.com/a/island_tree_02",
+      "download": "https://api.polyhaven.com/files/island_tree_02",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_nor_gl-ultra.jpg",
+          "bytes": 643164,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "18437a30e30bf738391710b05b35f5ffc85d0ca813563fab47b36f25488b6ab4"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_nor_gl-high.jpg",
+          "bytes": 643164,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "18437a30e30bf738391710b05b35f5ffc85d0ca813563fab47b36f25488b6ab4"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_nor_gl-low.jpg",
+          "bytes": 169493,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "59419159c74f18f04f4ab6c6262ffd15fb483468c3ab74af8510c9987d13d49c"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_diff-ultra.jpg",
+          "bytes": 3181185,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "6154448e631a3946d0c045ceb11962ba065a7603090ba88b3374098b70bfbab6"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_diff-high.jpg",
+          "bytes": 271475,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "dab7cbf62be6ef0fc0d9c1bd8e019dcaf632849abe40612e6c0f15a4f72638b8"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_diff-low.jpg",
+          "bytes": 70308,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "cdd11571b68091053f495557af1d4699166afbcef67c9b6a7506c687e8b78ba5"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_arm-ultra.jpg",
+          "bytes": 283024,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "af3e12fa56dfc66c280b5aeb7e745568875709cf1ea455f4355990464cc224c5"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_arm-high.jpg",
+          "bytes": 283024,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "af3e12fa56dfc66c280b5aeb7e745568875709cf1ea455f4355990464cc224c5"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_arm-low.jpg",
+          "bytes": 87519,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "050324692861b1f68d02eb548f7a143a200c7633a6a9435a859d663d6b322cbf"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_nor_gl-ultra.jpg",
+          "bytes": 148118,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9e995aac57e6916bea4672cd229b2eee1275080cec8a786f020a050cc0b94dee"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_nor_gl-high.jpg",
+          "bytes": 148118,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "9e995aac57e6916bea4672cd229b2eee1275080cec8a786f020a050cc0b94dee"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_nor_gl-low.jpg",
+          "bytes": 51849,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "05ab0c441cb7330cfa5ffeb20fede1b708d503ed17c3873b818625c0c3f0751b"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_diff-ultra.webp",
+          "bytes": 321324,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "17ac46244c81a2b76898d55efc00f04b717881bbaf8db06704b28274a32a6f55"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_diff-high.webp",
+          "bytes": 78356,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "d71cd524dceb3b2701d87be40a845950a4c31cbb9b631849cd840c76e327463b"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_diff-low.webp",
+          "bytes": 37390,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "896a71384b655e276929a92f7c7d07440487e28ae34db96e6502b8fc82cc8339"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_arm-ultra.jpg",
+          "bytes": 210061,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "2e1ddf371ed5db5543bda3095cc879f05cb0f73397ba2e4ff18957686bd9a7db"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_arm-high.jpg",
+          "bytes": 210061,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "2e1ddf371ed5db5543bda3095cc879f05cb0f73397ba2e4ff18957686bd9a7db"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_leaves_arm-low.jpg",
+          "bytes": 72085,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "c2f450e28166c06b1b0f8e7400616b52a74a7c5046b8470624a887b311eab772"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_nor_gl-ultra.jpg",
+          "bytes": 374742,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "0419bfbd37dcd79ac277cc67d9cd5428d18d237550168ec9969776a09c26563a"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_nor_gl-high.jpg",
+          "bytes": 374742,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "0419bfbd37dcd79ac277cc67d9cd5428d18d237550168ec9969776a09c26563a"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_nor_gl-low.jpg",
+          "bytes": 128606,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "4776a3ae3315937d5f930138fa13547ab3b3cd0155adf17d0faaab8c414cb54e"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_diff-ultra.jpg",
+          "bytes": 200659,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "6fb22ea2fe0eb7d44e2d6099e919c0a6e4ae41689fcdb49efcc06e8c96e49f4b"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_diff-high.jpg",
+          "bytes": 200659,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "6fb22ea2fe0eb7d44e2d6099e919c0a6e4ae41689fcdb49efcc06e8c96e49f4b"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_diff-low.jpg",
+          "bytes": 70739,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "43deeab758fd20215b2014881b36bb43a0065b8b148dae096faaddaf1f0151b9"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_arm-ultra.jpg",
+          "bytes": 178295,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "ec3ffc2175cf52b19b36474bc1137424e3f07f08e9d8aaff3ac700c3ac03a0e4"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_arm-high.jpg",
+          "bytes": 178295,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "ec3ffc2175cf52b19b36474bc1137424e3f07f08e9d8aaff3ac700c3ac03a0e4"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/island_tree_02_branches_arm-low.jpg",
+          "bytes": 57154,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "4756b131e844acc2ba029bcc70190cbda2e6d4796a1d65895a8173a6027500fa"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-ultra.bin",
+          "bytes": 992528,
+          "sha256": "643838a348ce4be253ebe5089bc81e5dec0752ea84718e9a48ee6c91594d4bf5"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-ultra.gltf",
+          "bytes": 4760,
+          "sha256": "e56144fb90447fa0b89711f9c8dc875c9c7a618ce36feb2ede4a1f1681bfd23b"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-high.bin",
+          "bytes": 687092,
+          "sha256": "b331729b235cd0f6823671e0ddaac346e589ce1e9098ca525e1a9f361bfcd431"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-high.gltf",
+          "bytes": 4771,
+          "sha256": "6de9eb1b6fae3030c9f1b7da2b6a4150f759536cbeb7711311d83f6bdb1949cf"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-low.bin",
+          "bytes": 290804,
+          "sha256": "2f40d972218d46db0f0abf5ffd298c4ba1d7983f8167f0061880e69c083168b4"
+        },
+        {
+          "path": "assets/cc0/island_tree_02/model-low.gltf",
+          "bytes": 4755,
+          "sha256": "9cb7c1ff58727f169aa2352eb20a1bdda78abf5d7aef0483586c9c179bd4cd9a"
+        }
+      ],
+      "processing": "Original glTF mesh optimized with attribute-aware meshoptimizer simplification; embedded LODs for Ultra/high/low; provider alpha restored for foliage. Genuine 4K colour for selected Ultra maps; data maps downsampled. Canopy converted to photographic LeafSet004 cards at the source leaf surface positions; disconnected leaves are not pruned away. Canopy converted to photographic LeafSet004 cards at the source leaf surface positions; disconnected leaves are not pruned away."
+    },
+    {
+      "id": "boulder_01",
+      "provider": "Poly Haven",
+      "type": "3d-model",
+      "source": "https://polyhaven.com/a/boulder_01",
+      "download": "https://api.polyhaven.com/files/boulder_01",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_nor_gl-ultra.jpg",
+          "bytes": 620263,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "49539885c742a4ba3b92a3dace44d34e7c92bcd4129f789f2ff25ffca9f4e1c7"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_nor_gl-high.jpg",
+          "bytes": 620263,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "49539885c742a4ba3b92a3dace44d34e7c92bcd4129f789f2ff25ffca9f4e1c7"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_nor_gl-low.jpg",
+          "bytes": 164331,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "3ad67136c2ec6af68469d08afb77ea1b8d4107a4fc52527d33dd3125216f85af"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_diff-ultra.jpg",
+          "bytes": 4924758,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "20134a9a07ab26f01557d29e6a801d67337754442e334d295d3394e8f6886e9f"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_diff-high.jpg",
+          "bytes": 405615,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "3d32f1a5dd5a2499b5530e98eb10d182b78de71ccc1101c57c808d6f7542367f"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_diff-low.jpg",
+          "bytes": 107868,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "43e99ea51582e030a3e3c0956546efefd3cab3f7ce79a783531d3902efe26895"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_arm-ultra.jpg",
+          "bytes": 256590,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "eddd7555d694987b4a58d170d71a454c001d1e9ec1c71baef2068051be96359c"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_arm-high.jpg",
+          "bytes": 256590,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "eddd7555d694987b4a58d170d71a454c001d1e9ec1c71baef2068051be96359c"
+        },
+        {
+          "path": "assets/cc0/boulder_01/boulder_01_arm-low.jpg",
+          "bytes": 80799,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "d8d3fa1ce5aea38dea156d1b90d111f88c718aac32f224445376055567555169"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-ultra.bin",
+          "bytes": 89552,
+          "sha256": "b2de315cf09ce84f7475155b7561203763da2746b45dcebaab710e643fd21339"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-ultra.gltf",
+          "bytes": 1512,
+          "sha256": "122809128423026768cc71beb03fa1f42d5b12f90b3cfb856c7866d6d1e8138f"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-high.bin",
+          "bytes": 38404,
+          "sha256": "bb77daebfbe39136687c46f72fe9d85f6dc5bf4f61e7161b5629236e58b00889"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-high.gltf",
+          "bytes": 1503,
+          "sha256": "86e2304d7a57e0d4c772200b16eb513083e38927bb38ab5f2f5aabfaf5cd0c10"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-low.bin",
+          "bytes": 9968,
+          "sha256": "4b3dfb77edc9d30fd8703b3cae3b4b68c1cb1dedd01903fe8fc4730e7a47d55b"
+        },
+        {
+          "path": "assets/cc0/boulder_01/model-low.gltf",
+          "bytes": 1498,
+          "sha256": "0a0b01a3efdeefd9924ded7190972da0a46baaee9cef9006ed4d65912ba9fa82"
+        }
+      ],
+      "processing": "Original glTF mesh optimized with attribute-aware meshoptimizer simplification; embedded LODs for Ultra/high/low; provider alpha restored for foliage. Genuine 4K colour for selected Ultra maps; data maps downsampled."
+    },
+    {
+      "id": "wooden_crate_02",
+      "provider": "Poly Haven",
+      "type": "3d-model",
+      "source": "https://polyhaven.com/a/wooden_crate_02",
+      "download": "https://api.polyhaven.com/files/wooden_crate_02",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_nor_gl-ultra.jpg",
+          "bytes": 205250,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "1e8912387cd1c5a8379187b4fe29aac765ab2486caf7fc68a527f5e06db54ce7"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_nor_gl-high.jpg",
+          "bytes": 205250,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "1e8912387cd1c5a8379187b4fe29aac765ab2486caf7fc68a527f5e06db54ce7"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_nor_gl-low.jpg",
+          "bytes": 58351,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "dfa569c306a9629d272b4ab4e6abca93c1874baf8d789b16451d479c919613a5"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_diff-ultra.jpg",
+          "bytes": 3554663,
+          "resolution": [
+            4096,
+            4096
+          ],
+          "sha256": "9c912018965069070a72e83c401937b6c9114e091aa2aac1dd1d2917debf0994"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_diff-high.jpg",
+          "bytes": 254090,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "4ed15f1e5da1477cb74aec5532a29eafc552e03129c12ce92fbe5611003f819b"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_diff-low.jpg",
+          "bytes": 70696,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "427c0ed76f2946d0e771b726432245b9164ab0cac7c19f8d8406354f9d63f374"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_arm-ultra.jpg",
+          "bytes": 360808,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "dfea7a9da9b77f6a945acad650c62a502c40fb416ec88512c4648f7c6adc1f87"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_arm-high.jpg",
+          "bytes": 360808,
+          "resolution": [
+            1024,
+            1024
+          ],
+          "sha256": "dfea7a9da9b77f6a945acad650c62a502c40fb416ec88512c4648f7c6adc1f87"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/wooden_crate_02_arm-low.jpg",
+          "bytes": 107739,
+          "resolution": [
+            512,
+            512
+          ],
+          "sha256": "efc26a0d2af393f35a28df04d50ab02fb6981fbb1d9b09548682b0857eeef912"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-ultra.bin",
+          "bytes": 67472,
+          "sha256": "41a93947e02f6d1c7178cd62a6971cfe3c2510d57be5626579dd06249be2908e"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-ultra.gltf",
+          "bytes": 2308,
+          "sha256": "e6d49f0c4c08eb89607ac925186ad502fef1cb5a1b6b273b943e38b135f0ac92"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-high.bin",
+          "bytes": 45920,
+          "sha256": "a8053b25dfed972005f980ea17f471aeb46e83677473294b31f09d283c3f4db3"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-high.gltf",
+          "bytes": 2300,
+          "sha256": "5f64d090e38b4d80951f1af9ef63a652577c0e301888e253931ef25cc4ccb5bd"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-low.bin",
+          "bytes": 15732,
+          "sha256": "4e4e9348531a6ca32a3ef9d56eff631e258cfe767d1db0c01f41433c326e53eb"
+        },
+        {
+          "path": "assets/cc0/wooden_crate_02/model-low.gltf",
+          "bytes": 2297,
+          "sha256": "a09f49cb020a598c24657906c18e2c80f8d365ecfdd4199a7bcea5335ad5775e"
+        }
+      ],
+      "processing": "Original glTF mesh optimized with attribute-aware meshoptimizer simplification; embedded LODs for Ultra/high/low; provider alpha restored for foliage. Genuine 4K colour for selected Ultra maps; data maps downsampled."
+    },
+    {
+      "id": "DaySkyHDRI069A",
+      "provider": "ambientCG",
+      "type": "hdri",
+      "source": "https://ambientcg.com/a/DaySkyHDRI069A",
+      "download": "https://ambientcg.com/get?file=DaySkyHDRI069A_2K.zip",
+      "license": "CC0-1.0",
+      "files": [
+        {
+          "path": "assets/cc0/DaySkyHDRI069A/environment.exr",
+          "bytes": 7529199,
+          "sha256": "8e31d8e35b45c311bf15e2f445160376fe9453f50c72103e4b175263e0de6336"
+        }
+      ],
+      "processing": "Original 2K EXR for physical image-based lighting, sky background, and water reflections. Sky is not upscaled to 4K."
+    }
+  ],
+  "coverage": {
+    "landscape": [
+      "Grass005",
+      "Ground112",
+      "Rock064",
+      "boulder_01"
+    ],
+    "trees": [
+      "island_tree_02",
+      "Bark012",
+      "LeafSet004",
+      "3DTreeStump001"
+    ],
+    "grassClumps": [
+      "Foliage008"
+    ],
+    "buildings": [
+      "Wood096",
+      "Plaster001",
+      "RoofingTiles013A",
+      "Metal055A",
+      "ThatchedRoof001A"
+    ],
+    "fruitModels": {
+      "apple": "3DApple002",
+      "avocado": "3DAvocado001"
+    },
+    "vegetableDetails": [
+      "LeafSet004",
+      "FoodCrossSectionSet001"
+    ],
+    "shop": [
+      "3DApple002",
+      "3DAvocado001",
+      "ColdCutsSet002",
+      "wooden_crate_02"
+    ],
+    "environment": [
+      "DaySkyHDRI069A"
+    ]
+  },
+  "authorship": "House, barn, shed, well, bridge, crop growth meshes and animated water geometry are original game geometry using the registered CC0 scan materials. Carrot, tomato, corn, strawberry, potato, chili and orange do not have imported full photogrammetry models; their shapes remain authored for this game. Player-uploaded profile images, brand/UI graphics and the 2D compatibility renderer are not stock 3D assets."
+}

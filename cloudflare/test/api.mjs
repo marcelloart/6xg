@@ -173,3 +173,15 @@ test('uploaded profile photo persists privately; invalid images cannot overwrite
  assert.equal((await call('PUT',auth,{save,revision:1},{path})).status,200);
  assert.equal((await call('GET',auth,undefined,{path})).body.save.state.profile.photo,undefined);
 });
+
+test('a growing plot moved onto unopened defaults round-trips while occupied plots remain blocked',async()=>{
+ const auth=await token(),path='/api/farm-save',save=JSON.parse(await readFile(new URL('../../tests/farm-studio-save.json',import.meta.url),'utf8'));
+ const destination=save.state.plots[35],deadline=save.state.plots[0].readyAt;
+ Object.assign(save.state.plots[0],{x:destination.x,y:destination.y});
+ assert.equal((await call('PUT',auth,{save,revision:0},{path})).status,200);
+ const restored=(await call('GET',auth,undefined,{path})).body.save;
+ assert.deepEqual(restored,save);assert.equal(restored.state.plots[0].readyAt,deadline);
+ const bad=structuredClone(save);Object.assign(bad.state.plots[0],{x:bad.state.plots[1].x,y:bad.state.plots[1].y});
+ assert.equal((await call('PUT',auth,{save:bad,revision:1},{path})).status,400);
+ assert.deepEqual((await call('GET',auth,undefined,{path})).body.save,save);
+});

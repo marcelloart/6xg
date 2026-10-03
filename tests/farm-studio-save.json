@@ -2,7 +2,7 @@
   "version": 5,
   "state": {
     "coins": 0,
-    "lastSeen": 1790928600000,
+    "lastSeen": 1790928660000,
     "seeds": {
       "carrot": 5,
       "tomato": 0,
@@ -34,8 +34,8 @@
       {
         "slot": 0,
         "kind": "barn",
-        "startedAt": 1790928600000,
-        "readyAt": 1790928690000,
+        "startedAt": 1790928660000,
+        "readyAt": 1790928750000,
         "x": 1170,
         "y": 740,
         "rotation": 1
@@ -57,8 +57,8 @@
         "x": 1130,
         "y": 1170,
         "crop": "carrot",
-        "plantedAt": 1790928600000,
-        "readyAt": 1790928900000
+        "plantedAt": 1790928660000,
+        "readyAt": 1790928960000
       },
       {
         "id": 1,
@@ -415,23 +415,23 @@
     ],
     "log": [
       {
-        "at": 1790928600000,
+        "at": 1790928660000,
         "text": "Menanam wortel di petak 1."
       },
       {
-        "at": 1790928600000,
+        "at": 1790928660000,
         "text": "Memindahkan petak 1. Tanaman tetap tumbuh."
       },
       {
-        "at": 1790928600000,
+        "at": 1790928660000,
         "text": "Mulai membangun lumbung."
       },
       {
-        "at": 1790928600000,
+        "at": 1790928660000,
         "text": "Membuka 6 petak baru · 120 koin."
       },
       {
-        "at": 1790928600000,
+        "at": 1790928660000,
         "text": "Selamat datang! 6 bibit wortel untuk panen pertamamu."
       }
     ]

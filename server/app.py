@@ -265,7 +265,8 @@ def validate_farm_save(save):
             if item.get("rotation", 0) % 2:
                 w, h = h, w
             require(integer(item.get("x"), 1000 + w // 2, 2190 - w // 2) and integer(item.get("y"), 630 + h // 2, 1760 - h // 2))
-            rects.append((item["x"], item["y"], w, h))
+            if "kind" in item or item["id"] < unlocked:
+                rects.append((item["x"], item["y"], w, h))
         for i, a in enumerate(rects):
             for b in rects[i + 1:]:
                 require(not (abs(a[0]-b[0]) < (a[2]+b[2])/2+5 and abs(a[1]-b[1]) < (a[3]+b[3])/2+5))

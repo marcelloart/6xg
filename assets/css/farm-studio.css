@@ -21,3 +21,8 @@
 @media(max-width:1000px){.brand-caption{display:none}.farm-panel{right:67px}}
 @media(max-width:580px){.topbar{height:54px;padding:0 12px}.topbar nav{gap:14px}.save-status{display:none}.resource-bar{top:65px}.map-location{top:115px}.zoom-tools{top:135px}.selection{top:132px}.farm-panel{top:auto;bottom:80px;max-height:calc(100% - 210px)}.welcome{padding:76px 18px 36px}.welcome-content{width:min(360px,100%);margin:auto}.welcome h1{font-size:clamp(38px,13vw,68px)}.welcome #welcomeCopy{max-width:280px;font-size:12px}.welcome .primary{font-size:13px;padding:14px 24px}.welcome .eyebrow{font-size:7px}.welcome-tags{margin-top:21px}.photo-controls{gap:5px}.photo-upload{padding:10px 12px}.pickup-hint span{font-size:9px;width:205px}.welcome-active .account-name{max-width:90px}}
 @media(max-height:580px) and (min-width:581px){.welcome{padding:54px 18px 18px}.welcome h1{font-size:52px;margin:8px 0 12px}.welcome #welcomeCopy{font-size:11px;margin-bottom:13px}.welcome .primary{padding:11px 24px;font-size:13px}.welcome-foot{margin:13px 0}.welcome-tags{margin-top:12px}}
+
+.asset-loading{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);padding:8px 14px;border-radius:18px;background:#21392be8;color:#f4f0dc;font-size:12px;pointer-events:none;z-index:8;max-width:80vw;text-align:center}
+.asset-loading[hidden]{display:none}
+
+.resource-art{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden}.resource-art img{width:100%;height:100%;object-fit:cover}.resource-art img[hidden]{display:none}

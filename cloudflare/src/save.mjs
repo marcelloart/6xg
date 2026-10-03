@@ -1,5 +1,6 @@
 import '../../assets/js/rts-engine.js';
 import '../../assets/js/farm-engine.js';
+// Farm validation counts only opened plots as occupied ground. Future plot defaults are relocated on unlock.
 const RESOURCES = ['wood', 'stone', 'gold', 'meat'];
 const UNITS = ['soldier', 'archer', 'cavalry'];
 const LEVELS = {
