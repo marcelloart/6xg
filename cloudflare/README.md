@@ -2,11 +2,15 @@
 
 ## Ladang Bara
 
-Game kebun memakai endpoint `GET/PUT /api/farm-save`, tabel `farm_saves`, dan snapshot versi 4/5. Migrasi `0002_farm_saves.sql` menambah tabel tanpa mengubah progres Benteng Bara pada `saves`. Jalankan semua migrasi saat deployment. Validator kebun diimpor dari `../assets/js/farm-engine.js` dan dibagikan dengan browser.
+Game kebun memakai **GET /api/farm-save** dan **POST /api/farm-action**. Snapshot versi 6 mencatat inventori, layout, profil, XP, tutorial, dan pesanan. Server memverifikasi token Privy ES256, mengambil identitas dari token, membaca kondisi D1, memvalidasi perintah, lalu menghitung saldo dan waktu dengan aturan shared engine. PUT /api/farm-save ditolak; klien tidak dapat memasok saldo atau waktu panen.
 
-`/health` sekarang juga memeriksa `farmStorage`. Nilai `ok`, `authConfigured`, `storage`, dan `farmStorage` harus `true`. Timer kebun tetap matang saat halaman ditutup karena `readyAt` disimpan; server tidak menjalankan simulasi tick. Ini ekonomi solo dari client, bukan ekonomi server untuk uang nyata atau PvP.
+Migrasi **0003_farm_actions.sql** menambah ID tindakan terakhir dan tabel tanda terima. Satu batch D1 mengubah farm serta mencatat tanda terima secara atomik. Revisi mencegah perangkat lama menimpa farm, dan ID tindakan yang sama dapat dicoba lagi tanpa hadiah/biaya ganda. Tanda terima berumur tujuh hari dibersihkan; tindakan lama tetap memiliki revisi yang sudah kedaluwarsa.
 
-Gunakan `python tools/build_farm.py` untuk versi asset frontend. Data kebun tidak dimigrasikan dari kampanye perang. Konfigurasi Workers Builds yang sudah ada tetap dipakai; deploy command menjalankan semua migrasi D1 sebelum menerbitkan Worker. Simpan/muat dengan akun Privy nyata lintas perangkat masih harus diuji pemilik.
+GET akun baru mengembalikan 0 koin, 0 bahan, dan 6 bibit wortel tanpa membuat baris. Tindakan pertama menyimpan farm satu kali. Farm lama versi 4/5 dimigrasikan di server sambil mempertahankan inventori, tenggat tanaman, layout, profil, dan akses untuk tanaman/bangunan yang telah dimiliki. Tabel kampanye RTS tidak diubah.
+
+Health mencantumkan **farmSaveVersion: 6**. Timer mengikuti tenggat server dan tanaman tidak berhenti tumbuh ketika tab ditutup. Semua pembelian, penanaman, panen, penjualan, pembangunan, perpindahan, profil, dan hadiah pesanan diperiksa server. Cache browser hanya salinan; koneksi diperlukan untuk transaksi.
+
+Konfigurasi Workers Builds tetap dipakai. Deploy menjalankan seluruh migrasi D1 sebelum Worker diterbitkan. Uji lokal memakai akun ES256 terisolasi, termasuk service binding dari game ke Worker, dan tidak mengubah akun pemain produksi. Alur akun Privy nyata lintas perangkat masih perlu diverifikasi oleh pemilik akun.
 
 Catatan berikut menjelaskan deployment dan kontrak kampanye perang yang juga dipertahankan.
 
@@ -59,4 +63,4 @@ Saat panduan ini ditulis, Workers Free menyertakan 100.000 request/hari; D1 Free
 Referensi resmi: [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/), [Deploy to Cloudflare](https://developers.cloudflare.com/workers/platform/deploy-buttons/), [verifikasi token Privy](https://docs.privy.io/authentication/user-authentication/access-tokens).
 
 
-Versi 5 menyimpan posisi bebas dan rotasi bangunan, petak tambahan/pindahan, profil, dan statistik. Validator memeriksa tabrakan/batas layout serta angka dan profil; versi 4 tetap diterima. Migrasi dilakukan oleh model browser tanpa mengulang bibit gratis. Health Cloudflare menyebut `farmSaveVersion: 5`. Tidak ada reset tabel pemain atau perubahan kredensial.
+Versi 6 meneruskan layout dan profil versi 5 serta menambah progres permainan. Validator dibagikan dengan browser, tetapi hanya server yang boleh menetapkan hasil transaksi. Kredensial dan progres kampanye lama tetap dipertahankan.
