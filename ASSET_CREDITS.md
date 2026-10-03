@@ -35,6 +35,6 @@ Ultra mempertahankan warna material/produk terpilih hingga 4096 px dari sumber a
 
 ## Foto katalog unggahan pemilik
 
-Enam gambar JPEG asli di `assets/produce/` diberikan oleh pemilik proyek pada 3 Oktober 2026: wortel, tomat, jagung, kentang, cabai, dan jeruk. Gambar tersebut digunakan untuk katalog bibit, jual panen, dan pemilihan bibit; foto tetap diprioritaskan saat thumbnail renderer 3D selesai dimuat. Aset unggahan ini terpisah dari daftar CC0 di atas dan tidak mengubah model tanaman pada peta.
+Tujuh gambar JPEG asli di `assets/produce/` diberikan oleh pemilik proyek pada 3 Oktober 2026: wortel, tomat, jagung, stroberi, kentang, cabai, dan jeruk. Gambar tersebut digunakan untuk katalog bibit, jual panen, dan pemilihan bibit; foto tetap diprioritaskan saat thumbnail renderer 3D selesai dimuat. Aset unggahan ini terpisah dari daftar CC0 di atas dan tidak mengubah model tanaman pada peta.
 
 Rincian berkas, hash SHA-256, sumber, dan pemrosesan: `assets/cc0/sources.json`. Impor ulang: unduh arsip yang tercatat ke cache lokal, lalu jalankan `python tools/import-cc0-textures.py <cache>` dan `node tools/import-cc0-models.mjs <cache>`. Model glTF Poly Haven beserta dependensinya dan alpha daun disimpan di subfolder cache sesuai ID. Jalankan `npm run build:3d` dan `python tools/build_farm.py` setelah impor.
