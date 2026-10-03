@@ -157,7 +157,8 @@ let mounted=false;
 function LegacyAccount(){
   const identity=usePrivy();
   const {login}=useLogin({onComplete:()=>document.getElementById('accountDialog').showModal()});
-  return <Account identity={identity} login={login}/>;
+  const startLogin=window.BARA_PAGE==='game'?()=>window.location.assign(new URL('/?login=1&next=game',cfg.siteOrigin).href):login;
+  return <Account identity={identity} login={startLogin}/>;
 }
 function GameAccount(){
   const [identity,setIdentity]=useState({ready:false,authenticated:false,user:null});
@@ -209,7 +210,7 @@ function BridgeAuth(){
 export function mountAuth(){
   if(mounted)return;mounted=true;
   document.getElementById('accountBody')?.replaceChildren();
-  if(window.BARA_PAGE==='game'){
+  if(window.BARA_PAGE==='game'&&window.location.origin!==cfg.siteOrigin){
     createRoot(document.getElementById('accountRoot')).render(<GameAccount/>);return;
   }
   createRoot(document.getElementById('accountRoot')).render(

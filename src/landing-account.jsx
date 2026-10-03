@@ -6,7 +6,7 @@ export function LandingAccount({cfg}){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
   const [summary,setSummary]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
   const prompted=useRef(false);
-  const play=()=>window.location.assign(cfg.gameOrigin+'/');
+  const play=()=>window.location.assign(cfg.playUrl||cfg.gameOrigin+'/');
   const dialog=()=>document.getElementById('accountDialog');
   const {login}=useLogin({onComplete:()=>{setError('');if(new URLSearchParams(location.search).get('next')==='game')play();else dialog().showModal();},onError:()=>{setError('Login belum berhasil. Silakan coba kembali.');dialog().showModal();}});
   useEffect(()=>{

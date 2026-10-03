@@ -5,5 +5,7 @@ window.BARA_ONLINE = Object.freeze({
   // Verified production Cloudflare Workers + D1 backend. Public URL only.
   apiBase: 'https://6xg-cloud-save.marcelloartis.workers.dev',
   siteOrigin: 'https://6xg.online',
-  gameOrigin: 'https://app.6xg.online'
+  gameOrigin: 'https://app.6xg.online',
+  // Temporary playable route while the external DNS activates the app subdomain.
+  playUrl: 'https://6xg.online/play/'
 });
