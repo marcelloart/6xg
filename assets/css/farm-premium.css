@@ -18,4 +18,12 @@
 .placement-dock[data-demo=true] .eyebrow{display:none}.placement-dock[data-demo=true] h3{font-size:16px;margin:0 0 6px}
 .placement-dock[data-demo=true] p{font-size:11px;line-height:1.6}.placement-dock[data-demo=true] .placement-controls{gap:7px;margin-top:10px}
 @media(max-width:760px){.farm-panel[data-shop=premium] .panel-content>h2{font-size:22px}.farm-panel[data-shop=premium] .panel-content>p{margin-bottom:14px}}
+@media(min-width:600px) and (max-width:760px) and (max-height:500px){
+ .game-page .placement-dock[data-demo=true][data-follow]{left:auto;right:10px;transform:none;width:250px;display:block;padding:10px;bottom:82px}
+ .game-page .placement-dock[data-demo=true] h3{font-size:14px;line-height:1.4}
+ .game-page .placement-dock[data-demo=true] .placement-navigation{display:none}
+ .game-page .placement-dock[data-demo=true][data-valid=true] .placement-info p{display:none}
+ .game-page .placement-dock[data-demo=true] .placement-controls{display:grid;grid-template-columns:54px minmax(0,1fr);margin-top:8px}
+ .game-page .placement-dock[data-demo=true] #confirmPlacement{grid-column:1/-1}
+}
 @media(max-width:760px){.premium-description{padding:15px}.premium-description h3{font-size:24px}.premium-description>p{font-size:11px}.premium-features{margin-bottom:13px}.premium-features span{font-size:9px}.premium-price strong{font-size:22px}.premium-art{aspect-ratio:10/6.2}.placement-dock[data-demo=true][data-follow=false]{width:calc(100% - 20px)}.placement-dock[data-demo=true] .placement-controls{display:flex;flex-wrap:wrap}.placement-dock[data-demo=true] #rotatePlacement{flex:0 0 auto}.placement-dock[data-demo=true] #confirmPlacement,.placement-dock[data-demo=true] #cancelPlacement{flex:1;padding:9px 10px;white-space:nowrap}}

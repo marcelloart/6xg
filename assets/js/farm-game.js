@@ -146,7 +146,7 @@ async function confirmPlacement(){
  if(!placement||!gate.canPlay||!entered||visiting||transactionBusy)return;
  if(placement.demoPlaced){placement.demoPlaced=false;placement.followPointer=true;placement.lifted=true;const screen=camera.worldToScreen(placement.point.x,placement.point.y);pickup.follow(screen.x,screen.y);renderPlacement();return;}
  const valid=placementResult();if(!valid.ok){audio.play('error');toast(valid.message);return;}
- if(placement.demo){pickup.reset();placement.demoPlaced=true;placement.followPointer=false;placement.lifted=false;renderPlacement();audio.play('place');toast('Preview ditempatkan. Putar atau zoom untuk melihat bentuk aslinya.');return;}
+ if(placement.demo){pickup.reset();placement.demoPlaced=true;placement.followPointer=false;placement.lifted=false;renderPlacement();audio.play('place');$('toast').hidden=true;return;}
  const p=placement,point={...p.point},type=p.kind==='garden'?'expand':p.kind==='plot'?'move-plot':p.moveBuilding!==undefined?'move-building':'build';
  const args=type==='expand'?{point,count:p.count,rotation:p.rotation}:type==='move-plot'?{id:p.movePlot,point}:type==='move-building'?{slot:p.moveBuilding,point,rotation:p.rotation}:{kind:p.kind,point,rotation:p.rotation};
  if(await transact(type,args,type==='expand'?'Area tanam baru siap digunakan.':type==='build'?'Pembangunan dimulai · +10 XP.':'Tata letak diperbarui.',type==='build'?'build':'place')){if(placement===p)cancelPlacement(true);}
