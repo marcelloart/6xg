@@ -48,5 +48,18 @@ const placement={kind:'plot',movePlot:0,point:{x:2100,y:1500},rotation:0,lifted:
 renderer.updateSelection(farm,{placement,now:farm.now()});assert.equal(soil.visible,false);assert.equal(crop.visible,false);assert(renderer.preview.children.length>=3,'Lifted plot includes the soil and living crop');const preview=renderer.preview;
 placement.point={x:2110,y:1510};placement.valid=false;renderer.updateSelection(farm,{placement,now:farm.now()});assert.equal(renderer.preview,preview,'Following the cursor reuses the preview instead of rebuilding geometry');assert.equal(preview.position.x,2110);assert.equal(renderer.previewFill.color.getHexString(),'e26854');
 renderer.updateSelection(farm,{placement:null,now:farm.now()});assert.equal(soil.visible,true);assert.equal(crop.visible,true);assert.equal(renderer.preview,null,'Cancel restores originals and removes the temporary ghost');
-assert.deepEqual(errors,[]);console.log('3D scene checks passed: mixed geometry, nine buildings and four prepared dishes, all crop stages, rotated canopy picking, and roof occlusion.');
+const garden=renderer.rusticGarden(),gardenBounds=new THREE.Box3().setFromObject(garden);
+assert(gardenBounds.min.x>=-45&&gardenBounds.max.x<=45&&gardenBounds.min.z>=-30&&gardenBounds.max.z<=30,'Real geometry fits the validated placement footprint');
+garden.traverse(o=>{if(o.isMesh)for(const value of o.geometry.attributes.position.array)assert(Number.isFinite(value));});
+const decor={kind:'bench',product:'rusticGarden',demo:true,demoPlaced:false,point:{x:1850,y:1100},rotation:0,lifted:true,valid:true};
+renderer.updateSelection(farm,{placement:decor,now:farm.now()});
+const ghost=renderer.preview.children.find(o=>o.userData.product==='rusticGarden');assert(ghost,'Placement renders the catalog product factory');
+assert.deepEqual(ghost.children.map(o=>o.material),garden.children.map(o=>o.material),'Preview and catalog model share the same actual PBR materials');
+assert.deepEqual(ghost.children.map(o=>Array.from(o.geometry.attributes.position.array)),garden.children.map(o=>Array.from(o.geometry.attributes.position.array)),'Product and world preview have identical geometry');
+for(const o of ghost.children)assert.equal(o.material.opacity,1,'Actual decoration keeps its original appearance during preview');
+let sharedDisposals=0;for(const o of garden.children)o.material.addEventListener('dispose',()=>sharedDisposals++);
+decor.demoPlaced=true;decor.followPointer=false;renderer.updateSelection(farm,{placement:decor,now:farm.now()});assert(!renderer.layoutGuide.visible);assert.equal(renderer.preview.children.find(o=>o.userData.product==='rusticGarden').position.y,0);assert(renderer.preview.children.filter(o=>o.isMesh||o.isLine).every(o=>!o.visible),'Parked preview removes the placement rectangle');
+decor.rotation=1;renderer.updateSelection(farm,{placement:decor,now:farm.now()});const rotatedBounds=new THREE.Box3().setFromObject(renderer.preview),size=window.BaraFarm.footprint('bench',1);assert(rotatedBounds.max.x-rotatedBounds.min.x<=size.w+.001&&rotatedBounds.max.z-rotatedBounds.min.z<=size.h+.001);
+renderer.updateSelection(farm,{placement:null,now:farm.now()});assert.equal(sharedDisposals,0,'Closing or rotating preview never disposes shared world materials');assert.equal(renderer.preview,null);
+assert.deepEqual(errors,[]);console.log('3D scene checks passed, including identical decoration catalog/preview geometry, footprint bounds and safe material disposal.');
 

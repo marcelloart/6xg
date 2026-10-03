@@ -1,0 +1,21 @@
+.premium-product{overflow:hidden;border:1px solid #d8ddc7;border-radius:18px;background:#fcf9ed;box-shadow:0 8px 24px #33482a0b}
+.farm-panel[data-shop=premium] .panel-content>h2{font-size:26px;line-height:1.15;margin-bottom:10px}
+.farm-panel[data-shop=premium] .panel-content>p{font-size:11px;line-height:1.6}
+.premium-art{position:relative;aspect-ratio:10/6.2;display:grid;place-items:center;background:#efe9db;overflow:hidden}
+.premium-art img{display:block;width:100%;height:100%;object-fit:contain}.premium-art img[hidden]{display:none}
+.premium-art>span{padding:20px;text-align:center;font-size:12px;line-height:1.6;color:#778069}
+.premium-art img:not([hidden])+span{display:none}
+.premium-tag{position:absolute;top:12px;left:12px;padding:7px 10px;border:1px solid #fff9;border-radius:20px;font-size:9px;letter-spacing:.06em;background:#304c3ee8;color:#fff9df}
+.premium-description{padding:19px}.premium-description h3{font:600 28px Georgia,serif;margin:0 0 9px;color:#314b38}
+.premium-description>p{font-size:12px;line-height:1.7;color:#73816a;margin:0 0 14px}
+.premium-features{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}.premium-features span{font-size:10px;color:#65754f;border-radius:7px;padding:6px 9px;background:#eff1e4}
+.premium-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 16px}.premium-price strong{font-size:24px;color:#45543a}.premium-price small{font-size:10px;color:#827b68}
+.premium-description>.action{width:100%;min-height:48px;font-size:13px}
+.premium-notice{padding:14px 2px 0;font-size:11px;line-height:1.7;color:#78836e;margin:0}.premium-notice b{color:#53674d}
+.game-page .placement-dock[data-demo=true]{border-color:#d8c895}.game-page .placement-dock[data-demo=true] h3{color:#425b3c}
+.game-page .map:has(.placement-dock[data-demo=true]:not([hidden])) .tutorial-card{display:none}
+.placement-dock[data-demo=true][data-follow=false]{width:min(560px,calc(100% - 34px));padding:13px 16px}
+.placement-dock[data-demo=true] .eyebrow{display:none}.placement-dock[data-demo=true] h3{font-size:16px;margin:0 0 6px}
+.placement-dock[data-demo=true] p{font-size:11px;line-height:1.6}.placement-dock[data-demo=true] .placement-controls{gap:7px;margin-top:10px}
+@media(max-width:760px){.farm-panel[data-shop=premium] .panel-content>h2{font-size:22px}.farm-panel[data-shop=premium] .panel-content>p{margin-bottom:14px}}
+@media(max-width:760px){.premium-description{padding:15px}.premium-description h3{font-size:24px}.premium-description>p{font-size:11px}.premium-features{margin-bottom:13px}.premium-features span{font-size:9px}.premium-price strong{font-size:22px}.premium-art{aspect-ratio:10/6.2}.placement-dock[data-demo=true][data-follow=false]{width:calc(100% - 20px)}.placement-dock[data-demo=true] .placement-controls{display:flex;flex-wrap:wrap}.placement-dock[data-demo=true] #rotatePlacement{flex:0 0 auto}.placement-dock[data-demo=true] #confirmPlacement,.placement-dock[data-demo=true] #cancelPlacement{flex:1;padding:9px 10px;white-space:nowrap}}

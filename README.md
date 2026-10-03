@@ -16,7 +16,13 @@ Login Privy diperlukan sebelum bermain. Akun kebun baru mulai dengan **0 koin, 0
 | Apel | 12 jam | 280 | 10 | 46 |
 | Alpukat | 1 hari | 420 | 12 | 60 |
 
-Semua harga menggunakan koin permainan. Tanaman menggunakan `plantedAt` dan `readyAt` absolut, sehingga tetap matang saat tab berada di belakang atau ditutup. Tidak ada percepatan waktu pada website produksi. Tanaman matang tidak layu, hasil tidak dijual otomatis, dan panen yang melampaui kapasitas tetap berada di petak sampai ruang tersedia. Setiap panen mengosongkan petak untuk bibit berikutnya.
+Harga bibit dan bahan menggunakan koin permainan. Tanaman menggunakan `plantedAt` dan `readyAt` absolut, sehingga tetap matang saat tab berada di belakang atau ditutup. Tidak ada percepatan waktu pada website produksi. Tanaman matang tidak layu, hasil tidak dijual otomatis, dan panen yang melampaui kapasitas tetap berada di petak sampai ruang tersedia. Setiap panen mengosongkan petak untuk bibit berikutnya.
+
+## Contoh dekorasi premium (v1.7.2)
+
+**Toko → Premium → Preview di kebun** menampilkan satu produk contoh, **Taman Rustic**: bangku kayu, dua pot bunga, pagar pendek, dan alas batu. Model dibuat khusus untuk game menggunakan material kayu/batu ambientCG yang sudah disertakan. Gambar katalog 600 × 420 dirender dari factory `rusticGarden()` yang juga dipakai preview dunia, dengan geometri, ukuran, dan material PBR yang sama. Gambar menyesuaikan tekstur kualitas perangkat; sudut kamera, pencahayaan lingkungan dan zoom kebun dapat mengubah tampilan saat diperiksa.
+
+Harga **Rp15.000** adalah contoh, ditandai **belum dijual**. Pembayaran, kepemilikan premium, pendapatan dan komisi belum diaktifkan. Preview tidak mengirim transaksi server, memakai koin/bahan, memberi bonus, atau mengubah snapshot kebun. Setelah diletakkan, model dapat diperiksa dengan geser/zoom peta dan diputar; **Ubah posisi** melanjutkan penempatan dengan validasi hijau/merah yang sama. **Selesai preview**, Esc, pergantian akun, atau muat ulang menghapus contoh sementara. Mode 2D menonaktifkan preview ini agar tidak menggantinya dengan gambar yang berbeda.
 
 Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kayu berharga 3 koin, batu 4, daging 5. Jika pemain sudah tidak punya bibit, tanaman, atau hasil panen, pembelian bahan menyisakan minimal 5 koin untuk bibit wortel agar permainan dapat diteruskan.
 

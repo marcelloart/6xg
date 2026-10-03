@@ -1,13 +1,13 @@
 {
   "name": "6xg-benteng-bara",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "private": true,
   "type": "module",
   "scripts": {
     "build:auth": "node tools/build-auth.mjs",
     "build:game": "node tools/build-game.mjs",
     "test:session": "node tests/game-session.mjs && node tests/session-bridge.mjs && node tests/cloud.cjs && node tests/farm-accounts.cjs",
-    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs && node tests/farm-progression.cjs && node tests/farm-production.cjs && node tests/farm-community.cjs && node tests/farm-community-client.cjs && node tests/farm-actions-client.cjs && node tests/farm.cjs && node tests/farm-layout.cjs && node tests/farm-accounts.cjs && node tests/farm-camera.cjs && node tests/farm-pickup.cjs && node tests/farm-audio.cjs && node tests/farm-scene.mjs && node tests/farm-visuals.mjs && node tests/farm-assets.mjs",
+    "test": "node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs && node tests/farm-progression.cjs && node tests/farm-production.cjs && node tests/farm-community.cjs && node tests/farm-community-client.cjs && node tests/farm-actions-client.cjs && node tests/farm.cjs && node tests/farm-layout.cjs && node tests/farm-accounts.cjs && node tests/farm-decor.cjs && node tests/farm-camera.cjs && node tests/farm-pickup.cjs && node tests/farm-audio.cjs && node tests/farm-scene.mjs && node tests/farm-visuals.mjs && node tests/farm-assets.mjs",
     "build:3d": "node tools/build-3d.mjs"
   },
   "dependencies": {
