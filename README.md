@@ -161,3 +161,7 @@ Cuplikan pada landing page berasal dari render game sebenarnya dengan kebun cont
 - Kunjungan memakai proyeksi tampilan terpisah (nama, avatar emoji, level, petak, bangunan, ternak). Foto profil, saldo, inventori, log, pesanan dan progres misi tidak dibagikan. Semua API kunjungan membutuhkan akun terverifikasi. Ini kunjungan snapshot, bukan multiplayer waktu nyata; kembali ke Kebunku mengembalikan kamera dan kebun sendiri.
 - Snapshot v8 menerima v4–v7 tanpa mereset kebun atau mengulang bibit awal. State `livestock` dan `social` diinisialisasi kosong/private. Semua transaksi tetap CAS dan memakai receipt idempotensi; waktu ternak berasal dari server.
 - Verifikasi: `npm test`, `npm run test:session`, `npm --prefix cloudflare test`, `npm run build:3d`, `npm run build:game`.
+
+## Tampilan ponsel (1.7.1)
+
+Layar hingga 760 px memakai empat menu utama: Kebun, Toko, Bangun, Lainnya. Atur, Olah, Tujuan, Ternak, Teman, dan Tas ada di Lainnya. Tas juga bisa dibuka dari indikator penyimpanan. Status level memakai indikator kecil; ketuk untuk melihat XP, misi dan pesanan. Panduan ada di Menu. Rotasi kamera dibuka melalui tombol opsi kamera. Tombol Kembali ke kebun memusatkan rumah dan petak aktif di area bermain ponsel, dengan sudut 30 derajat tetap. Tata letak memperhitungkan safe area layar, keyboard dan tinggi browser. Desktop tetap menyediakan semua menu utama.

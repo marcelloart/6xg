@@ -10,7 +10,8 @@ function guideCopy(step){
 function renderProgress(){
  const badge=$('progressBadge'),card=$('tutorialCard');if(!badge||!card)return;
  badge.hidden=!entered||!gate.canPlay;const level=farm.level,xp=farm.s.progress.xp,start=F.LEVEL_XP[level-1],next=F.LEVEL_XP[level],ratio=next?Math.min(100,100*(xp-start)/(next-start)):100;
- badge.innerHTML='<span>🌱 LEVEL '+level+'</span><small>'+format(xp)+' XP'+(next?' / '+format(next):' · Maksimal')+'</small><i style="--progress:'+ratio+'%"></i>';
+ badge.innerHTML='<span>🌱 <span class="level-label">LEVEL</span> '+level+'</span><small>'+format(xp)+' XP'+(next?' / '+format(next):' · Maksimal')+'</small><i style="--progress:'+ratio+'%"></i>';
+ badge.setAttribute('aria-label','Level '+level+', '+format(xp)+' XP'+(next?' dari '+format(next):' maksimal')+'. Buka tujuan kebun');badge.title=format(xp)+' XP'+(next?' / '+format(next):' · Maksimal');
  const step=farm.tutorialStep();card.hidden=!entered||!gate.canPlay||Boolean(panel)||Boolean(placement)||farm.s.progress.tutorial.dismissed||step===4;
  if(card.hidden)return;const copy=guideCopy(step),signature=step+'|'+copy+'|'+Boolean(authority?.command);if(signature===guideSignature)return;guideSignature=signature;
  card.innerHTML='<div class="tutorial-top"><span>PANDUAN · '+(step+1)+' / 4</span>'+action('Nanti','tutorial','dismiss',1,false,true)+'</div><h3>'+guideTitles[step]+'</h3><p>'+copy+'</p><div class="guide-dots">'+guideTitles.slice(0,4).map((_,i)=>'<i class="'+(i<=step?'done':'')+'"></i>').join('')+'</div><div class="item-actions">'+action(step===0?'Pilih wortel':step===1?'Lihat tanaman':step===2?'Jual panen':'Siapkan lumbung','guide','')+action('Tujuan & pesanan','panel','goals',1,false,true)+(authority?.command?action('Coba lagi','retry','',1,false,true):'')+'</div>';

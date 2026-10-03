@@ -8,4 +8,12 @@ test('Zoom keeps the clicked ground point stationary at a rotated angle',()=>{co
 test('Clamped camera corners remain within the large map on phones and desktops',()=>{const c=fresh();for(const[w,h]of[[320,600],[1280,720],[1920,1080]]){c.resize(w,h);for(let i=0;i<16;i++){c.rotate(Math.PI/8);c.zoomAt(.001);for(const[x,y]of[[0,0],[3200,2200],[1e6,-1e6]]){c.focus(x,y);for(const p of c.corners)assert(p.x>=-1e-6&&p.y>=-1e-6&&p.x<=3200+1e-6&&p.y<=2200+1e-6);}}}});
 test('A plot click still selects its saved position after zoom, pan, and rotation',()=>{const c=fresh();c.rotate(.9);c.pan(50,40);c.zoomAt(1.3);let selected;const g=new context.Gesture(c,p=>selected=p),p=c.worldToScreen(1592,1084);g.down(1,p.x,p.y);g.up(1,p.x,p.y);close(selected.x,1592);close(selected.y,1084);});
 test('A pinch cannot plant a crop when either finger is lifted',()=>{const c=fresh();c.rotate(.5);let planted=0;const g=new context.Gesture(c,()=>planted++);g.down(1,450,320);g.down(2,550,320);g.move(2,620,320);g.up(2,620,320);g.up(1,450,320);assert.equal(planted,0);assert.equal(g.pointers.size,0);});
+test('Phone home framing exposes the house and active plots between the status bar and navigation',()=>{
+ const source=fs.readFileSync('assets/js/farm-game.js','utf8'),start=source.indexOf('function center(){'),end=source.indexOf('function closePanel(){',start);
+ const plots=Array.from({length:9},(_,i)=>({x:1524+i%3*68,y:1010+Math.floor(i/3)*74}));
+ context.farm={s:{plots},unlocked:9};context.visiting=null;vm.runInContext(source.slice(start,end),context);
+ for(const[w,h,top]of[[320,568,112],[390,844,112],[760,390,64]]){const c=fresh();c.resize(w,h);context.camera=c;context.center();const roof=c.worldToScreen(1593,872,120);assert(roof.y>=top-1e-6);for(const p of plots){const screen=c.worldToScreen(p.x,p.y+32);assert(screen.y<=h-108+1e-6);const picked=c.screenToWorld(screen.x,screen.y);close(picked.x,p.x);close(picked.y,p.y+32);}close(c.yaw,0);close(c.tilt,30*Math.PI/180);}
+ const phone=fresh();context.camera=phone;phone.resize(740,390);context.center();assert(phone.zoom<1.05);phone.resize(390,844);context.center();close(phone.zoom,1.05);
+ const c=fresh();context.camera=c;context.center();close(c.x,1590);close(c.y,1135);
+});
 console.log(JSON.stringify({passed:tests.length,tests},null,2));
