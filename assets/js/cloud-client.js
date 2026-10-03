@@ -1,24 +1,25 @@
 'use strict';
 // A session belongs to exactly one Privy user. No token is stored by the game.
 class BaraCloudSession {
-  constructor(base,userId,getToken,{fetcher=(...args)=>fetch(...args),onStatus=()=>{},onSaved=()=>{},path='/api/save'}={}) {
+  constructor(base,userId,getToken,{fetcher=(...args)=>fetch(...args),onStatus=()=>{},onSaved=()=>{},path='/api/save',cookieSession=false}={}) {
     const url=new URL(base);
     if(url.protocol!=='https:'&&!(['localhost','127.0.0.1'].includes(url.hostname)&&url.protocol==='http:'))throw new Error('Server akun harus menggunakan HTTPS.');
     if(url.username||url.password||url.search||url.hash)throw new Error('Alamat server tidak valid.');
     if(!['/api/save','/api/farm-save'].includes(path))throw new Error('Endpoint progres tidak valid.');
     this.path=path;
     this.onSaved=onSaved;
+    this.cookieSession=cookieSession;
     this.base=url.href.replace(/\/$/,'');this.userId=userId;this.getToken=getToken;this.fetcher=fetcher;this.onStatus=onStatus;
     this.controller=new AbortController();this.closed=false;this.revision=0;this.pending=null;this.saving=false;this.blocked=false;
   }
   async request(method,body) {
     if(this.closed)throw new Error('Sesi telah berakhir.');
-    const token=await this.getToken();
+    const token=this.cookieSession?null:await this.getToken();
     if(this.closed)throw new Error('Sesi telah berakhir.');
-    if(!token)throw new Error('Silakan masuk kembali.');
+    if(!this.cookieSession&&!token)throw new Error('Silakan masuk kembali.');
     const response=await this.fetcher(this.base+this.path,{
-      method,signal:this.controller.signal,cache:'no-store',credentials:'omit',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      method,signal:this.controller.signal,cache:'no-store',credentials:this.cookieSession?'include':'omit',
+      headers:{...(!this.cookieSession?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},
       ...(body?{body:JSON.stringify(body)}:{})
     });
     if(this.closed)throw new Error('Sesi telah berakhir.');

@@ -6,6 +6,10 @@ const tests=[];const raw=n=>JSON.stringify({version:2,state:{time:n}});
 const ok=data=>({ok:true,json:async()=>data});
 async function test(name,fn){await fn();tests.push(name);}
 (async()=>{
+  await test('HttpOnly game sessions use browser cookies without requesting or exposing a token',async()=>{
+    const requests=[];const s=new Session('https://app.6xg.online','did:privy:a',()=>{throw Error('Token must stay server-side');},{cookieSession:true,path:'/api/farm-save',fetcher:async(url,options)=>{requests.push(options);return ok({userId:'did:privy:a',save:null,revision:0});}});
+    await s.load();assert.equal(requests[0].credentials,'include');assert.equal(requests[0].headers.Authorization,undefined);s.close();
+  });
   await test('The default browser fetch keeps its native invocation context',async()=>{
     context.fetch=function(){assert(!(this instanceof Session));return Promise.resolve(ok({userId:'did:privy:a',save:null,revision:0}));};
     const s=new Session('https://api.example.test','did:privy:a',async()=>'token');await s.load();s.close();

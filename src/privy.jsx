@@ -29,7 +29,8 @@ function Account({identity,login}){
     game.setIdentity(userId);setProfile(null);
     if(!userId){
       attached.current=null;game.detach();
-      showStatus('guest','Masuk atau daftar untuk memiliki akun pemain.');return;
+      if(identity.error)showStatus('error','Sesi game belum dapat dipulihkan. Hubungkan akun kembali untuk mencoba lagi.');
+      else showStatus('guest','Masuk atau daftar untuk memiliki akun pemain.');return;
     }
     try{localStorage.setItem('6xg-account-used','1');}catch{}
     game.pause();
@@ -48,12 +49,12 @@ function Account({identity,login}){
           }
         }
         if(cfg.apiBase){
-          cloud=new window.BaraCloudSession(cfg.apiBase,userId,async()=>{
+          cloud=new window.BaraCloudSession(identity.apiBase||cfg.apiBase,userId,async()=>{
             if(auth.current.userId!==userId)throw new Error('Akun berubah');
             const token=await auth.current.getAccessToken();
             if(auth.current.userId!==userId)throw new Error('Akun berubah');
             return token;
-          },{path:'/api/farm-save',onSaved:remember,onStatus:(state,text)=>{if(!cancelled)showStatus(state,text);}});
+          },{path:'/api/farm-save',cookieSession:identity.cookieSession===true,...(identity.fetcher?{fetcher:identity.fetcher}:{}),onSaved:remember,onStatus:(state,text)=>{if(!cancelled)showStatus(state,text);}});
           session.current=cloud;
           const data=await cloud.load();if(cancelled)return;
           if(data.save){
@@ -141,7 +142,7 @@ function Account({identity,login}){
       <div className="account-status" data-state={status.state} role="status">{status.text}</div>
       {!cfg.apiBase&&<div className="account-notice"><p className="account-copy">Penyimpanan online belum aktif.</p><p className="account-meta">Progres tetap tersimpan di browser perangkat ini. Akun belum menyinkronkan kebun ke perangkat lain.</p></div>}
       <div className="account-actions">
-        {!authenticated&&<button className="primary" disabled={!ready||busy} onClick={()=>{document.getElementById('accountDialog').close();login({disableSignup:false});}}>{ready?'Daftar / Masuk dengan Privy ↗':'Menyiapkan login…'}</button>}
+        {!authenticated&&<button className="primary" disabled={!ready||busy} onClick={()=>{document.getElementById('accountDialog').close();login({disableSignup:false});}}>{!ready?'Menyiapkan login…':identity.error?'Hubungkan akun kembali ↗':'Daftar / Masuk dengan Privy ↗'}</button>}
         {authenticated&&choice&&<button className="primary" onClick={choose}>Mulai kebun baru</button>}
         {authenticated&&game.canPlay()&&<button className="primary" onClick={()=>{document.getElementById('accountDialog').close();game.enter();}}>Mainkan Ladang Bara ↗</button>}
         {authenticated&&['error','local'].includes(status.state)&&cfg.apiBase&&<><button className="primary" onClick={()=>setRetry(n=>n+1)}>Coba sinkronkan lagi</button>{status.state==='error'&&<button className="secondary" onClick={continueLocal}>Lanjutkan di perangkat ini</button>}</>}
@@ -162,14 +163,27 @@ function LegacyAccount(){
 }
 function GameAccount(){
   const [identity,setIdentity]=useState({ready:false,authenticated:false,user:null});
-  const bridge=useRef(null);
+  const renewing=useRef(false);
+  const resume=()=>{if(renewing.current)return;renewing.current=true;game.pause();window.location.replace(new URL('/?login=1&next=game',cfg.siteOrigin).href);};
+  const fetchSession=async(url,options)=>{const response=await fetch(url,{...options,credentials:'include'});if(response.status===401)resume();return response;};
   useEffect(()=>{
-    try{bridge.current=createSessionBridge({siteOrigin:cfg.siteOrigin,gameOrigin:cfg.gameOrigin,onState:state=>setIdentity(state)});}
-    catch{setIdentity({ready:true,authenticated:false,error:true});}
-    return()=>bridge.current?.close();
+    const controller=new AbortController();
+    (async()=>{try{
+      const response=await fetch(new URL('/api/game-session',cfg.gameOrigin),{credentials:'include',cache:'no-store',signal:controller.signal});
+      if(response.status===401){resume();return;}
+      if(!response.ok)throw new Error('Session unavailable');const data=await response.json();
+      if(typeof data.user?.id!=='string'||!data.user.id.startsWith('did:privy:'))throw new Error('Invalid identity');
+      setIdentity({ready:true,authenticated:true,user:data.user});
+    }catch{if(!controller.signal.aborted)setIdentity({ready:true,authenticated:false,error:true});}})();
+    return()=>controller.abort();
   },[]);
   const login=()=>{window.location.assign(new URL('/?login=1&next=game',cfg.siteOrigin).href);};
-  return <Account identity={{...identity,getAccessToken:()=>bridge.current.request('token'),getCache:()=>bridge.current.request('farmCache'),logout:()=>bridge.current.request('logout')}} login={login}/>;
+  const logout=async()=>{
+    const response=await fetch(new URL('/api/game-session/logout',cfg.gameOrigin),{method:'POST',credentials:'include'});
+    if(!response.ok)throw new Error('Logout failed');
+    window.location.assign(new URL('/?logout=1',cfg.siteOrigin).href);
+  };
+  return <Account identity={{...identity,apiBase:cfg.gameOrigin,cookieSession:true,fetcher:fetchSession,getAccessToken:async()=>null,logout}} login={login}/>;
 }
 function BridgeAuth(){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
