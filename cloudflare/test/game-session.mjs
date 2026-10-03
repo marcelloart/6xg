@@ -29,6 +29,16 @@ test('the game restores the signed account from its cookie, and never accepts a 
   const jwt=await token();const r=await call('/api/game-session','GET',{cookie:jwt});assert.equal(r.status,200);assert.equal((await r.json()).user.id,'did:privy:session-a');
   assert.equal((await call('/api/game-session','GET',{auth:jwt})).status,401);
 });
+
+test('the deployed service binding reaches signed-token verification without a public network fetch',async()=>{
+  const jwt=await token('did:privy:binding-account');
+  const env={CLOUD_SAVE:{fetch:cloudFetch}};
+  const dependencies={cloudFetch:async()=>{throw new Error('Public network fetch must not run');}};
+  const r=await handleGameRequest(new Request(APP+'/api/game-session',{method:'POST',headers:{Origin:SITE,Authorization:'Bearer '+jwt}}),env,dependencies);
+  assert.equal(r.status,200);assert.equal((await r.json()).user.id,'did:privy:binding-account');
+  const fake=await handleGameRequest(new Request(APP+'/api/game-session',{method:'POST',headers:{Origin:SITE,Authorization:'Bearer a.b.c'}}),env,dependencies);
+  assert.equal(fake.status,401);assert.equal((await fake.json()).error,'session_expired');
+});
 test('forged, expired and wrong-audience sessions are rejected by real JWT verification',async()=>{
   const other=await generateKeyPair('ES256');
   for(const jwt of [await token('did:privy:session-a',{},other.privateKey),await token('did:privy:session-a',{exp:1}),await token('did:privy:session-a',{aud:'other-app'})])assert.equal((await call('/api/game-session','GET',{cookie:jwt})).status,401);

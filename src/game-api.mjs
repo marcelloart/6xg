@@ -26,7 +26,10 @@ export async function handleGameRequest(request,env,{cloudFetch=fetch}={}){
   // The existing backend verifies Privy's signature, audience, expiry and user ID.
   // Bootstrap only reads progress; it cannot initialize or overwrite a farm.
   try{
-    const remote=await cloudFetch(CLOUD+'/api/farm-save',{
+    // Cloudflare Workers on this account must use the service binding to reach
+    // one another; a public workers.dev fetch is not a reliable server route.
+    const send=env.CLOUD_SAVE?(url,init)=>env.CLOUD_SAVE.fetch(url,init):cloudFetch;
+    const remote=await send(CLOUD+'/api/farm-save',{
       method:path==='/api/farm-save'?request.method:'GET',redirect:'error',
       headers:{Authorization:'Bearer '+token,Origin:APP,'Content-Type':request.headers.get('Content-Type')||'application/json'},
       ...(path==='/api/farm-save'&&request.method==='PUT'?{body:request.body}:{}),
