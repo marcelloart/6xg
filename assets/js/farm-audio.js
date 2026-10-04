@@ -81,9 +81,9 @@ class FarmAudio {
  async preview(){if(await this.unlock()){this.play('plant',{preview:true});this.play('harvest',{preview:true,delay:.55});this.play('sell',{preview:true,delay:1.25});}}
  startAmbience(){
   if(this.loops.length||!this.ctx||!this.unlocked||this.ctx.state!=='running'||!this.active||!this.visible||!this.settings.enabled||!this.settings.volume||!this.settings.ambience)return;
-  for(const kind of['wind','water']){
+  for(const kind of['wind','water','rain']){
    const source=this.ctx.createBufferSource(),filter=this.ctx.createBiquadFilter(),gain=this.ctx.createGain(),panner=this.ctx.createStereoPanner?.();source.buffer=this.environmentBuffers[kind]??=this.makeNoise(kind==='wind'?9:6,kind==='wind',true);source.loop=true;
-   filter.type='lowpass';filter.frequency.value=kind==='wind'?650:2100;filter.Q.value=.35;gain.gain.value=kind==='wind'?.2:0;source.connect(filter);filter.connect(gain);
+   filter.type='lowpass';filter.frequency.value=kind==='wind'?650:kind==='rain'?4500:2100;filter.Q.value=.35;gain.gain.value=kind==='wind'?.2:0;source.connect(filter);filter.connect(gain);
    if(panner){gain.connect(panner);panner.connect(this.ambience);}else gain.connect(this.ambience);source.start();this.loops.push({kind,source,gain,filter,panner});
   }
   this.nextBird=this.ctx.currentTime+4;
@@ -93,12 +93,13 @@ class FarmAudio {
  observe(farm,camera,now){
   if(!this.active||!this.visible||!this.unlocked||this.ctx?.state!=='running'||!this.settings.enabled||!this.settings.volume)return;
   this.startAmbience();const t=this.ctx.currentTime;
+  const weather=globalThis.FarmWeather?.at(now)||{rain:0,wind:1},rain=this.loops.find(l=>l.kind==='rain'),wind=this.loops.find(l=>l.kind==='wind');if(rain)this.ramp(rain.gain.gain,weather.rain*.42,.7);if(wind)this.ramp(wind.gain.gain,.2*weather.wind,.7);
   const river={x:640+110*Math.sin(camera.y/270),y:camera.y},water=this.loops.find(l=>l.kind==='water'),position=this.spatial(river,camera);
   if(water){this.ramp(water.gain.gain,.22*position.strength,.4);if(water.panner)this.ramp(water.panner.pan,position.pan,.25);}
-  for(const [slot,deadline]of this.construction)if(deadline<=now){if(farm.s.buildings.some(b=>b.slot===slot&&b.readyAt===deadline))this.play('complete');this.construction.delete(slot);}
-  const building=farm.s.buildings.filter(b=>b.readyAt>now);for(const b of building)this.construction.set(b.slot,b.readyAt);
+  for(const [slot,deadline]of this.construction)if(deadline<=now){if(farm.s.buildings.some(b=>b.slot===slot&&(b.readyAt===deadline||b.upgrade?.readyAt===deadline||b.readyAt<deadline&&b.level>1)))this.play('complete');this.construction.delete(slot);}
+  const building=farm.s.buildings.filter(b=>b.readyAt>now||b.upgrade?.readyAt>now);for(const b of building)this.construction.set(b.slot,b.upgrade?.readyAt||b.readyAt);
   if(this.settings.ambience&&this.loops.length){
-   if(t>=this.nextBird){this.emit('bird',{bus:'ambience',strength:.6,pan:this.random()*1.2-.6});this.nextBird=t+8+this.random()*10;}
+   if(t>=this.nextBird&&weather.rain<.15){this.emit('bird',{bus:'ambience',strength:.6,pan:this.random()*1.2-.6});this.nextBird=t+8+this.random()*10;}
    if(t>=this.nextHammer){const nearest=building.map(b=>({...this.spatial(b,camera),slot:b.slot})).sort((a,b)=>b.strength-a.strength)[0];if(nearest?.strength>.05)this.emit('hammer',{bus:'ambience',pan:nearest.pan,strength:nearest.strength*.5});this.nextHammer=t+1.2+this.random()*1.1;}
   }
  }

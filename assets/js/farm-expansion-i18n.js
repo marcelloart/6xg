@@ -1,0 +1,11 @@
+'use strict';
+Object.assign(globalThis.BaraTranslations,{
+ 'Sisakan satu bibit atau 5 koin untuk panen berikutnya.':'Keep one seed or 5 coins for your next harvest.',
+ 'Antrean per bangunan berjalan bergiliran, termasuk saat game ditutup. Upgrade membuka antrean tambahan.':'Each building processes its queue in order, even while the game is closed. Upgrades add queue slots.',
+ 'Kebun anggur':'Vineyard','Kebun botani':'Botanical garden','Kawasan ini sudah dibuka.':'This area is already unlocked.','Siapkan level dan koin untuk membuka kawasan.':'Reach the required level and save coins to unlock this area.',' dibuka · 6 petak baru.':' unlocked · 6 new plots.',
+ 'Anggur':'Grape','Labu':'Pumpkin','Kakao':'Cacao','Rumah kaca':'Greenhouse','Kompot anggur':'Grape compote','Sup labu':'Pumpkin soup','Dessert cokelat':'Chocolate dessert',
+ '+9 petak tanam · kebun botani':'+9 growing plots · botanical garden',
+ 'Bangunan ini tidak memiliki upgrade.':'This building has no upgrades.','Tunggu pekerjaan bangunan selesai.':'Wait for building work to finish.','Bangunan sudah level maksimum.':'This building is at its maximum level.','Siapkan level, koin, dan bahan untuk upgrade.':'Reach the required level and prepare coins and materials for the upgrade.','Upgrade dimulai. Manfaat lama tetap aktif sampai selesai.':'Upgrade started. Existing benefits stay active until it finishes.','Upgrade bangunan untuk membuka resep ini.':'Upgrade this building to unlock the recipe.',
+ 'Panen kebun anggur':'Vineyard harvest','Festival labu':'Pumpkin festival','Kakao pilihan':'Selected cacao','Keranjang botani':'Botanical basket',
+ 'Tambahkan kebun teman yang membuka kunjungan terlebih dahulu.':'Add a friend who has enabled farm visits first.','Bantuan hari ini sudah mencapai batas 5 tanaman.':'Today’s help has reached the limit of 5 crops.','Pilih tanaman yang masih tumbuh dan belum disiram teman.':'Choose a growing crop that has not been watered by a friend.','Tanaman ini sudah kamu bantu.':'You have already helped this crop.','Kirim satu hadiah per teman, maksimal 3 teman per hari.':'Send one gift per friend, up to 3 friends each day.','Bibit milikmu belum cukup untuk hadiah ini.':'You do not have enough seeds for this gift.','Penyimpanan bibit teman sudah penuh.':'Your friend’s seed storage is full.'
+});

@@ -1,1 +1,1 @@
-export const sharedRow=(db,code)=>db.prepare("SELECT save, saved_at FROM farm_saves WHERE json_extract(save, '$.state.social.code') = ? AND json_extract(save, '$.state.social.enabled') = 1 LIMIT 1").bind(code).first();
+export const sharedRow=(db,code)=>db.prepare("SELECT user_id, save, revision, saved_at FROM farm_saves WHERE json_extract(save, '$.state.social.code') = ? AND json_extract(save, '$.state.social.enabled') = 1 LIMIT 1").bind(code).first();

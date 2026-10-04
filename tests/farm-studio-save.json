@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "state": {
     "coins": 0,
     "lastSeen": 1790928660000,
@@ -12,7 +12,10 @@
       "chili": 0,
       "orange": 0,
       "apple": 0,
-      "avocado": 0
+      "avocado": 0,
+      "grape": 0,
+      "pumpkin": 0,
+      "cacao": 0
     },
     "produce": {
       "carrot": 0,
@@ -23,7 +26,10 @@
       "chili": 0,
       "orange": 0,
       "apple": 0,
-      "avocado": 0
+      "avocado": 0,
+      "grape": 0,
+      "pumpkin": 0,
+      "cacao": 0
     },
     "materials": {
       "wood": 94,
@@ -36,6 +42,8 @@
         "kind": "barn",
         "startedAt": 1790928660000,
         "readyAt": 1790928750000,
+        "level": 1,
+        "upgrade": null,
         "x": 1170,
         "y": 740,
         "rotation": 1
@@ -47,6 +55,9 @@
         "soup": 0,
         "jam": 0,
         "juice": 0,
+        "compote": 0,
+        "pumpkinSoup": 0,
+        "chocolate": 0,
         "pie": 0
       },
       "jobs": []
@@ -78,6 +89,13 @@
       "code": null,
       "friends": []
     },
+    "community": {
+      "day": 20728,
+      "helped": [],
+      "gifts": [],
+      "received": []
+    },
+    "regions": [],
     "expansions": 6,
     "profile": {
       "name": "Pekebun Uji",

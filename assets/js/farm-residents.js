@@ -5,8 +5,8 @@
   const crop=[preferred,...Object.keys(F.CROPS)].find(k=>farm.s.seeds[k]>0&&farm.cropUnlocked(k)),empty=crop&&plots.find(p=>!p.crop);
   if(ready)jobs.gardener={key:'harvest:'+ready.id+':'+ready.readyAt,targetKind:'plot',id:ready.id,mode:'tend',action:'harvest',args:{id:ready.id},seconds:4};
   else if(empty)jobs.gardener={key:'plant:'+empty.id+':'+crop,targetKind:'plot',id:empty.id,mode:'tend',action:'plant',args:{id:empty.id,crop},seconds:3};
-  const construction=farm.s.buildings.filter(b=>b.readyAt>now).sort((a,b)=>a.readyAt-b.readyAt)[0];
-  if(construction)jobs.builder={key:'build:'+construction.slot+':'+construction.readyAt,targetKind:'building',slot:construction.slot,mode:'work',construction:true};
+  const construction=farm.s.buildings.filter(b=>b.readyAt>now||b.upgrade?.readyAt>now).sort((a,b)=>(a.upgrade?.readyAt||a.readyAt)-(b.upgrade?.readyAt||b.readyAt))[0];
+  if(construction)jobs.builder={key:'build:'+construction.slot+':'+(construction.upgrade?.readyAt||construction.readyAt),targetKind:'building',slot:construction.slot,mode:'work',construction:true};
   const production=farm.s.production,finished=production.jobs.find(j=>j.readyAt<=now&&farm.used+F.RECIPES[j.recipe].yield<=farm.capacity&&production.goods[j.recipe]+F.RECIPES[j.recipe].yield<=10000);
   if(finished)jobs.neighbor={key:'collect:'+finished.id,targetKind:'building',slot:finished.slot,mode:'work',action:'collect',args:{id:finished.id},seconds:2};
   else{

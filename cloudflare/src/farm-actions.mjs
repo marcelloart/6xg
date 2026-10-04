@@ -1,5 +1,6 @@
 import '../../assets/js/farm-engine.js';
 import {sharedRow} from './farm-sharing.mjs';
+import {prepareHelp} from './farm-help.mjs';
 const F=globalThis.BaraFarm;
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const exact=(value,keys)=>object(value)&&Object.keys(value).length===keys.length&&keys.every(k=>Object.hasOwn(value,k));
@@ -13,8 +14,12 @@ const specs={
  material:[['material','qty'],a=>Object.hasOwn(F.MATERIALS,a.material)&&int(a.qty,1,100),f=>a=>f.buyMaterial(a.material,a.qty)],
  kit:[['kind'],a=>Object.hasOwn(F.BUILDINGS,a.kind),f=>a=>f.buildingUnlocked(a.kind)?f.buyBuildKit(a.kind):{ok:false,message:'Bangunan ini belum terbuka.'}],
  build:[['kind','point','rotation'],a=>Object.hasOwn(F.BUILDINGS,a.kind)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.build(a.kind,a.point,a.rotation)],
+ upgrade:[['slot'],a=>int(a.slot,0,23),f=>a=>f.upgradeBuilding(a.slot)],
+ 'friend-water':[['code','plot'],a=>F.friendCode(a.code)&&int(a.plot,0,80),f=>a=>({ok:false})],
+ 'friend-gift':[['code','crop','qty'],a=>F.friendCode(a.code)&&Object.hasOwn(F.CROPS,a.crop)&&int(a.qty,1,5),f=>a=>({ok:false})],
  'move-building':[['slot','point','rotation'],a=>int(a.slot,0,23)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.moveBuilding(a.slot,a.point,a.rotation)],
  'move-plot':[['id','point'],a=>int(a.id,0,80)&&point(a.point),f=>a=>f.movePlot(a.id,a.point)],
+ region:[['key','point','rotation'],a=>Object.hasOwn(F.REGIONS,a.key)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.unlockRegion(a.key,a.point,a.rotation)],
  expand:[['point','count','rotation'],a=>point(a.point)&&[1,3,6].includes(a.count)&&int(a.rotation,0,3),f=>a=>f.expandGarden(a.point,a.count,a.rotation)],
  profile:[['profile'],a=>object(a.profile)&&Object.keys(a.profile).every(k=>['name','farmName','avatar','photo','useAccountPhoto'].includes(k)),f=>a=>f.updateProfile(a.profile)],
  order:[['id'],a=>typeof a.id==='string'&&/^\d:\d{1,10}:\d{1,2}$/.test(a.id),f=>a=>f.deliverOrder(a.id)],
@@ -39,7 +44,7 @@ export function parseAction(p){
 export function serverFarm(save,now){
  const farm=new F.Farm({save,clock:()=>now});
  // A legacy snapshot cannot dictate the server clock after migration.
- if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);p.readyAt=p.plantedAt+F.CROPS[p.crop].minutes*60000;}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;}const tails=new Map();for(const j of farm.s.production.jobs){j.startedAt=Math.max(1,j.startedAt-shift,farm.s.buildings.find(b=>b.slot===j.slot).readyAt,tails.get(j.slot)||0);j.readyAt=j.startedAt+F.RECIPES[j.recipe].minutes*60000;tails.set(j.slot,j.readyAt);}for(const a of farm.s.livestock.animals)if(a.fedAt){a.fedAt=Math.max(1,a.fedAt-shift,farm.s.buildings.find(b=>b.slot===a.slot).readyAt);a.readyAt=a.fedAt+F.ANIMALS[a.kind].minutes*60000;}for(const e of farm.s.log)e.at=Math.min(now,e.at);}
+ if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);const end=p.plantedAt+F.CROPS[p.crop].minutes*60000;if(p.wateredAt)p.wateredAt=Math.max(p.plantedAt,Math.min(now,end-1,p.wateredAt-shift));p.readyAt=end-(p.wateredAt?Math.min(F.CROPS[p.crop].minutes*6000,end-p.wateredAt):0);}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;if(b.upgrade){b.upgrade.startedAt=Math.max(b.readyAt,b.upgrade.startedAt-shift);b.upgrade.readyAt=b.upgrade.startedAt+F.upgradeDuration(b.kind,b.upgrade.targetLevel);}}const tails=new Map();for(const j of farm.s.production.jobs){j.startedAt=Math.max(1,j.startedAt-shift,farm.s.buildings.find(b=>b.slot===j.slot).readyAt,tails.get(j.slot)||0);j.readyAt=j.startedAt+F.RECIPES[j.recipe].minutes*60000;tails.set(j.slot,j.readyAt);}for(const a of farm.s.livestock.animals)if(a.fedAt){a.fedAt=Math.max(1,a.fedAt-shift,farm.s.buildings.find(b=>b.slot===a.slot).readyAt);a.readyAt=a.fedAt+F.ANIMALS[a.kind].minutes*60000;}for(const e of farm.s.log)e.at=Math.min(now,e.at);for(const v of farm.s.community.received)v.at=Math.min(now,v.at);for(const v of farm.s.community.helped)v.plantedAt=Math.max(1,v.plantedAt-shift);}
  farm.now();return farm;
 }
 const snapshot=(uid,row,now)=>({userId:uid,save:JSON.parse(serverFarm(row?JSON.parse(row.save):null,now).serialize()),revision:row?.revision||0,savedAt:row?.saved_at||null,serverTime:now,authoritative:true});
@@ -53,13 +58,21 @@ export async function runFarmAction(db,uid,p,now=Date.now()){
  const previous=await receipt();if(previous)return replay(previous);
  const row=await read(db,uid);if(p.revision!==(row?.revision||0))return{status:409,data:{error:'save_conflict',...snapshot(uid,row,now)}};
  if(p.type==='friend'&&!await sharedRow(db,p.args.code))return{status:422,data:{error:'action_denied',message:'Kebun teman tidak ditemukan atau kunjungannya dinonaktifkan.',...snapshot(uid,row,now)}};
- const farm=serverFarm(row?JSON.parse(row.save):null,now),level=farm.level,result=specs[p.type][2](farm)(p.args);
+ const farm=serverFarm(row?JSON.parse(row.save):null,now),level=farm.level;
+ const help=p.type.startsWith('friend-')?await prepareHelp(db,uid,p,farm,now,serverFarm):null;
+ const result=help?(help.ok?help.result:help):specs[p.type][2](farm)(p.args);
  if(!result.ok)return{status:422,data:{error:'action_denied',message:result.message,...snapshot(uid,row,now)}};
  result.level=farm.level;result.levelUp=farm.level>level;
  const savedAt=new Date(now).toISOString(),raw=farm.serialize();F.validateSave(JSON.parse(raw));
  const update=row?db.prepare('UPDATE farm_saves SET save = ?, revision = revision + 1, saved_at = ?, last_action_id = ? WHERE user_id = ? AND revision = ?').bind(raw,savedAt,p.id,uid,p.revision):db.prepare('INSERT INTO farm_saves(user_id, save, revision, saved_at, last_action_id) VALUES (?, ?, 1, ?, ?) ON CONFLICT(user_id) DO NOTHING').bind(uid,raw,savedAt,p.id);
  // D1 batches are transactional. A receipt can exist only for the matching committed action.
- await db.batch([update,db.prepare('INSERT INTO farm_actions(user_id, action_id, request_hash, result, created_at) SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND last_action_id = ?) ON CONFLICT(user_id, action_id) DO NOTHING').bind(uid,p.id,hash,JSON.stringify(result),now,uid,p.id)]);
+ if(help){
+  const guard="EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND revision = ? AND json_extract(save, '$.state.social.enabled') = 1 AND json_extract(save, '$.state.social.code') = ?)";
+  const own=row?db.prepare('UPDATE farm_saves SET save = ?, revision = revision + 1, saved_at = ?, last_action_id = ? WHERE user_id = ? AND revision = ? AND '+guard).bind(raw,savedAt,p.id,uid,p.revision,help.row.user_id,help.row.revision,p.args.code):db.prepare('INSERT INTO farm_saves(user_id,save,revision,saved_at,last_action_id) SELECT ?,?,1,?,? WHERE '+guard+' ON CONFLICT(user_id) DO NOTHING').bind(uid,raw,savedAt,p.id,help.row.user_id,help.row.revision,p.args.code);
+  const other=db.prepare('UPDATE farm_saves SET save = ?,revision = revision + 1,saved_at = ?,last_action_id = ? WHERE user_id = ? AND revision = ? AND EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND revision = ? AND last_action_id = ?)').bind(help.target.serialize(),savedAt,p.id,help.row.user_id,help.row.revision,uid,p.revision+1,p.id);
+  const receiptUpdate=db.prepare('INSERT INTO farm_actions(user_id,action_id,request_hash,result,created_at) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND last_action_id = ?) AND EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND last_action_id = ?) ON CONFLICT(user_id,action_id) DO NOTHING').bind(uid,p.id,hash,JSON.stringify(result),now,uid,p.id,help.row.user_id,p.id);
+  await db.batch([own,other,receiptUpdate]);
+ }else await db.batch([update,db.prepare('INSERT INTO farm_actions(user_id, action_id, request_hash, result, created_at) SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM farm_saves WHERE user_id = ? AND last_action_id = ?) ON CONFLICT(user_id, action_id) DO NOTHING').bind(uid,p.id,hash,JSON.stringify(result),now,uid,p.id)]);
  const committed=await receipt();if(!committed)return{status:409,data:{error:'save_conflict',...await loadFarm(db,uid,now)}};
  // Old retries still carry their stale revision after a receipt is pruned.
  await db.prepare('DELETE FROM farm_actions WHERE user_id = ? AND created_at < ?').bind(uid,now-7*86400000).run();

@@ -12,7 +12,10 @@
       "chili": 0,
       "orange": 0,
       "apple": 0,
-      "avocado": 0
+      "avocado": 0,
+      "grape": 0,
+      "pumpkin": 0,
+      "cacao": 0
     },
     "produce": {
       "carrot": 0,
@@ -23,7 +26,10 @@
       "chili": 0,
       "orange": 0,
       "apple": 0,
-      "avocado": 0
+      "avocado": 0,
+      "grape": 0,
+      "pumpkin": 0,
+      "cacao": 0
     },
     "materials": {
       "wood": 0,
