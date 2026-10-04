@@ -95,7 +95,7 @@ class FarmRenderer3D {
   this.landscape=new THREE.Group();this.farmLayer=new THREE.Group();this.cropLayer=new THREE.Group();this.scene.add(this.landscape,this.farmLayer,this.cropLayer);this.makeLandscape();
   this.labelLayer=document.createElement('div');this.labelLayer.className='world-labels';this.labelLayer.setAttribute('aria-hidden','true');canvas.parentElement.append(this.labelLayer);this.labels=new Map();
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.lost=true;this.showLost();});canvas.addEventListener('webglcontextrestored',()=>{this.lost=false;this.lastModel='';this.hideLost();if(this.sky){const pmrem=new THREE.PMREMGenerator(this.webgl);this.environmentTarget?.dispose();this.environmentTarget=pmrem.fromEquirectangular(this.sky);this.scene.environment=this.environmentTarget.texture;pmrem.dispose();this.catalogueDirty=true;}});
-  this.mode='3d';document.getElementById('cameraPosition').textContent=harvestT_farm_3d_js('DUNIA 3D · KEBUN MILIKMU');
+  this.mode='3d';
   this.loadWorldAssets();
  }
  loadScanMaterials(){
@@ -378,6 +378,6 @@ class FarmRenderer3D {
 
 function create(canvas){let preference='auto';try{preference=localStorage.getItem('6xg:graphics')||'auto';}catch{}const mobile=matchMedia('(max-width: 800px)').matches,quality=['ultra','high','low'].includes(preference)?preference:mobile?'low':'ultra';let supported=false;try{const probe=document.createElement('canvas'),context=probe.getContext('webgl2');supported=Boolean(context);context?.getExtension('WEBGL_lose_context')?.loseContext();}catch{}
  if(preference!=='2d'&&supported){try{const camera=new FarmCamera(),renderer=new FarmRenderer3D(canvas,camera,quality);return{camera,renderer};}catch(error){console.warn('3D graphics unavailable; starting 2D view.',error);const replacement=canvas.cloneNode(true);canvas.replaceWith(replacement);canvas=replacement;}}
- const camera=new MapCamera(),renderer=new FarmRenderer(canvas,camera);renderer.mode='2d';document.getElementById('cameraPosition').textContent=harvestT_farm_3d_js('TAMPILAN 2D');document.getElementById('rotateLeft').hidden=true;document.getElementById('rotateRight').hidden=true;return{camera,renderer};
+ const camera=new MapCamera(),renderer=new FarmRenderer(canvas,camera);renderer.mode='2d';document.getElementById('rotateLeft').hidden=true;document.getElementById('rotateRight').hidden=true;return{camera,renderer};
 }
 window.Farm3D={create};

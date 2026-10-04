@@ -2,7 +2,7 @@
 const harvestT_farm_game_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 const PREMIUM_STORE_ENABLED=false;
 const F=BaraFarm,$=id=>document.getElementById(id),gate=new AccountGate('6xg-farm:');
-const {camera,renderer}=typeof Farm3D!=='undefined'?Farm3D.create($('worldCanvas')):(()=>{const camera=new MapCamera();$('rotateLeft').hidden=true;$('rotateRight').hidden=true;$('cameraPosition').textContent=harvestT_farm_game_js('TAMPILAN 2D');return{camera,renderer:new FarmRenderer($('worldCanvas'),camera)};})();
+const {camera,renderer}=typeof Farm3D!=='undefined'?Farm3D.create($('worldCanvas')):(()=>{const camera=new MapCamera();$('rotateLeft').hidden=true;$('rotateRight').hidden=true;return{camera,renderer:new FarmRenderer($('worldCanvas'),camera)};})();
 let farm=new F.Farm(),activeSaveKey=null,entered=false,selectedCrop='carrot',selectedPlot=null,pendingBuild=null,panel=null,shop='seeds',storeItem='carrot',tradeQty=1,placement=null,selectedBuilding=null,toastTimer=null,uiSignature='';
 let authority=null,transactionBusy=false,serverAnchor=null;
 const serverClock=()=>serverAnchor?serverAnchor.time+Math.floor(Math.max(0,performance.now()-serverAnchor.tick)):Date.now();
@@ -109,7 +109,7 @@ function renderUI(){
  const s=farm.s;$('coinsValue').textContent=hudFormat(s.coins);$('coinsValue').title=format(s.coins);for(const k of Object.keys(F.MATERIALS)){$(k+'Value').textContent=hudFormat(s.materials[k]);$(k+'Value').title=format(s.materials[k]);}
  $('storageValue').textContent=farm.used+' / '+farm.capacity;$('storageFill').style.width=100*farm.used/farm.capacity+'%';
 
- $('farmName').textContent=typeof BaraI18n!=='undefined'?BaraI18n.defaultName(s.profile.farmName):s.profile.farmName;renderProgress();renderPlacement();renderProfile();renderPanel();renderSelection();
+ renderProgress();renderPlacement();renderProfile();renderPanel();renderSelection();
 }
 async function transact(type,args,success,cue){
  if(!gate.canPlay||transactionBusy||visiting||communityVisitBusy)return false;
