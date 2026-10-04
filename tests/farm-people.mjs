@@ -64,9 +64,20 @@ for(const type of ['gardener','builder','neighbor'])for(const hz of [30,60,120])
  const z=[];for(let i=2;i<track.values.length;i+=3)z.push(track.values[i]);assert(Math.max(...z)-Math.min(...z)<1e-4,'Navigation owns forward displacement; walking capture cannot accumulate a second forward movement');
  assert(asset.model.userData.walkSpeed>130&&asset.model.userData.walkSpeed<150,'Stride speed comes from the original motion capture');
  const actor=createPerson(asset),controller=Object.create(FarmPeople.prototype),navigation=new FarmPeopleNavigation(sizes);navigation.update(farm,1791106939676);actor.id=0;actor.type=type;actor.speed=11.5;actor.root.position.set(1250,0,1600);actor.root.rotation.y=Math.PI/2;actor.path=[{x:2050,y:1600}];actor.task={face:{x:2050,y:1600},mode:'idle'};
- Object.assign(controller,{people:[actor],navigation,heightAt:()=>0,lastTick:null,clock:0});controller.setAction(actor,'walk');const hip=actor.model.getObjectByName('Bip01'),last=new THREE.Vector3();let maximum=0,loops=0,clipTime=0;
- for(let frame=0;frame<hz*10;frame++){controller.update(farm,1791106939676,frame*1000/hz);actor.root.updateMatrixWorld(true);const current=hip.getWorldPosition(new THREE.Vector3());if(frame>hz)maximum=Math.max(maximum,current.distanceTo(last));last.copy(current);if(actor.actions.walk.time<clipTime)loops++;clipTime=actor.actions.walk.time;}
+ Object.assign(controller,{people:[actor],navigation,heightAt:()=>0,lastTick:null,clock:0});controller.setAction(actor,'walk');const hip=actor.model.getObjectByName('Bip01'),last=new THREE.Vector3(),footLast=[null,null],contacts=[0,0],shoes=[],skins=[];let maximum=0,loops=0,clipTime=0,slip=0,lowest=Infinity;
+ actor.model.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;skins.push(mesh);const indices=mesh.geometry.attributes.skinIndex,weights=mesh.geometry.attributes.skinWeight,feet=mesh.skeleton.bones.map(b=>/^Bip01_[LR]_(Foot|Toe)/.test(b.name));for(let i=0;i<indices.count;i++){let influence=0;for(let j=0;j<4;j++)if(feet[indices.getComponent(i,j)])influence+=weights.getComponent(i,j);if(influence>.8)shoes.push({mesh,index:i});}});
+ for(let frame=0;frame<hz*10;frame++){
+  controller.update(farm,1791106939676,frame*1000/hz);actor.root.updateMatrixWorld(true);const current=hip.getWorldPosition(new THREE.Vector3());if(frame>hz)maximum=Math.max(maximum,current.distanceTo(last));last.copy(current);if(actor.actions.walk.time<clipTime)loops++;clipTime=actor.actions.walk.time;
+  if(frame<=hz)continue;
+  for(let i=0;i<2;i++){const leg=actor.gait.legs[i],foot=leg.foot.getWorldPosition(new THREE.Vector3());if(leg.contact>.99){contacts[i]++;if(footLast[i]?.contact>.99)slip=Math.max(slip,Math.hypot(foot.x-footLast[i].x,foot.z-footLast[i].z));}footLast[i]={x:foot.x,z:foot.z,contact:leg.contact};}
+  if(frame%Math.round(hz/6)===0){for(const skin of skins)skin.skeleton.update();for(const shoe of shoes){const point=shoe.mesh.getVertexPosition(shoe.index,new THREE.Vector3());shoe.mesh.localToWorld(point);lowest=Math.min(lowest,point.y);}}
+ }
  assert(loops>=3,'The test covers repeated walk-cycle boundaries');assert(maximum<.4*60/hz,'World-space body position cannot jump back on a walk loop: '+type+' at '+hz+' Hz, '+maximum);
- assert(Math.abs(actor.walkRate-actor.currentSpeed/actor.walkStrideSpeed)<1e-5,'Footstep playback matches actual movement distance');
+ assert(Math.abs(actor.walkRate*actor.gait.ratio*actor.walkStrideSpeed-actor.currentSpeed)<1e-5,'Shortened stride and footstep cadence match actual movement distance');
+ assert(actor.actions.walk.getClip().duration/actor.walkRate<1.8,'A leisurely walk keeps a natural step cadence instead of slowing the entire capture');
+ assert(contacts.every(n=>n>hz/2),'Both feet plant repeatedly during walking: '+type+' at '+hz+' Hz');
+ assert(slip<.045*60/hz,'The fully planted foot stays in place on the ground: '+type+' at '+hz+' Hz, '+slip);
+ assert(lowest>-.1,'Animated shoe vertices stay above the ground: '+type+' at '+hz+' Hz, '+lowest);
 }
-console.log('Walking displacement passed: every rig at 30/60/120 Hz, repeated capture loops, continuous world position and captured stride timing.');
+console.log('Walking displacement passed: every rig at 30/60/120 Hz, continuous body movement, natural cadence, planted feet and actual animated shoe grounding.');
+

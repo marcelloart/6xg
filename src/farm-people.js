@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkeleton} from 'three/addons/utils/SkeletonUtils.js';
+import {createGait,updateGait} from './farm-gait.js';
 
 const ASSETS=typeof FARM_PEOPLE_URLS==='undefined'?{}:FARM_PEOPLE_URLS;
 export const RESIDENT_TYPES=Object.freeze(['gardener','neighbor','builder']);
@@ -50,8 +51,8 @@ export async function loadPerson(type){
 export function createPerson(asset,height=38){
  const root=new THREE.Group(),model=cloneSkeleton(asset.model);const scale=height/asset.model.userData.height;model.scale.setScalar(scale);model.position.y=-asset.model.userData.ground*scale;root.add(model);
  const mixer=new THREE.AnimationMixer(model),actions=Object.fromEntries(asset.clips.map(c=>[c.name,mixer.clipAction(c)])),animationWeights={},animationVelocity={};for(const [name,action]of Object.entries(actions)){animationWeights[name]=name==='idle'?1:0;animationVelocity[name]=0;action.setEffectiveWeight(animationWeights[name]);action.enabled=name==='idle';}actions.idle.play();mixer.update(.01);
- const pose=[];model.traverse(bone=>{if(bone.isBone)pose.push({bone,rotation:bone.quaternion.clone()});});
- return{root,model,mixer,actions,animationWeights,animationVelocity,pose,walkStrideSpeed:(asset.model.userData.walkSpeed||140.2373)*scale,walkRate:0,turnSpeed:0,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
+ const pose=[];model.traverse(bone=>{if(bone.isBone)pose.push({bone,rotation:bone.quaternion.clone(),displayRotation:bone.quaternion.clone()});});
+ return{root,model,mixer,actions,animationWeights,animationVelocity,pose,gait:createGait(root,model),walkStrideSpeed:(asset.model.userData.walkSpeed||140.2373)*scale,walkRate:.72,turnSpeed:0,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
 }
 
 export class FarmPeople {
@@ -65,13 +66,17 @@ export class FarmPeople {
   // A new target starts from the current mixture, even when a previous transition is interrupted.
   // Restarting Three's fade clocks restores old weights and causes a visible one-frame pose jump.
   const weights=person.animationWeights,velocities=person.animationVelocity,omega=10,decay=Math.exp(-omega*delta);let sum=0;
-  for(const name of Object.keys(person.actions)){const target=Number(name===person.mode),error=weights[name]-target,change=(velocities[name]+omega*error)*delta;const next=target+(error+change)*decay;weights[name]=Math.max(0,Math.min(1,next));velocities[name]=next===weights[name]?(velocities[name]-omega*change)*decay:0;sum+=weights[name];}
-  person.walkRate+=(Math.max(0,person.currentSpeed/person.walkStrideSpeed)-person.walkRate)*(1-Math.exp(-delta/.12));
+  const movement=Math.min(1,Math.max(0,person.currentSpeed/4)),locomotion=movement*movement*(3-2*movement);
+  for(const name of Object.keys(person.actions)){const target=person.mode==='walk'?(name==='walk'?locomotion:name==='idle'?1-locomotion:0):Number(name===person.mode),error=weights[name]-target,change=(velocities[name]+omega*error)*delta;const next=target+(error+change)*decay;weights[name]=Math.max(0,Math.min(1,next));velocities[name]=next===weights[name]?(velocities[name]-omega*change)*decay:0;sum+=weights[name];}
+  person.walkRate+=(Math.max(.72,person.currentSpeed/person.walkStrideSpeed)-person.walkRate)*(1-Math.exp(-delta/.12));
   for(const [name,action]of Object.entries(person.actions)){const weight=weights[name]/sum;action.stopFading().stopWarping().setEffectiveWeight(weight);action.enabled=weight>.0001||name===person.mode;action.setEffectiveTimeScale(name==='walk'?person.walkRate:name==='work'?.82:1);}
   person.mixer.update(delta);
   // Filter capture noise without replacing the imported skeletal motion. A short visual delay
   // keeps interrupted transitions and fast wrist keyframes within a continuous angular speed.
   const alpha=1-Math.exp(-delta/.035);for(const joint of person.pose){const angle=joint.rotation.angleTo(joint.bone.quaternion),blend=Math.min(alpha,angle?6*delta/angle:1);joint.rotation.slerp(joint.bone.quaternion,blend);joint.bone.quaternion.copy(joint.rotation);}
+  updateGait(person,delta,this.heightAt);
+  for(const joint of person.pose){const angle=joint.displayRotation.angleTo(joint.bone.quaternion);joint.displayRotation.slerp(joint.bone.quaternion,angle?Math.min(1,6*delta/angle):1);joint.bone.quaternion.copy(joint.displayRotation);}
+  person.root.updateMatrixWorld(true);
  }
  tasks(farm,now,person){const tasks=[];
   if(this.jobs){const job=this.jobs[person.type];if(job){const target=job.targetKind==='plot'?farm.s.plots.find(p=>p.id===job.id):farm.s.buildings.find(b=>b.slot===job.slot);if(target){let [w,h]=job.targetKind==='plot'?[60,60]:this.navigation.footprints[target.kind]||[130,116];if(target.rotation%2)[w,h]=[h,w];const margin=job.targetKind==='plot'?4:14;for(const [dx,dy]of [[0,h/2+margin],[w/2+margin,0],[0,-h/2-margin],[-w/2-margin,0]]){const point={x:target.x+dx,y:target.y+dy};if(this.navigation.open(point))tasks.push({...point,face:{x:target.x,y:target.y},mode:job.mode,key:job.key,workJob:job,construction:job.construction});}}return tasks;}
