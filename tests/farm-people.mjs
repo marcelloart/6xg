@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {createPerson,FarmPeopleNavigation,FarmPeople} from '../src/farm-people.js';
+import {createPerson,FarmPeopleNavigation,FarmPeople,walkingSpeed} from '../src/farm-people.js';
 globalThis.ProgressEvent=class {constructor(type,init){Object.assign(this,init);}};
 const context={};vm.createContext(context);vm.runInContext(fs.readFileSync('assets/js/farm-engine.js','utf8')+';this.F=BaraFarm;',context);const F=context.F,farm=new F.Farm({clock:()=>1791106939676}),before=JSON.stringify(farm.s);
 const assets={};
@@ -17,13 +17,32 @@ for(const id of ['gardener','neighbor','builder']){
  assert.equal(b.mode,'idle');console.log(id,triangles+' triangles, 4 skeletal clips, independent skeletons');
 }
 const sizes=Object.fromEntries(Object.keys(F.BUILDINGS).map(kind=>{const p=F.footprint(kind,0);return[kind,[p.w,p.h]];}));
-const nav=new FarmPeopleNavigation(sizes);nav.update(farm,Date.now());for(const target of [{x:1350,y:1130},{x:1820,y:1250},{x:1640,y:1440}]){const path=nav.route({x:1490,y:976},target);assert(path.length);for(let i=1;i<path.length;i++)assert(nav.clear(path[i-1],path[i]),'Avoids farm objects and diagonal corner clipping');}
-farm.s.buildings.push({kind:'barn',slot:0,x:1840,y:1260,rotation:1,readyAt:Date.now()+10000});assert(nav.update(farm,Date.now()));assert(!nav.open({x:1840,y:1260}));const routed=nav.route({x:1760,y:1260},{x:1920,y:1260});assert(routed.length>5);for(let i=1;i<routed.length;i++)assert(nav.clear(routed[i-1],routed[i]));farm.s.buildings.pop();assert.equal(JSON.stringify(farm.s),before,'Visual residents do not change economy or player saves');
+const nav=new FarmPeopleNavigation(sizes);nav.update(farm,Date.now());for(const target of [{x:1350,y:1130},{x:1820,y:1250},{x:1640,y:1440}]){const path=nav.route({x:1490,y:960},target);assert(path.length);for(let i=1;i<path.length;i++)assert(nav.clear(path[i-1],path[i]),'Avoids farm objects and diagonal corner clipping');}
+farm.s.buildings.push({kind:'barn',slot:0,x:1840,y:1260,rotation:1,readyAt:Date.now()+10000});assert(nav.update(farm,Date.now()));assert(!nav.open({x:1840,y:1260}));const routed=nav.route({x:1760,y:1260},{x:1920,y:1260});assert(routed.length>=2);assert(!nav.clear({x:1760,y:1260},{x:1920,y:1260}));for(let i=1;i<routed.length;i++)assert(nav.clear(routed[i-1],routed[i]));farm.s.buildings.pop();assert.equal(JSON.stringify(farm.s),before,'Visual residents do not change economy or player saves');
 console.log('People navigation passed: plots, rotated buildings, obstacle reroutes, and unchanged farm state.');
 const people=Object.create(FarmPeople.prototype);Object.assign(people,{navigation:nav,heightAt:()=>0,lastTick:null,clock:0,people:[],assets});
-for(let i=0;i<3;i++){const type=['gardener','neighbor','builder'][i],person=createPerson(assets[type]);Object.assign(person,{id:i,type,cycle:i,wait:0,speed:19+i});person.root.position.set(1450+i*22,0,975);people.people.push(person);}
+for(let i=0;i<3;i++){const type=['gardener','neighbor','builder'][i],person=createPerson(assets[type]);Object.assign(person,{id:i,type,cycle:i,wait:0,speed:walkingSpeed(i)});assert(person.speed<=12.5);person.root.position.set(1450+i*22,0,975);people.people.push(person);}
 const states=new Set();for(let frame=0;frame<900;frame++){people.update(farm,1791106939676,frame*40);for(const p of people.people){states.add(p.mode);assert(nav.open({x:p.root.position.x,y:p.root.position.z}),'Residents remain on walkable land');}}
 assert(states.has('walk')&&states.has('work'));assert.equal(JSON.stringify(farm.s),before);
 const p=people.people[0],frozen=p.root.position.clone(),time=p.mixer.time;people.update(farm,1791106939676,1000000,{motion:false});assert(p.root.position.equals(frozen));assert.equal(p.mixer.time,time);people.update(farm,1791106939676,2000000);assert(p.root.position.distanceTo(frozen)<2,'Returning to a hidden tab does not teleport villagers');
 farm.s.buildings.push({kind:'barn',slot:0,x:1840,y:1260,rotation:1,readyAt:1791107000000});nav.update(farm,1791106939676);const builder=people.people.find(p=>p.type==='builder');assert(people.tasks(farm,1791106939676,builder).every(t=>t.construction));
 console.log('Resident lifecycle passed: walking and working, construction priority, motion controls, and safe tab resume.');
+farm.s.buildings.pop();nav.update(farm,1791106939676);people.jobs={};
+for(const plot of farm.s.plots.slice(0,farm.unlocked)){
+ people.jobs.gardener={key:'plant:'+plot.id,action:'plant',targetKind:'plot',id:plot.id,mode:'tend',seconds:3};
+ const targets=people.tasks(farm,1791106939676,people.people[0]);
+ assert(targets.some(target=>nav.route({x:1485,y:964},target).length),'Every unlocked plot has a reachable work edge, including the middle plot');
+}
+const gardener=people.people[0],plot=farm.s.plots[0];let completed=0;
+gardener.root.position.set(1485,0,964);gardener.path=[];gardener.task=null;gardener.wait=0;
+people.jobs.gardener={key:'plant:'+plot.id,action:'plant',targetKind:'plot',id:plot.id,mode:'tend',seconds:3};
+people.onWork=async job=>{assert.equal(job.id,plot.id);completed++;};people.lastTick=null;
+for(let frame=0;frame<1200&&completed===0;frame++){people.update(farm,1791106939676,frame*1000/60,{residentJobs:people.jobs});await Promise.resolve();}
+assert.equal(completed,1,'Farmer reaches the plot, performs work and submits exactly one action');
+console.log('Role work passed: all plot edges are reachable and the farmer completes a real job callback.');
+people.jobs={};people.lastTick=null;people.onWork=null;
+for(const resident of people.people){resident.path=[];resident.task=null;resident.wait=0;resident.currentSpeed=0;}
+gardener.root.position.set(1460,0,964);people.people[1].root.position.set(1740,0,965);builder.root.position.set(1529,0,964);
+for(let frame=0;frame<1800;frame++)people.update(farm,1791106939676,frame*1000/60,{residentJobs:people.jobs});
+assert(builder.root.position.distanceTo(new THREE.Vector3(1440,0,947))<5,'An idle farmer does not permanently block the builder: walk around stationary residents');
+console.log('Pedestrian avoidance passed: stationary residents cannot trap another worker.');

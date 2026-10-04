@@ -38,9 +38,9 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const CROP_LEVEL=Object.freeze(Object.fromEntries(keys.map((k,i)=>[k,i+1])));
  const BUILDING_LEVEL=Object.freeze({barn:1,house:2,well:3,shed:4,bench:3,kitchen:2,juicery:7,bakery:8,planter:1,coop:3,cowshed:5});
  const RECIPES=Object.freeze({
-  soup:{name:harvestT_farm_engine_js('Sup wortel'),icon:'🍲',building:'kitchen',level:2,minutes:10,inputs:{carrot:3},yield:1,sell:16,xp:4},
+  soup:{name:harvestT_farm_engine_js('Sup wortel'),icon:'🍲',building:'kitchen',level:2,minutes:15,inputs:{carrot:3},yield:1,sell:16,xp:4},
   jam:{name:harvestT_farm_engine_js('Selai stroberi'),icon:'🍓',building:'kitchen',level:4,minutes:30,inputs:{strawberry:3},yield:1,sell:60,xp:9},
-  juice:{name:harvestT_farm_engine_js('Jus jeruk'),icon:'🥤',building:'juicery',level:7,minutes:45,inputs:{orange:3},yield:1,sell:175,xp:15},
+  juice:{name:harvestT_farm_engine_js('Jus jeruk'),icon:'🥤',building:'juicery',level:7,minutes:5,inputs:{orange:3},yield:1,sell:175,xp:15},
   pie:{name:harvestT_farm_engine_js('Pai apel'),icon:'🥧',building:'bakery',level:8,minutes:60,inputs:{apple:3},yield:1,sell:225,xp:20}
  });
  const ANIMALS=Object.freeze({chicken:{name:harvestT_farm_engine_js('Ayam'),icon:'🐔',building:'coop',capacity:4,level:3,price:65,minutes:30,feed:{corn:1},product:'egg',yield:3,xp:4},cow:{name:harvestT_farm_engine_js('Sapi'),icon:'🐄',building:'cowshed',capacity:2,level:5,price:200,minutes:120,feed:{carrot:2,corn:2},product:'milk',yield:3,xp:8}});
@@ -118,7 +118,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
    check(object(p)&&integer(p.nextId,1,1e9)&&Array.isArray(p.jobs)&&p.jobs.length<=MAX_BUILDINGS*3);
    clean.production={nextId:p.nextId,goods:inventory(p.goods,Object.keys(RECIPES),10000),jobs:[]};
    const ids=new Set(),tails=new Map(),counts=new Map();
-   for(const j of p.jobs){check(object(j)&&Object.hasOwn(RECIPES,j.recipe));const recipe=RECIPES[j.recipe],b=clean.buildings.find(b=>b.slot===j.slot);check(integer(j.id,1,p.nextId-1)&&!ids.has(j.id)&&b?.kind===recipe.building&&integer(j.startedAt,b.readyAt,MAX_TIME)&&j.readyAt===j.startedAt+recipe.minutes*MINUTE&&j.readyAt<=MAX_TIME&&j.startedAt>=(tails.get(j.slot)||0));ids.add(j.id);tails.set(j.slot,j.readyAt);counts.set(j.slot,(counts.get(j.slot)||0)+1);check(counts.get(j.slot)<=3);clean.production.jobs.push({id:j.id,slot:j.slot,recipe:j.recipe,startedAt:j.startedAt,readyAt:j.readyAt});}
+   for(const j of p.jobs){check(object(j)&&Object.hasOwn(RECIPES,j.recipe));const recipe=RECIPES[j.recipe],b=clean.buildings.find(b=>b.slot===j.slot);check(integer(j.id,1,p.nextId-1)&&!ids.has(j.id)&&b?.kind===recipe.building&&integer(j.startedAt,b.readyAt,MAX_TIME)&&[recipe.minutes,...({soup:[10],juice:[45]}[j.recipe]||[])].some(minutes=>j.readyAt===j.startedAt+minutes*MINUTE)&&j.readyAt<=MAX_TIME&&j.startedAt>=(tails.get(j.slot)||0));ids.add(j.id);tails.set(j.slot,j.readyAt);counts.set(j.slot,(counts.get(j.slot)||0)+1);check(counts.get(j.slot)<=3);clean.production.jobs.push({id:j.id,slot:j.slot,recipe:j.recipe,startedAt:j.startedAt,readyAt:j.readyAt});}
    const claims=(v,list)=>{check(Array.isArray(v)&&v.length<=list.length&&new Set(v).size===v.length&&v.every(k=>list.includes(k)));return[...v];};
    check(object(c)&&integer(c.day,0,50000)&&object(c.totals)&&integer(c.totals.crafted,0,1e9)&&integer(c.totals.dailies,0,1e9));
    clean.challenges={day:c.day,counts:inventory(c.counts,['planted','harvested','orders'],1e9),claimed:claims(c.claimed,Object.keys(DAILY)),totals:{crafted:c.totals.crafted,dailies:c.totals.dailies},achievements:claims(c.achievements,Object.keys(ACHIEVEMENTS))};

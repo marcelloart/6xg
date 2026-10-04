@@ -1,4 +1,6 @@
 export const riverCenter=z=>640+110*Math.sin(z/270);
+// Keep refresh-rate timing instead of discarding every other 60 Hz frame.
+export function renderFrameTime(tick,last,quality){const interval=1000/(quality==='low'?30:60),elapsed=tick-last;if(elapsed+.25<interval)return null;const frames=Math.max(1,Math.floor((elapsed+.25)/interval));return tick-Math.max(0,elapsed-frames*interval);}
 export function bridgeBounds(z=1115,width=78){
  const centers=Array.from({length:17},(_,i)=>riverCenter(z-width/2+width*i/16));
  return{z,width,left:Math.min(...centers)-105-38,right:Math.max(...centers)+105+38,deckY:17};

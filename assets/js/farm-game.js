@@ -5,6 +5,7 @@ const F=BaraFarm,$=id=>document.getElementById(id),gate=new AccountGate('6xg-far
 const {camera,renderer}=typeof Farm3D!=='undefined'?Farm3D.create($('worldCanvas')):(()=>{const camera=new MapCamera();$('rotateLeft').hidden=true;$('rotateRight').hidden=true;return{camera,renderer:new FarmRenderer($('worldCanvas'),camera)};})();
 let farm=new F.Farm(),activeSaveKey=null,entered=false,selectedCrop='carrot',selectedPlot=null,pendingBuild=null,panel=null,shop='seeds',storeItem='carrot',tradeQty=1,placement=null,selectedBuilding=null,toastTimer=null,uiSignature='';
 let authority=null,transactionBusy=false,serverAnchor=null;
+let automaticResidents=true,residentJobs={gardener:null,builder:null,neighbor:null};try{automaticResidents=localStorage.getItem('6xg:residents-auto')!=='false';}catch{}
 const serverClock=()=>serverAnchor?serverAnchor.time+Math.floor(Math.max(0,performance.now()-serverAnchor.tick)):Date.now();
 const audio=new FarmAudio({onChange:syncSoundUI});
 const format=n=>new Intl.NumberFormat(typeof BaraI18n!=='undefined'?BaraI18n.locale:'id-ID').format(n);
@@ -111,13 +112,13 @@ function renderUI(){
 
  renderProgress();renderPlacement();renderProfile();renderPanel();renderSelection();
 }
-async function transact(type,args,success,cue){
+async function transact(type,args,success,cue,{quiet=false}={}){
  if(!gate.canPlay||transactionBusy||visiting||communityVisitBusy)return false;
  if(!authority){toast(harvestT_farm_game_js('Hubungkan ke server untuk melakukan transaksi.'));return false;}
  transactionBusy=true;document.body.classList.add('transaction-busy');
- try{const result=await authority.action(type,args);if(!result?.ok){audio.play('error');toast(result?.message||harvestT_farm_game_js('Transaksi belum dikonfirmasi.'));return false;}
- if(cue)audio.play(cue);save();renderUI();if(result.levelUp)toast('Level '+result.level+harvestT_farm_game_js(' terbuka! Lihat tanaman dan bangunan baru di Tujuan.'));else toast(typeof success==='function'?success(result):success||harvestT_farm_game_js('Progres diperbarui.'));return true;
- }catch{toast(harvestT_farm_game_js('Server belum dapat dihubungi. Transaksi belum dikonfirmasi.'));return false;}
+ try{const result=await authority.action(type,args);if(!result?.ok){if(!quiet){audio.play('error');toast(result?.message||harvestT_farm_game_js('Transaksi belum dikonfirmasi.'));}return false;}
+ if(cue)audio.play(cue);save();renderUI();if(result.levelUp)toast('Level '+result.level+harvestT_farm_game_js(' terbuka! Lihat tanaman dan bangunan baru di Tujuan.'));else if(!quiet)toast(typeof success==='function'?success(result):success||harvestT_farm_game_js('Progres diperbarui.'));return true;
+ }catch{if(!quiet)toast(harvestT_farm_game_js('Server belum dapat dihubungi. Transaksi belum dikonfirmasi.'));return false;}
  finally{transactionBusy=false;document.body.classList.remove('transaction-busy');renderUI();}
 }
 function choosePlot(id,plantOnClick=false){
@@ -248,10 +249,14 @@ try{$('graphicsQuality').value=localStorage.getItem('6xg:graphics')||'auto';}cat
 $('miniMap').addEventListener('click',e=>{if(!entered)return;const r=e.currentTarget.getBoundingClientRect();camera.focus((e.clientX-r.left)/r.width*3200,(e.clientY-r.top)/r.height*2200);});
 for(const target of[canvas,$('miniMap')])target.addEventListener('keydown',e=>{if(!entered)return;const shifts={ArrowLeft:[90,0],ArrowRight:[-90,0],ArrowUp:[0,90],ArrowDown:[0,-90]};if(shifts[e.key]){e.preventDefault();camera.pan(...shifts[e.key]);}else if(e.key==='Home'){e.preventDefault();center();}else if(e.key==='q'||e.key==='Q')camera.rotate?.(-Math.PI/8);else if(e.key==='e'||e.key==='E')camera.rotate?.(Math.PI/8);else if(e.key==='+'||e.key==='=')camera.zoomAt(1.2);else if(e.key==='-')camera.zoomAt(1/1.2);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){cancelPlacement();selectedPlot=null;selectedBuilding=null;closePanel();renderUI();}else if((e.key==='r'||e.key==='R')&&placement&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){rotatePlacement();}});
+const residentWork=new FarmResidentWork.Work({getFarm:()=>farm,clock:serverClock,preferred:()=>selectedCrop,identity:()=>activeSaveKey,enabled:()=>automaticResidents&&gate.canPlay&&entered&&Boolean(authority)&&!visiting&&!communityVisitBusy&&!placement&&!document.querySelector('dialog[open]'),run:(job,current)=>current===farm?transact(job.action,job.args,null,job.action==='plant'?'plant':job.action==='production'?'build':'harvest',{quiet:true}):false});
+if(renderer.residents)renderer.residents.onWork=job=>residentWork.complete(job);
+if($('residentAuto')){$('residentAuto').checked=automaticResidents;$('residentAuto').addEventListener('change',e=>{automaticResidents=e.target.checked;try{localStorage.setItem('6xg:residents-auto',String(automaticResidents));}catch{}residentJobs=residentWork.plans();});}
+setInterval(()=>{residentJobs=residentWork.tick(document.hidden||renderer.wind===false||!renderer.residents);},1000);
 let mobileViewport=null,mapWidth=0;
 const resize=()=>{const r=$('map').getBoundingClientRect(),mobile=r.width<=760;camera.resize(r.width,r.height);if(mobileViewport!==null&&(mobile!==mobileViewport||(mobile&&Math.abs(r.width-mapWidth)>1))&&entered&&!placement){center();renderUI();}mobileViewport=mobile;mapWidth=r.width;};new ResizeObserver(resize).observe($('map'));resize();center();
 let lastPlacementFrame=performance.now();
-function draw(){const tick=performance.now();pickup.update((tick-lastPlacementFrame)/1000);lastPlacementFrame=tick;const sceneFarm=visiting?.farm||farm;renderer.draw(sceneFarm,{selectedPlot,pendingBuild,placement,selectedCrop,now:sceneFarm.now(),lightingNow:serverClock(),welcome:!entered});renderer.mini($('miniMap'),sceneFarm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
+function draw(){const tick=performance.now();pickup.update((tick-lastPlacementFrame)/1000);lastPlacementFrame=tick;const sceneFarm=visiting?.farm||farm;renderer.draw(sceneFarm,{selectedPlot,pendingBuild,placement,selectedCrop,now:sceneFarm.now(),lightingNow:serverClock(),welcome:!entered,residentJobs:visiting?{}:residentJobs});renderer.mini($('miniMap'),sceneFarm);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';requestAnimationFrame(draw);}requestAnimationFrame(draw);
 setInterval(()=>{const now=farm.now();if(visiting)return;renderProgress();tickCommunityUI(now);audio.observe(farm,camera,now);tickProductionUI(now);const signature=farm.s.livestock.animals.map(a=>a.id+':'+a.fedAt+':'+Number(a.readyAt<=now)).join(',')+'|'+farm.s.challenges.day+'|'+farm.s.production.jobs.map(j=>j.id+':'+Number(j.readyAt<=now)+':'+Number(j.startedAt<=now)).join(',')+'|'+farm.unlocked+'|'+farm.capacity+'|'+farm.s.plots.filter(p=>p.crop&&p.readyAt<=now).map(p=>p.id).join(',')+'|'+farm.s.buildings.filter(b=>b.readyAt<=now).length;if(signature!==uiSignature){uiSignature=signature;renderUI();}else if(selectedPlot!==null){const p=farm.s.plots[selectedPlot];if(p?.crop&&p.readyAt>now)$('plotCopy').textContent=harvestT_farm_game_js('Sedang tumbuh · ')+countdown(p.readyAt-now)+harvestT_farm_game_js(' lagi');}},1000);
 window.addEventListener('pagehide',()=>{save();audio.setVisible(false);});document.addEventListener('visibilitychange',()=>{audio.setVisible(!document.hidden);if(document.hidden){save();if(placement?.followPointer)cancelPlacement();else pickup.reset();}else renderUI();});setInterval(save,60000);
 const AVATAR_ICONS={sprout:'🌱',sunflower:'🌻',apple:'🍎',bee:'🐝'};
