@@ -1,4 +1,5 @@
 'use strict';
+const harvestT_landing_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 const navToggle=document.getElementById('navToggle'),nav=document.getElementById('siteNav');
 navToggle.addEventListener('click',()=>{const open=navToggle.getAttribute('aria-expanded')!=='true';navToggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('is-open',open);});
 nav.addEventListener('click',event=>{if(event.target.closest('a')){navToggle.setAttribute('aria-expanded','false');nav.classList.remove('is-open');}});
@@ -7,7 +8,7 @@ document.querySelectorAll('[data-start]').forEach(button=>button.addEventListene
   if(window.BARA_SESSION?.authenticated)document.dispatchEvent(new Event('bara:game-open'));
   else document.dispatchEvent(new Event('bara:account-open'));
 }));
-window.addEventListener('bara:session',event=>document.querySelectorAll('[data-start]').forEach(button=>{button.textContent=event.detail.authenticated?'Mainkan kebunmu ↗':'Daftar & mulai ↗';}));
+window.addEventListener('bara:session',event=>document.querySelectorAll('[data-start]').forEach(button=>{button.textContent=event.detail.authenticated?harvestT_landing_js('Mainkan kebunmu ↗'):harvestT_landing_js('Daftar & mulai ↗');}));
 
 // Motion is an enhancement: the page stays readable without JavaScript or observers.
 (() => {
@@ -51,7 +52,7 @@ window.addEventListener('bara:session',event=>document.querySelectorAll('[data-s
   function syncPause() {
     root.classList.toggle('motion-suspended', userPaused || document.hidden);
     toggle.setAttribute('aria-pressed', String(userPaused));
-    toggle.querySelector('.motion-toggle-label').textContent = userPaused ? 'Putar animasi' : 'Jeda animasi';
+    toggle.querySelector('.motion-toggle-label').textContent = userPaused ? harvestT_landing_js('Putar animasi') : harvestT_landing_js('Jeda animasi');
     if (document.hidden && frame) {
       window.cancelAnimationFrame(frame);
       frame = 0;

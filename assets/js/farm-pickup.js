@@ -1,4 +1,5 @@
 'use strict';
+const harvestT_farm_pickup_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 // Long presses consume the original click, so moving a crop cannot harvest it.
 class FarmPickupGesture {
  constructor(camera,gestures,handlers,timers={set:(fn,ms)=>setTimeout(fn,ms),clear:id=>clearTimeout(id)}){this.camera=camera;this.gestures=gestures;this.handlers=handlers;this.timers=timers;this.pointers=new Map();this.wait=null;this.carry=null;this.cursor=null;this.anchorId=null;this.navigating=false;this.pointerType='mouse';}

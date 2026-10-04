@@ -1,4 +1,5 @@
 'use strict';
+const harvestT_farm_scenery_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 // Original vector scenery; no FarmVille artwork or game assets are used.
 class FarmRenderer{
  constructor(canvas,camera){this.wind=!matchMedia('(prefers-reduced-motion: reduce)').matches;try{const saved=localStorage.getItem('6xg:motion');if(saved!==null)this.wind=saved==='true';}catch{}this.canvas=canvas;this.ctx=canvas.getContext('2d');this.camera=camera;this.back=document.createElement('canvas');this.back.width=3200;this.back.height=2200;this.paintLandscape(this.back.getContext('2d'));}
@@ -23,7 +24,7 @@ class FarmRenderer{
    this.rect(c,-52,-63,102,72,barn?'#b87c67':'#e4d6a4',4);this.rect(c,14,-64,38,74,barn?'#9d6858':'#c8c496',2);
    c.fillStyle=barn?'#886355':'#be8b64';c.beginPath();c.moveTo(-63,-60);c.lineTo(-8,-106);c.lineTo(65,-61);c.lineTo(8,-67);c.closePath();c.fill();c.fillStyle=barn?'#b38c76':'#d6a777';c.beginPath();c.moveTo(-63,-60);c.lineTo(-8,-106);c.lineTo(8,-67);c.closePath();c.fill();
    if(!shed){this.rect(c,29,-98,12,23,'#d0bf99',2);this.rect(c,-37,-42,19,19,'#638981',2);this.line(c,[[-27,-42],[-27,-23]],'#ecdfb3',2);}
-   this.rect(c,-6,-30,barn?29:19,40,barn?'#715548':'#79806a',2);if(barn){this.line(c,[[-3,-27],[20,7]],'#cba17c',2);this.line(c,[[20,-27],[-3,7]],'#cba17c',2);}this.rect(c,-57,8,115,7,'#ccc2a0',2);if(['kitchen','juicery','bakery'].includes(kind)){this.rect(c,-46,-21,92,8,kind==='juicery'?'#729650':'#c48469',2);this.rect(c,-34,-74,68,14,'#eee2b9',2);c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#536e43';c.fillText({kitchen:'DAPUR',juicery:'JUS',bakery:'PAI'}[kind],0,-64);}
+   this.rect(c,-6,-30,barn?29:19,40,barn?'#715548':'#79806a',2);if(barn){this.line(c,[[-3,-27],[20,7]],'#cba17c',2);this.line(c,[[20,-27],[-3,7]],'#cba17c',2);}this.rect(c,-57,8,115,7,'#ccc2a0',2);if(['kitchen','juicery','bakery'].includes(kind)){this.rect(c,-46,-21,92,8,kind==='juicery'?'#729650':'#c48469',2);this.rect(c,-34,-74,68,14,'#eee2b9',2);c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#536e43';c.fillText({kitchen:harvestT_farm_scenery_js('DAPUR'),juicery:harvestT_farm_scenery_js('JUS'),bakery:harvestT_farm_scenery_js('PAI')}[kind],0,-64);}
   }c.restore();
  }
  fence(c,x,y,w,h){
@@ -64,7 +65,7 @@ class FarmRenderer{
  label(c,x,y,text,color='#f7efdc',background='#3f6547e8'){
   c.font='500 10px "DM Sans",sans-serif';const width=c.measureText(text).width+16;this.rect(c,x-width/2,y,width,20,background,5);c.fillStyle=color;c.textAlign='center';c.fillText(text,x,y+14);
  }
- draw(farm,{selectedPlot=null,pendingBuild=null,selectedCrop='carrot',now=Date.now(),welcome=false,placement=null}={}){
+ draw(farm,{selectedPlot=null,pendingBuild=null,selectedCrop='carrot',now=Date.now(),welcome=false,placement=null,lightingNow=now}={}){
   const c=this.ctx,cam=this.camera,dpr=Math.min(2,devicePixelRatio||1);if(this.canvas.width!==Math.round(cam.width*dpr)||this.canvas.height!==Math.round(cam.height*dpr)){this.canvas.width=Math.round(cam.width*dpr);this.canvas.height=Math.round(cam.height*dpr);}
   c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,cam.width,cam.height);c.translate(cam.width/2,cam.height/2);c.scale(cam.zoom,cam.zoom);c.translate(-cam.x,-cam.y);c.drawImage(this.back,0,0);
   const open=farm.unlocked;
@@ -78,14 +79,15 @@ class FarmRenderer{
    else if(!welcome){c.fillStyle='#d5ba8a';c.textAlign='center';c.font='18px sans-serif';c.fillText('+',p.x,p.y+8);}
    if(p.id===selectedPlot){c.strokeStyle='#f4d17c';c.lineWidth=3;c.beginPath();c.roundRect(p.x-30,p.y-26,61,57,5);c.stroke();}
   }
-  this.label(c,1610,1391,open+' petak · kebunmu','#5e744d','#f5efdcdf');
-  for(const b of farm.s.buildings){if(placement?.point&&b.slot===placement.moveBuilding)continue;const ready=now>=b.readyAt;c.save();c.translate(b.x,b.y);if(!ready){this.rect(c,-48,-30,96,48,'#bfb88d',4);this.line(c,[[-48,-56],[-48,16],[48,16],[48,-56]],'#a08b68',4);}else this.house(c,0,0,b.kind);c.restore();this.label(c,b.x,b.y+26,ready?BaraFarm.BUILDINGS[b.kind].name:'Membangun · '+Math.ceil((b.readyAt-now)/1000)+'d');}
+  this.label(c,1610,1391,open+harvestT_farm_scenery_js(' petak · kebunmu'),'#5e744d','#f5efdcdf');
+  for(const b of farm.s.buildings){if(placement?.point&&b.slot===placement.moveBuilding)continue;const ready=now>=b.readyAt;c.save();c.translate(b.x,b.y);if(!ready){this.rect(c,-48,-30,96,48,'#bfb88d',4);this.line(c,[[-48,-56],[-48,16],[48,16],[48,-56]],'#a08b68',4);}else this.house(c,0,0,b.kind);c.restore();this.label(c,b.x,b.y+26,ready?BaraFarm.BUILDINGS[b.kind].name:harvestT_farm_scenery_js('Membangun · ')+Math.ceil((b.readyAt-now)/1000)+'d');}
   for(const a of farm.s.livestock.animals){const b=farm.s.buildings.find(b=>b.slot===a.slot);if(!b||b.readyAt>now||b.slot===placement?.moveBuilding)continue;const i=farm.s.livestock.animals.filter(v=>v.slot===b.slot).indexOf(a),x=b.x+(i%2?22:-22)+Math.sin(now/1300+a.id)*2,y=b.y+12+Math.floor(i/2)*17;this.ellipse(c,x,y,a.kind==='cow'?13:7,a.kind==='cow'?8:5,'#f1e9d3');this.ellipse(c,x+8,y-5,a.kind==='cow'?5:3,4,'#ded6c2');if(a.kind==='cow')this.ellipse(c,x-3,y,4,5,'#343b30');else this.ellipse(c,x+9,y-9,2,2,'#b65235');}
   if(placement?.point){const points=placement.kind==='garden'?farm.gardenPoints(placement.point,placement.count,placement.rotation):[placement.point];for(const p of points){const size=BaraFarm.footprint(placement.kind==='garden'?'plot':placement.kind,placement.rotation);this.rect(c,p.x-size.w/2,p.y-size.h/2,size.w,size.h,placement.valid?'#9bd49b99':'#d9807899',5);c.strokeStyle=placement.valid?'#397f50':'#af463c';c.lineWidth=3;c.strokeRect(p.x-size.w/2,p.y-size.h/2,size.w,size.h);}}
   if(placement?.lifted&&placement.point){const p=placement.point;c.save();c.globalAlpha=.8;if(placement.kind==='plot'){this.rect(c,p.x-29,p.y-43,58,55,'#b18b5e',4);const original=farm.s.plots[placement.movePlot];if(original?.crop)this.crop(c,p.x,p.y-18,original.crop,Math.min(1,(now-original.plantedAt)/(original.readyAt-original.plantedAt)),now);}else this.house(c,p.x,p.y-18,placement.kind);c.restore();}
-  this.label(c,1593,927,'Pondok kebun','#f4eedb','#566e47dc');
+  this.label(c,1593,927,harvestT_farm_scenery_js('Pondok kebun'),'#f4eedb','#566e47dc');
   // Slow ripples and birds keep the valley alive without changing the economy.
   for(let i=0;i<3;i++){const x=680+Math.sin(now/10000+i)*38,y=830+i*47;this.ellipse(c,x,y,8,4,'#edf0ce');this.ellipse(c,x+6,y-3,4,3,'#faf4dd');this.ellipse(c,x+10,y-3,2,1,'#d8a95c');}
+  if(typeof FarmDaylight!=='undefined'){const light=FarmDaylight.at(lightingNow),night=1-light.daylight;c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='rgba(13,28,59,'+(night*.42)+')';c.fillRect(0,0,cam.width,cam.height);if(light.golden>.01){c.fillStyle='rgba(255,161,67,'+(light.golden*.12)+')';c.fillRect(0,0,cam.width,cam.height);}const readout=document.getElementById('daylightReadout');if(readout)readout.textContent=FarmDaylight.describe(light);}
  }
  mini(canvas,farm){
   const c=canvas.getContext('2d'),sx=canvas.width/3200,sy=canvas.height/2200;c.setTransform(sx,0,0,sy,0,0);c.drawImage(this.back,0,0);

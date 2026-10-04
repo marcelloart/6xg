@@ -1,4 +1,5 @@
 'use strict';
+const harvestT_farm_camera_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 // Ground-plane coordinates stay identical to the saved farm and the 2D fallback.
 class FarmCamera {
  constructor(){this.x=1590;this.y=1135;this.zoom=1.05;this.width=1;this.height=1;this.yaw=0;this.tilt=30*Math.PI/180;}

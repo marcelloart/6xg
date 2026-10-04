@@ -91,3 +91,5 @@
  .game-page .zoom-tools{top:calc(64px + env(safe-area-inset-top))}
  .game-page .farm-panel{max-height:calc(100% - 146px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
 }
+
+@media(max-width:760px){html[lang=en] .game-page .storage-label:after{content:'📦 Bag'}}

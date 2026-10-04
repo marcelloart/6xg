@@ -5,7 +5,7 @@ const context={window:{},console,Intl,Map,Math,PREMIUM_STORE_ENABLED:true,$:node
  renderer:{mode:'3d'},productImage:()=> 'actual-model.png',camera:{width:1280,height:720,zoom:1.05,zoomAt(){},focus(){},pan(){},screenToWorld:()=>({x:1850,y:1100}),worldToScreen:()=>({x:640,y:360})},
  audio:{play(){}},pickup:{reset(){},follow(){}},canvas:{focus(){}},closePanel(){},renderUI(){context.renderPlacement?.();},toast(){},transact:async(type,args)=>{calls.push({type,args});return true;}};
 vm.createContext(context);vm.runInContext(fs.readFileSync('assets/js/farm-engine.js','utf8')+'\nglobalThis.F=BaraFarm;globalThis.farm=new BaraFarm.Farm({clock:()=>1000000});',context);
-vm.runInContext(source.slice(source.indexOf('function placementResult(){'),source.indexOf('function onAction(event){')),context);
+vm.runInContext("const harvestT_farm_game_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;",context);vm.runInContext(source.slice(source.indexOf('function placementResult(){'),source.indexOf('function onAction(event){')),context);
 (async()=>{
  const original=context.farm.serialize();assert.equal(context.farm.s.coins,0);assert.equal(context.farm.s.materials.wood,0);
  context.beginDecorationPreview();assert.equal(context.placement.product,'sunsetConservatory');assert.equal(context.placement.kind,'barn');assert(context.placement.dusk);assert.equal(node('previewAmbience').hidden,false);assert.equal(node('previewAmbience')['aria-pressed'],'true');assert(context.placement.followPointer);assert(context.placementResult().ok,'Fresh zero-balance players can try the decoration on empty land');

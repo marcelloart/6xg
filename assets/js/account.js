@@ -1,4 +1,5 @@
 'use strict';
+const harvestT_account_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(value):value;
 // Restore an existing session on the login screen; playing always needs identity.
 let authLoading=null;
 function openAccountDialog(){
@@ -8,7 +9,7 @@ function openAccountDialog(){
       .then(module=>module.mountAuth())
       .catch(()=>{
         authLoading=null;
-        document.getElementById('accountBody').textContent='Login belum dapat dimuat. Periksa koneksi, lalu buka Akun kembali.';
+        document.getElementById('accountBody').textContent=harvestT_account_js('Login belum dapat dimuat. Periksa koneksi, lalu buka Akun kembali.');
       });
   }
 }
