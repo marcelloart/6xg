@@ -32,7 +32,7 @@ export function LandingAccount({cfg}){
     }
   },[ready,authenticated]);
   useEffect(()=>{if(ready&&authenticated&&user?.id&&wantPlay){setWantPlay(false);play();}},[ready,authenticated,user?.id,wantPlay]);
-  useEffect(()=>{const open=()=>play();document.addEventListener('bara:game-open',open);return()=>document.removeEventListener('bara:game-open',open);},[getAccessToken,user?.id]);
+  useEffect(()=>{const open=()=>play();document.addEventListener('bara:game-open',open);return()=>document.removeEventListener('bara:game-open',open);},[getAccessToken,user?.id,user?.twitter?.profilePictureUrl]);
   useEffect(()=>{if(ready&&!prompted.current&&new URLSearchParams(location.search).get('logout')==='1'){prompted.current=true;logout().then(()=>history.replaceState(null,'','/')).catch(()=>setError('Belum dapat keluar. Coba lagi.'));}},[ready]);
   useEffect(()=>{
     let cancelled=false;setSummary(null);if(!ready||!authenticated)return;
