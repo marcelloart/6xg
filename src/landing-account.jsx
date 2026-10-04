@@ -43,7 +43,7 @@ export function LandingAccount({cfg}){
     }catch{}})();return()=>{cancelled=true;};
   },[ready,authenticated,user?.id]);
   const name=summary?.name||'Akun pemain';
-  const email=user?.email?.address||user?.google?.email||'Akun terverifikasi';
+  const accountLabel=user?.email?.address||user?.google?.email||(user?.twitter?.username?'@'+user.twitter.username:user?.twitter?.name)||user?.wallet?.address||'Akun terverifikasi';
   const begin=()=>{dialog().close();setError('');login({disableSignup:false});};
   const signOut=async()=>{setBusy(true);try{const response=await fetch(new URL('/api/game-session/logout',cfg.gameOrigin),{method:'POST',credentials:'include'});if(!response.ok)throw new Error('Logout failed');await logout();}catch{setError('Belum dapat keluar. Coba lagi.');}finally{setBusy(false);}};
   return <>
@@ -51,7 +51,7 @@ export function LandingAccount({cfg}){
     {createPortal(<>
       <p className="account-eyebrow">AKUN LADANG BARA</p>
       <h3>{authenticated?'Selamat datang, '+name+'.':'Satu akun. Kebun milikmu.'}</h3>
-      <p className="account-copy">{authenticated?email:'Daftar atau masuk melalui Privy. Akun baru dibuat setelah identitasmu terverifikasi.'}</p>
+      <p className="account-copy">{authenticated?accountLabel:'Daftar atau masuk melalui Privy. Akun baru dibuat setelah identitasmu terverifikasi.'}</p>
       <div className="account-status" role="status">{error||(busy?'Menghubungkan sesi game…':!ready?'Menyiapkan login…':authenticated?'Akun terhubung. Kebun siap dibuka.':'Mulai dengan 6 bibit wortel gratis, 0 koin, dan 0 bahan bangunan.')}</div>
       {authenticated&&summary?.farmName&&<p className="farm-summary">Kebunmu: <strong>{summary.farmName}</strong></p>}
       <div className="account-actions">{authenticated?<><button className="primary" disabled={busy} onClick={play}>{busy?'Menghubungkan…':'Mainkan kebunmu ↗'}</button><button className="secondary" disabled={busy} onClick={signOut}>Keluar dari akun</button></>:<button className="primary" disabled={!ready||busy} onClick={begin}>{ready?'Daftar / Masuk ↗':'Menyiapkan login…'}</button>}</div>

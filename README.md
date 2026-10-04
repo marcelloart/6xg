@@ -4,6 +4,8 @@ Game kebun di [6xg.online](https://6xg.online): beli bibit, tanam, tunggu matang
 
 Login Privy diperlukan sebelum bermain. Akun kebun baru mulai dengan **0 koin, 0 kayu, 0 batu, 0 daging, dan 6 bibit wortel gratis**. Ada 9 petak tanam awal dan 20 ruang penyimpanan hasil. Bibit gratis diberikan sekali pada pembuatan kebun, bukan setiap login.
 
+Menu login mendukung Google, **X/Twitter**, wallet, dan email melalui Privy. Masing-masing metode harus diaktifkan di dashboard Privy pada aplikasi yang sama; X memakai identifier SDK `twitter`. Nama akun X ditampilkan sebagai `@username` bila akun tidak memiliki email. Progres dan sesi game tetap mengikuti Privy DID, bukan alamat email atau username X. Metode yang belum ditautkan pada akun Privy yang sama dapat membuka akun kebun terpisah.
+
 | Bibit | Tumbuh | Harga bibit | Hasil panen | Harga jual per hasil |
 | --- | --- | --- | --- | --- |
 | Wortel | 5 menit | 5 | 3 | 3 |

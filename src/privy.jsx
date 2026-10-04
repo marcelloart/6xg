@@ -87,7 +87,7 @@ function Account({identity,login}){
     catch{showStatus('error','Belum dapat keluar. Coba kembali.');}
     finally{setBusy(false);}
   }
-  const name=user?.email?.address||user?.google?.email||user?.wallet?.address||'Pemain';
+  const name=user?.email?.address||user?.google?.email||(user?.twitter?.username?'@'+user.twitter.username:user?.twitter?.name)||user?.wallet?.address||'Pemain';
   const open=()=>document.getElementById('accountDialog').showModal();
   return <>
     <button className="account-btn" onClick={open} aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'}>
@@ -146,7 +146,7 @@ function BridgeAuth(){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
   const current=useRef({});
   // The game needs identity and access tokens, never Privy's persistent session.
-  const state={ready,authenticated,user:authenticated?{id:user?.id,email:user?.email?{address:user.email.address}:undefined,google:user?.google?{email:user.google.email}:undefined}:null};
+  const state={ready,authenticated,user:authenticated?{id:user?.id,email:user?.email?{address:user.email.address}:undefined,google:user?.google?{email:user.google.email}:undefined,twitter:user?.twitter?{username:user.twitter.username,name:user.twitter.name}:undefined}:null};
   current.current={state,getAccessToken,logout};
   useEffect(()=>{
     if(window.parent===window)return;
@@ -185,7 +185,7 @@ export function mountAuth(){
     createRoot(document.getElementById('accountRoot')).render(<GameAccount/>);return;
   }
   createRoot(document.getElementById('accountRoot')).render(
-    <PrivyProvider appId={cfg.privyAppId} config={{appearance:{theme:'light',accentColor:'#557c50'},embeddedWallets:{ethereum:{createOnLogin:'off'},solana:{createOnLogin:'off'}}}}>
+    <PrivyProvider appId={cfg.privyAppId} config={{loginMethods:['google','twitter','wallet','email'],appearance:{theme:'light',accentColor:'#557c50'},embeddedWallets:{ethereum:{createOnLogin:'off'},solana:{createOnLogin:'off'}}}}>
       {window.BARA_PAGE==='bridge'?<BridgeAuth/>:window.BARA_PAGE==='landing'?<LandingAccount cfg={cfg}/>:<LegacyAccount/>}
     </PrivyProvider>
   );
