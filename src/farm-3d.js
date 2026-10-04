@@ -288,7 +288,6 @@ class FarmRenderer3D {
   this.scene.fog.color.set('#c2cdbb').lerp(new THREE.Color('#172a42'),night);
   if(this.scene.background?.isColor)this.scene.background.copy(this.scene.fog.color);
   this.materials.window.emissiveIntensity=night*.8;
-  const readout=document.getElementById('daylightReadout');if(readout)readout.textContent=FarmDaylight.describe(light);
  }
  applyPreviewAmbience(dusk){
   if(!this.sun)return;const hemisphere=this.scene.children.find(o=>o.isHemisphereLight);

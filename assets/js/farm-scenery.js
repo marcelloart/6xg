@@ -87,7 +87,7 @@ class FarmRenderer{
   this.label(c,1593,927,harvestT_farm_scenery_js('Pondok kebun'),'#f4eedb','#566e47dc');
   // Slow ripples and birds keep the valley alive without changing the economy.
   for(let i=0;i<3;i++){const x=680+Math.sin(now/10000+i)*38,y=830+i*47;this.ellipse(c,x,y,8,4,'#edf0ce');this.ellipse(c,x+6,y-3,4,3,'#faf4dd');this.ellipse(c,x+10,y-3,2,1,'#d8a95c');}
-  if(typeof FarmDaylight!=='undefined'){const light=FarmDaylight.at(lightingNow),night=1-light.daylight;c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='rgba(13,28,59,'+(night*.42)+')';c.fillRect(0,0,cam.width,cam.height);if(light.golden>.01){c.fillStyle='rgba(255,161,67,'+(light.golden*.12)+')';c.fillRect(0,0,cam.width,cam.height);}const readout=document.getElementById('daylightReadout');if(readout)readout.textContent=FarmDaylight.describe(light);}
+  if(typeof FarmDaylight!=='undefined'){const light=FarmDaylight.at(lightingNow),night=1-light.daylight;c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='rgba(13,28,59,'+(night*.42)+')';c.fillRect(0,0,cam.width,cam.height);if(light.golden>.01){c.fillStyle='rgba(255,161,67,'+(light.golden*.12)+')';c.fillRect(0,0,cam.width,cam.height);}}
  }
  mini(canvas,farm){
   const c=canvas.getContext('2d'),sx=canvas.width/3200,sy=canvas.height/2200;c.setTransform(sx,0,0,sy,0,0);c.drawImage(this.back,0,0);
