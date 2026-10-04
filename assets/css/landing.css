@@ -67,4 +67,5 @@
 @media(max-width:360px){.hero-content{padding-left:20px;padding-right:20px}.hero-actions{gap:16px}.hero-actions .primary{font-size:11px;padding:12px 14px}.hero-actions .text-link{font-size:11px}.hero-note{font-size:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}.hero-visual{transform:none}.hero-leaf{display:none}.motion-enabled [data-reveal]{opacity:1;transform:none}.primary:hover{transform:none}}
 
-.login-symbol{overflow:hidden;flex-shrink:0}.login-symbol img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.login-symbol{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;overflow:hidden;border-radius:50%;background:#e5eadc;line-height:1}.login-symbol img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+@media(max-width:760px){.login-symbol{width:24px;height:24px;flex-basis:24px}}
