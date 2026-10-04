@@ -18,11 +18,11 @@ Login Privy diperlukan sebelum bermain. Akun kebun baru mulai dengan **0 koin, 0
 
 Harga bibit dan bahan menggunakan koin permainan. Tanaman menggunakan `plantedAt` dan `readyAt` absolut, sehingga tetap matang saat tab berada di belakang atau ditutup. Tidak ada percepatan waktu pada website produksi. Tanaman matang tidak layu, hasil tidak dijual otomatis, dan panen yang melampaui kapasitas tetap berada di petak sampai ruang tersedia. Setiap panen mengosongkan petak untuk bibit berikutnya.
 
-## Contoh dekorasi premium (v1.7.2)
+## Tampilan kebun lebih bersih (v1.7.4)
 
-**Toko → Premium → Preview di kebun** menampilkan satu produk contoh, **Taman Rustic**: bangku kayu, dua pot bunga, pagar pendek, dan alas batu. Model dibuat khusus untuk game menggunakan material kayu/batu ambientCG yang sudah disertakan. Gambar katalog 600 × 420 dirender dari factory `rusticGarden()` yang juga dipakai preview dunia, dengan geometri, ukuran, dan material PBR yang sama. Gambar menyesuaikan tekstur kualitas perangkat; sudut kamera, pencahayaan lingkungan dan zoom kebun dapat mengubah tampilan saat diperiksa.
+Toko Premium dinonaktifkan sementara. Tab dan gaya premiumnya tidak dimuat, dan gambar katalog dekorasi tidak dirender saat bermain. Kode prototipe tersimpan untuk pengembangan berikutnya; preview diblokir oleh `PREMIUM_STORE_ENABLED=false`.
 
-Harga **Rp15.000** adalah contoh, ditandai **belum dijual**. Pembayaran, kepemilikan premium, pendapatan dan komisi belum diaktifkan. Preview tidak mengirim transaksi server, memakai koin/bahan, memberi bonus, atau mengubah snapshot kebun. Setelah diletakkan, model dapat diperiksa dengan geser/zoom peta dan diputar; **Ubah posisi** melanjutkan penempatan dengan validasi hijau/merah yang sama. **Selesai preview**, Esc, pergantian akun, atau muat ulang menghapus contoh sementara. Mode 2D menonaktifkan preview ini agar tidak menggantinya dengan gambar yang berbeda.
+Petunjuk tetap di bagian bawah peta dan kartu tutorial otomatis dihapus. Indikator tahan hanya menampilkan lingkaran progres; penempatan tetap menampilkan validitas lokasi dan tombol tindakan. Panduan lengkap tersedia melalui **Menu → Panduan bermain** pada komputer maupun ponsel.
 
 Toko memiliki bagian **Bibit**, **Jual panen**, **Bahan**, dan **Bangunan**. Kayu berharga 3 koin, batu 4, daging 5. Jika pemain sudah tidak punya bibit, tanaman, atau hasil panen, pembelian bahan menyisakan minimal 5 koin untuk bibit wortel agar permainan dapat diteruskan.
 
@@ -54,7 +54,7 @@ Lima pencapaian permanen menghitung panen, koin penjualan, bangunan selesai, pro
 
 ## Tutorial, level dan pesanan
 
-Menu **Tujuan** menyatukan panduan interaktif empat langkah (tanam → panen → jual → lumbung), progres level, daftar yang terbuka, dan tiga pesanan pelanggan. Panduan boleh disembunyikan lalu dilanjutkan; progresnya berada di akun server.
+Menu **Tujuan** menyatukan panduan interaktif empat langkah (tanam → panen → jual → lumbung), progres level, daftar yang terbuka, dan tiga pesanan pelanggan. Panduan muncul saat panel Tujuan dibuka; progresnya berada di akun server.
 
 Level 1–9 membutuhkan XP kumulatif **0, 30, 80, 150, 260, 420, 650, 950, 1400**. Wortel sampai alpukat terbuka berurutan pada level tersebut. Panen memberi 2 XP per hasil, memulai pembangunan 10 XP, dan pesanan 8 + 4 × level pesanan. Lumbung tersedia di level 1, rumah di 2, sumur dan dekorasi bangku kebun di 3, gudang di 4. Bangku memerlukan 4 kayu + 2 batu dan 30 detik pembangunan.
 

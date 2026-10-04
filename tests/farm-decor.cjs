@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('assets/js/farm-game.js','utf8'),nodes=new Map(),calls=[];
 const node=id=>{if(!nodes.has(id))nodes.set(id,{dataset:{},classList:{toggle(){}},setAttribute(key,value){this[key]=value;},getBoundingClientRect:()=>({top:id==='map'?0:context.camera.height-240}),textContent:'',disabled:false,hidden:false});return nodes.get(id);};
-const context={window:{},console,Intl,Map,Math,$:node,gate:{canPlay:true},entered:true,visiting:null,transactionBusy:false,placement:null,pendingBuild:null,selectedPlot:null,selectedBuilding:null,shop:'premium',panel:null,
+const context={window:{},console,Intl,Map,Math,PREMIUM_STORE_ENABLED:true,$:node,gate:{canPlay:true},entered:true,visiting:null,transactionBusy:false,placement:null,pendingBuild:null,selectedPlot:null,selectedBuilding:null,shop:'premium',panel:null,
  renderer:{mode:'3d'},productImage:()=> 'actual-model.png',camera:{width:1280,height:720,zoom:1.05,zoomAt(){},focus(){},pan(){},screenToWorld:()=>({x:1850,y:1100}),worldToScreen:()=>({x:640,y:360})},
  audio:{play(){}},pickup:{reset(){},follow(){}},canvas:{focus(){}},closePanel(){},renderUI(){context.renderPlacement?.();},toast(){},transact:async(type,args)=>{calls.push({type,args});return true;}};
 vm.createContext(context);vm.runInContext(fs.readFileSync('assets/js/farm-engine.js','utf8')+'\nglobalThis.F=BaraFarm;globalThis.farm=new BaraFarm.Farm({clock:()=>1000000});',context);
@@ -20,6 +20,7 @@ vm.runInContext(source.slice(source.indexOf('function placementResult(){'),sourc
  context.renderer.mode='2d';context.beginDecorationPreview();assert.equal(context.placement,null,'2D mode cannot substitute another model');context.renderer.mode='3d';
  context.camera.width=760;context.camera.height=390;context.beginDecorationPreview();assert(context.placementResult().ok,'Landscape preview opens in an available location');context.cancelPlacement(true);assert.equal(context.farm.serialize(),original);
  vm.runInContext(fs.readFileSync('assets/js/farm-camera.js','utf8')+'\nglobalThis.TestCamera=FarmCamera;',context);context.camera=new context.TestCamera();context.camera.resize(320,568);context.beginDecorationPreview();const point=context.placement.point,roof=context.camera.worldToScreen(point.x,point.y-48,99),terrace=context.camera.worldToScreen(point.x,point.y+64,0);assert(roof.y>=111.9&&terrace.y<=314.1,'Small-phone framing leaves the roof below the HUD and the terrace above the measured placement dock');context.cancelPlacement(true);assert.equal(context.farm.serialize(),original);
+ context.PREMIUM_STORE_ENABLED=false;context.beginDecorationPreview();assert.equal(context.placement,null,'The retired premium preview cannot be entered in production');
  context.placement={kind:'bench',point:{x:1850,y:1100},rotation:0};await context.confirmPlacement();assert.equal(calls.length,1);assert.equal(calls[0].type,'build','Normal buildings still use the authoritative server action');
  assert(!fs.readFileSync('play/index.html','utf8').includes('data-action="premium-buy"'));console.log('Conservatory preview checks passed: zero balance, full terrace collision, rotation, relocation, day/dusk, auth, landscape and no purchase/save mutations.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
