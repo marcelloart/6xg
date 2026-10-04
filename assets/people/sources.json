@@ -180,8 +180,8 @@
     },
     {
       "path": "assets/people/builder.gltf",
-      "bytes": 440509,
-      "sha256": "a5606649ddb4582ec99a10c62f49e6a8bdf6146b3dcc1f1f3b1a025cd44d0acb"
+      "bytes": 442303,
+      "sha256": "efd1ad79c8839fff973ec13a1e2ce8331dec038219a3e555c620c4d737bf9c01"
     },
     {
       "path": "assets/people/f003_body_color.webp",
@@ -215,8 +215,8 @@
     },
     {
       "path": "assets/people/gardener.gltf",
-      "bytes": 439057,
-      "sha256": "885dcb56583507a1f49bccb17439a359fa197874bc08dd22b835140d370a1e1e"
+      "bytes": 440852,
+      "sha256": "b6bbdfcb1037ff084149b7e7b1d516d660162cc60638f6111efb1712b2d81137"
     },
     {
       "path": "assets/people/LICENSE-Microsoft.md",
@@ -305,8 +305,24 @@
     },
     {
       "path": "assets/people/neighbor.gltf",
-      "bytes": 443390,
-      "sha256": "0113f485fa42b6047dabe8d95ddb117b7b68719b2751df579f48d679ac3da331"
+      "bytes": 445144,
+      "sha256": "45a2fc767627d17a786a2dcd61a459b250b663a4f1b07aaaa3ce43cd0e18ab03"
+    },
+    {
+      "path": "assets/people/gardener-motion.bin",
+      "bytes": 10768,
+      "sha256": "44237ebfc19496a690656f1098f509024d971892fbf5e3887bf481bba5e56977"
+    },
+    {
+      "path": "assets/people/neighbor-motion.bin",
+      "bytes": 10768,
+      "sha256": "2abc807b7f48db4ceb488e7db5142122f701365624775012984dbf65f754dfd6"
+    },
+    {
+      "path": "assets/people/builder-motion.bin",
+      "bytes": 10768,
+      "sha256": "44237ebfc19496a690656f1098f509024d971892fbf5e3887bf481bba5e56977"
     }
-  ]
+  ],
+  "motionNotes": "Pelvis Y motion retained; forward Z locomotion removed from walk loops. World navigation owns walking displacement. Stride timing uses captured walking distance."
 }

@@ -58,3 +58,15 @@ for(const type of ['gardener','builder','neighbor'])for(const hz of [30,60,120])
  }
 }
 console.log('Animation continuity passed: all three rigs, interrupted tasks, normalized blending and smooth body turns at 30/60/120 Hz.');
+for(const type of ['gardener','builder','neighbor'])for(const hz of [30,60,120]){
+ const asset=assets[type],track=asset.clips.find(c=>c.name==='walk').tracks.find(t=>t.name==='Bip01.position');
+ assert(new THREE.Vector3().fromArray(track.values,0).distanceTo(new THREE.Vector3().fromArray(track.values,track.values.length-3))<1e-4,'Walking pelvis translation closes its loop: '+type);
+ const z=[];for(let i=2;i<track.values.length;i+=3)z.push(track.values[i]);assert(Math.max(...z)-Math.min(...z)<1e-4,'Navigation owns forward displacement; walking capture cannot accumulate a second forward movement');
+ assert(asset.model.userData.walkSpeed>130&&asset.model.userData.walkSpeed<150,'Stride speed comes from the original motion capture');
+ const actor=createPerson(asset),controller=Object.create(FarmPeople.prototype),navigation=new FarmPeopleNavigation(sizes);navigation.update(farm,1791106939676);actor.id=0;actor.type=type;actor.speed=11.5;actor.root.position.set(1250,0,1600);actor.root.rotation.y=Math.PI/2;actor.path=[{x:2050,y:1600}];actor.task={face:{x:2050,y:1600},mode:'idle'};
+ Object.assign(controller,{people:[actor],navigation,heightAt:()=>0,lastTick:null,clock:0});controller.setAction(actor,'walk');const hip=actor.model.getObjectByName('Bip01'),last=new THREE.Vector3();let maximum=0,loops=0,clipTime=0;
+ for(let frame=0;frame<hz*10;frame++){controller.update(farm,1791106939676,frame*1000/hz);actor.root.updateMatrixWorld(true);const current=hip.getWorldPosition(new THREE.Vector3());if(frame>hz)maximum=Math.max(maximum,current.distanceTo(last));last.copy(current);if(actor.actions.walk.time<clipTime)loops++;clipTime=actor.actions.walk.time;}
+ assert(loops>=3,'The test covers repeated walk-cycle boundaries');assert(maximum<.4*60/hz,'World-space body position cannot jump back on a walk loop: '+type+' at '+hz+' Hz, '+maximum);
+ assert(Math.abs(actor.walkRate-actor.currentSpeed/actor.walkStrideSpeed)<1e-5,'Footstep playback matches actual movement distance');
+}
+console.log('Walking displacement passed: every rig at 30/60/120 Hz, repeated capture loops, continuous world position and captured stride timing.');

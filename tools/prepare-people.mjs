@@ -21,8 +21,9 @@ for(const [id,folder]of Object.entries(sources)){
  model.traverse(o=>{if(!o.isMesh)return;o.geometry=mergeVertices(o.geometry);const uv=o.geometry.attributes.uv;for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i));o.material=(Array.isArray(o.material)?o.material:[o.material]).map(m=>{const map=m.map?.userData.file,normal=m.normalMap?.userData.file,alpha=!!m.alphaMap;const converted=new THREE.MeshStandardMaterial({name:m.name,color:0xffffff,roughness:.82,metalness:0,side:alpha?THREE.DoubleSide:THREE.FrontSide,alphaTest:alpha?.45:0});maps.set(m.name,{map,normal,alpha});return converted;});});
  const animations=Object.values(clips).map(original=>{const clip=original.clone();clip.tracks=clip.tracks.filter(t=>model.getObjectByName(t.name.split('.')[0])&&!/Footsteps/.test(t.name)&&!t.name.endsWith('.scale')).map(t=>{
    if(!t.name.endsWith('.position'))return t;const bone=model.getObjectByName(t.name.split('.')[0]),p=bone.position;const values=t.values.slice();
-   // Preserve each character's limb proportions and keep locomotion in place.
-   for(let i=0;i<values.length;i+=3){values[i]=p.x;values[i+1]=p.y;values[i+2]=p.z;if(bone.name==='Bip01'){const standing=clips.idle.tracks.find(t=>t.name==='Bip01.position');values[i+2]+=t.values[i+2]-standing.values[2];}}
+   // Rocketbox uses Y for height and Z for forward motion. Navigation supplies
+   // walking displacement; copying captured Z here makes every walk loop jump back.
+   for(let i=0;i<values.length;i+=3){values[i]=p.x;values[i+1]=p.y;values[i+2]=p.z;if(bone.name==='Bip01'){const standing=clips.idle.tracks.find(t=>t.name==='Bip01.position');values[i]+=t.values[i]-standing.values[0];values[i+1]+=t.values[i+1]-standing.values[1];if(clip.name!=='walk')values[i+2]+=t.values[i+2]-standing.values[2];}}
    return new THREE.VectorKeyframeTrack(t.name,t.times.slice(),values);
  });clip.tracks=clip.tracks.map(track=>{const interpolate=track.createInterpolant(),times=[],values=[];for(let t=0;t<clip.duration;t+=1/30){times.push(t);values.push(...interpolate.evaluate(t));}times.push(clip.duration);values.push(...interpolate.evaluate(clip.duration));return new track.constructor(track.name,times,values).optimize();});return clip;});
  const gltf=await new GLTFExporter().parseAsync(model,{animations,onlyVisible:true});
@@ -35,3 +36,4 @@ for(const [id,folder]of Object.entries(sources)){
  await fs.writeFile(output+'/'+id+'.gltf',JSON.stringify(gltf));console.log(id,animations.map(c=>[c.name,c.duration,c.tracks.length]));
 }
 await fs.copyFile(path.resolve('../human-source/LICENSE.md'),output+'/LICENSE-Microsoft.md');
+await import('./prepare-people-motion.mjs');

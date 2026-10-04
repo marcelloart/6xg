@@ -51,7 +51,7 @@ export function createPerson(asset,height=38){
  const root=new THREE.Group(),model=cloneSkeleton(asset.model);const scale=height/asset.model.userData.height;model.scale.setScalar(scale);model.position.y=-asset.model.userData.ground*scale;root.add(model);
  const mixer=new THREE.AnimationMixer(model),actions=Object.fromEntries(asset.clips.map(c=>[c.name,mixer.clipAction(c)])),animationWeights={},animationVelocity={};for(const [name,action]of Object.entries(actions)){animationWeights[name]=name==='idle'?1:0;animationVelocity[name]=0;action.setEffectiveWeight(animationWeights[name]);action.enabled=name==='idle';}actions.idle.play();mixer.update(.01);
  const pose=[];model.traverse(bone=>{if(bone.isBone)pose.push({bone,rotation:bone.quaternion.clone()});});
- return{root,model,mixer,actions,animationWeights,animationVelocity,pose,walkRate:.65,turnSpeed:0,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
+ return{root,model,mixer,actions,animationWeights,animationVelocity,pose,walkStrideSpeed:(asset.model.userData.walkSpeed||140.2373)*scale,walkRate:0,turnSpeed:0,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
 }
 
 export class FarmPeople {
@@ -66,7 +66,7 @@ export class FarmPeople {
   // Restarting Three's fade clocks restores old weights and causes a visible one-frame pose jump.
   const weights=person.animationWeights,velocities=person.animationVelocity,omega=10,decay=Math.exp(-omega*delta);let sum=0;
   for(const name of Object.keys(person.actions)){const target=Number(name===person.mode),error=weights[name]-target,change=(velocities[name]+omega*error)*delta;const next=target+(error+change)*decay;weights[name]=Math.max(0,Math.min(1,next));velocities[name]=next===weights[name]?(velocities[name]-omega*change)*decay:0;sum+=weights[name];}
-  person.walkRate+=(Math.max(.25,person.currentSpeed/17.5)-person.walkRate)*(1-Math.exp(-delta/.2));
+  person.walkRate+=(Math.max(0,person.currentSpeed/person.walkStrideSpeed)-person.walkRate)*(1-Math.exp(-delta/.12));
   for(const [name,action]of Object.entries(person.actions)){const weight=weights[name]/sum;action.stopFading().stopWarping().setEffectiveWeight(weight);action.enabled=weight>.0001||name===person.mode;action.setEffectiveTimeScale(name==='walk'?person.walkRate:name==='work'?.82:1);}
   person.mixer.update(delta);
   // Filter capture noise without replacing the imported skeletal motion. A short visual delay
