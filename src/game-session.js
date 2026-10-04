@@ -1,8 +1,10 @@
-export async function startGameSession({gameOrigin,userId,getAccessToken,fetcher=(...args)=>fetch(...args)}){
+import '../assets/js/account-photo.js';
+export async function startGameSession({gameOrigin,userId,twitterPhoto,getAccessToken,fetcher=(...args)=>fetch(...args)}){
   const token=await getAccessToken();
   if(!token||!userId)throw new Error('Sesi akun belum siap. Silakan coba kembali.');
   const url=new URL('/api/game-session',gameOrigin).href;
-  const created=await fetcher(url,{method:'POST',credentials:'include',cache:'no-store',headers:{Authorization:'Bearer '+token}});
+  const photo=BaraAccountPhoto.twitterURL(twitterPhoto);
+  const created=await fetcher(url,{method:'POST',credentials:'include',cache:'no-store',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({twitterPhoto:photo})});
   if(!created.ok)throw new Error('Sesi game belum dapat disambungkan. Silakan coba kembali.');
   // Verify the browser accepted the HttpOnly cookie before leaving the landing.
   const restored=await fetcher(url,{credentials:'include',cache:'no-store'});

@@ -20,6 +20,12 @@ Menu login mendukung Google, **X/Twitter**, wallet, dan email melalui Privy. Mas
 
 Harga bibit dan bahan menggunakan koin permainan. Tanaman menggunakan `plantedAt` dan `readyAt` absolut, sehingga tetap matang saat tab berada di belakang atau ditutup. Tidak ada percepatan waktu pada website produksi. Tanaman matang tidak layu, hasil tidak dijual otomatis, dan panen yang melampaui kapasitas tetap berada di petak sampai ruang tersedia. Setiap panen mengosongkan petak untuk bibit berikutnya.
 
+## Foto profil X
+
+Foto dari `user.twitter.profilePictureUrl` Privy tampil otomatis di landing dan game saat belum ada foto unggahan. URL HTTPS dibatasi ke jalur profil `pbs.twimg.com`; varian `_normal` memakai gambar asli. Sesi game membawa URL kosmetik dalam cookie host-only terpisah yang cocok dengan DID terverifikasi, dan membuangnya ketika akun berubah atau keluar. URL bukan identitas, tidak dipakai untuk izin, dan tidak disimpan dalam saldo atau snapshot. Tidak ada App Secret/OAuth token baru. Jika gambar gagal dimuat, avatar kebun muncul kembali.
+
+Foto unggahan tetap diutamakan. Pilihan avatar kebun atau foto X dapat disimpan di profil; pilihan `useAccountPhoto` opsional mempertahankan kompatibilitas snapshot lama. Foto tetap pribadi dan tidak dibagikan kepada pengunjung kebun. Pemain yang sudah membuka game sebelum pembaruan perlu membuka kembali lewat tombol Mainkan di landing untuk menyegarkan foto pada sesi.
+
 ## Tampilan kebun lebih bersih (v1.7.4)
 
 Toko Premium dinonaktifkan sementara. Tab dan gaya premiumnya tidak dimuat, dan gambar katalog dekorasi tidak dirender saat bermain. Kode prototipe tersimpan untuk pengembangan berikutnya; preview diblokir oleh `PREMIUM_STORE_ENABLED=false`.

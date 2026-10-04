@@ -16,7 +16,7 @@ const specs={
  'move-building':[['slot','point','rotation'],a=>int(a.slot,0,23)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.moveBuilding(a.slot,a.point,a.rotation)],
  'move-plot':[['id','point'],a=>int(a.id,0,80)&&point(a.point),f=>a=>f.movePlot(a.id,a.point)],
  expand:[['point','count','rotation'],a=>point(a.point)&&[1,3,6].includes(a.count)&&int(a.rotation,0,3),f=>a=>f.expandGarden(a.point,a.count,a.rotation)],
- profile:[['profile'],a=>object(a.profile)&&Object.keys(a.profile).every(k=>['name','farmName','avatar','photo'].includes(k)),f=>a=>f.updateProfile(a.profile)],
+ profile:[['profile'],a=>object(a.profile)&&Object.keys(a.profile).every(k=>['name','farmName','avatar','photo','useAccountPhoto'].includes(k)),f=>a=>f.updateProfile(a.profile)],
  order:[['id'],a=>typeof a.id==='string'&&/^\d:\d{1,10}:\d{1,2}$/.test(a.id),f=>a=>f.deliverOrder(a.id)],
  tutorial:[['dismissed'],a=>typeof a.dismissed==='boolean',f=>a=>f.tutorialDismiss(a.dismissed)],
  production:[['slot','recipe'],a=>int(a.slot,0,23)&&Object.hasOwn(F.RECIPES,a.recipe),f=>a=>f.startProduction(a.slot,a.recipe)],

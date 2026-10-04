@@ -4,6 +4,7 @@ import {createPortal} from 'react-dom';
 import {PrivyProvider,usePrivy,useLogin} from '@privy-io/react-auth';
 import {CHANNEL,createSessionBridge} from './session-bridge.js';
 import {LandingAccount} from './landing-account.jsx';
+import {AccountAvatar} from './account-avatar.jsx';
 
 const cfg=window.BARA_ONLINE;
 const game=window.LadangBara;
@@ -26,7 +27,7 @@ function Account({identity,login}){
     if(!ready)return;
     let cancelled=false;
     session.current?.close();session.current=null;setChoice(false);
-    game.setIdentity(userId);setProfile(null);
+    game.setIdentity(userId);game.setAccountPhoto(user?.twitter?.profilePictureUrl);setProfile(null);
     if(!userId){
       attached.current=null;game.detach();
       if(identity.error)showStatus('error','Sesi game belum dapat dipulihkan. Hubungkan akun kembali untuk mencoba lagi.');
@@ -60,6 +61,7 @@ function Account({identity,login}){
     })();
     return()=>{cancelled=true;clearTimeout(flushTimer.current);session.current?.close();session.current=null;};
   },[ready,userId,retry]);
+  useEffect(()=>{game.setAccountPhoto(authenticated?user?.twitter?.profilePictureUrl:null);},[authenticated,userId,user?.twitter?.profilePictureUrl]);
 
   useEffect(()=>{
     const onSave=event=>{
@@ -91,7 +93,7 @@ function Account({identity,login}){
   const open=()=>document.getElementById('accountDialog').showModal();
   return <>
     <button className="account-btn" onClick={open} aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'}>
-      <span className="account-avatar" aria-hidden="true">{authenticated&&profile?.photo?<img src={profile.photo} alt=""/>:authenticated?({sprout:"🌱",sunflower:"🌻",apple:"🍎",bee:"🐝"}[profile?.avatar]||"🌱"):"◉"}</span>
+      <AccountAvatar authenticated={authenticated} profile={profile} accountURL={user?.twitter?.profilePictureUrl}/>
       <span className="account-name">{authenticated?(profile?.name||'Akun pemain'):'Daftar / Masuk'}</span>
     </button>
     {createPortal(<>
@@ -146,12 +148,12 @@ function BridgeAuth(){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
   const current=useRef({});
   // The game needs identity and access tokens, never Privy's persistent session.
-  const state={ready,authenticated,user:authenticated?{id:user?.id,email:user?.email?{address:user.email.address}:undefined,google:user?.google?{email:user.google.email}:undefined,twitter:user?.twitter?{username:user.twitter.username,name:user.twitter.name}:undefined}:null};
+  const state={ready,authenticated,user:authenticated?{id:user?.id,email:user?.email?{address:user.email.address}:undefined,google:user?.google?{email:user.google.email}:undefined,twitter:user?.twitter?{username:user.twitter.username,name:user.twitter.name,profilePictureUrl:BaraAccountPhoto.twitterURL(user.twitter.profilePictureUrl)}:undefined}:null};
   current.current={state,getAccessToken,logout};
   useEffect(()=>{
     if(window.parent===window)return;
     window.parent.postMessage({channel:CHANNEL,type:'state',state},cfg.gameOrigin);
-  },[ready,authenticated,user?.id]);
+  },[ready,authenticated,user?.id,user?.twitter?.profilePictureUrl]);
   useEffect(()=>{
     if(window.parent===window)return;
     const receive=async event=>{

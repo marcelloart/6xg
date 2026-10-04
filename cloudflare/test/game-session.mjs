@@ -4,12 +4,14 @@ import {readFile} from 'node:fs/promises';
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 import {generateKeyPair,exportSPKI,SignJWT} from 'jose';
 import {handleGameRequest} from '../../src/game-api.mjs';
+import {build} from 'esbuild';
 const SITE='https://6xg.online',APP='https://app.6xg.online';
 const keys=await generateKeyPair('ES256');let mf,db;
 before(async()=>{
+  const gameScript=(await build({entryPoints:[new URL('../../src/game-api.mjs',import.meta.url).pathname.replace(/^\/([A-Z]:)/,'$1')],bundle:true,format:'esm',platform:'browser',write:false})).outputFiles[0].text;
   mf=new Miniflare(convertV4MiniflareOptions({workers:[
     {name:'backend',routes:['6xg-cloud-save.marcelloartis.workers.dev/*'],modules:true,scriptPath:new URL('../dist/worker.js',import.meta.url).pathname.replace(/^\/([A-Z]:)/,'$1'),compatibilityDate:'2026-10-01',bindings:{PRIVY_APP_ID:'test-app',PRIVY_VERIFICATION_KEY:await exportSPKI(keys.publicKey),ALLOWED_ORIGINS:SITE+','+APP},d1Databases:{DB:'game-session-test'}},
-    {name:'game',routes:['app.6xg.online/*'],modules:true,script:(await readFile(new URL('../../src/game-api.mjs',import.meta.url),'utf8')).replace('export async function handleGameRequest','async function handleGameRequest'),compatibilityDate:'2026-10-03',serviceBindings:{CLOUD_SAVE:'backend'}},
+    {name:'game',routes:['app.6xg.online/*'],modules:true,script:gameScript,compatibilityDate:'2026-10-03',serviceBindings:{CLOUD_SAVE:'backend'}},
   ],cf:false,telemetry:{enabled:false}}));
   db=await mf.getD1Database('DB','backend');
   for(const file of ['0001_saves.sql','0002_farm_saves.sql','0003_farm_actions.sql'])await db.exec((await readFile(new URL('../migrations/'+file,import.meta.url),'utf8')).replaceAll('\n',' '));
@@ -17,8 +19,8 @@ before(async()=>{
 after(async()=>mf?.dispose());
 async function token(uid='did:privy:session-a',updates={},key=keys.privateKey){const now=Math.floor(Date.now()/1000);return new SignJWT({sub:uid,sid:'test-session',iss:'privy.io',aud:'test-app',iat:now,exp:now+3600,...updates}).setProtectedHeader({alg:'ES256'}).sign(key);}
 const cloudFetch=(url,init)=>mf.dispatchFetch(url,{...init,...(init.body?{duplex:'half'}:{})});
-async function call(path,method='GET',{auth,cookie,origin=APP,body}={},dependencies={cloudFetch}){
-  const headers={...(origin?{Origin:origin}:{}),...(auth?{Authorization:'Bearer '+auth}:{}),...(cookie?{Cookie:'__Host-6xg-game='+cookie}:{}),...(body?{'Content-Type':'application/json'}:{})};
+async function call(path,method='GET',{auth,cookie,picture,origin=APP,body}={},dependencies={cloudFetch}){
+  const headers={...(origin?{Origin:origin}:{}),...(auth?{Authorization:'Bearer '+auth}:{}),...(cookie?{Cookie:'__Host-6xg-game='+cookie+(picture?'; '+picture:'')}:{}),...(body?{'Content-Type':'application/json'}:{})};
   return handleGameRequest(new Request(APP+path,{method,headers,...(body?{body:JSON.stringify(body)}:{})}),{ASSETS:{fetch:()=>new Response('asset')}},dependencies);
 }
 test('signed landing login establishes a host-only HttpOnly cookie without creating or changing a farm',async()=>{
@@ -27,6 +29,28 @@ test('signed landing login establishes a host-only HttpOnly cookie without creat
   assert(r.headers.get('Set-Cookie').includes('Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=3600'));assert(!r.headers.get('Set-Cookie').includes('Domain='));
   assert.equal(r.headers.get('Access-Control-Allow-Origin'),SITE);assert.equal(r.headers.get('Access-Control-Allow-Credentials'),'true');assert.equal(r.headers.get('Cache-Control'),'no-store');
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM farm_saves').first()).n,0);
+});
+test('X picture follows a verified session across reloads, but never changes identity or follows another account',async()=>{
+ const uid='did:privy:photo-owner',jwt=await token(uid),small='https://pbs.twimg.com/profile_images/123/photo_normal.jpg',photo=small.replace('_normal','');
+ const response=await call('/api/game-session','POST',{auth:jwt,origin:SITE,body:{twitterPhoto:small,userId:'did:privy:forged'}});
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{user:{id:uid,twitter:{profilePictureUrl:photo}}});
+ const cookies=response.headers.getSetCookie(),picture=cookies.find(c=>c.startsWith('__Host-6xg-picture='));assert(picture);assert(picture.includes('Secure; HttpOnly; SameSite=Strict'));assert(!picture.includes('Domain='));
+ const restored=await call('/api/game-session','GET',{cookie:jwt,picture:picture.split(';')[0]});assert.equal((await restored.json()).user.twitter.profilePictureUrl,photo);
+ const switched=await call('/api/game-session','GET',{cookie:await token('did:privy:photo-other'),picture:picture.split(';')[0]});assert.deepEqual((await switched.json()).user,{id:'did:privy:photo-other'});
+ const loggedOut=await call('/api/game-session/logout','POST',{cookie:jwt,picture:picture.split(';')[0]});assert(loggedOut.headers.getSetCookie().every(c=>c.includes('Max-Age=0')));assert.equal(loggedOut.headers.getSetCookie().length,2);
+ for(const twitterPhoto of ['https://evil.example/image.jpg','javascript:alert(1)','https://pbs.twimg.com/profile_images/'+ 'a'.repeat(5000)]){
+  const rejected=await call('/api/game-session','POST',{auth:jwt,origin:SITE,body:{twitterPhoto}});assert.equal((await rejected.json()).user.twitter,undefined);assert(rejected.headers.getSetCookie().find(c=>c.startsWith('__Host-6xg-picture=')).includes('Max-Age=0'));
+ }
+ const noX=await call('/api/game-session','POST',{auth:jwt,origin:SITE});assert.equal((await noX.json()).user.twitter,undefined);
+ assert.equal((await call('/api/game-session','POST',{auth:'a.b.c',origin:SITE,body:{twitterPhoto:small}})).status,401);
+});
+test('X or garden avatar choice persists on the server without changing money, crops or deadlines',async()=>{
+ const jwt=await token('did:privy:photo-preference');let revision=0;
+ for(const useAccountPhoto of [false,true]){
+  const response=await call('/api/farm-action','POST',{cookie:jwt,body:{id:crypto.randomUUID(),revision,type:'profile',args:{profile:{name:'Pekebun',farmName:'Kebunku',avatar:'bee',useAccountPhoto}}}});
+  assert.equal(response.status,200);const state=await response.json();revision=state.revision;assert.equal(state.save.state.profile.useAccountPhoto,useAccountPhoto);assert.equal(state.save.state.coins,0);assert.equal(state.save.state.seeds.carrot,6);assert.equal(state.save.state.plots[0].crop,null);
+  const restored=await call('/api/farm-save','GET',{cookie:jwt});assert.equal((await restored.json()).save.state.profile.useAccountPhoto,useAccountPhoto);
+ }
 });
 test('the game restores the signed account from its cookie, and never accepts a client identity or substitute bearer',async()=>{
   const jwt=await token();const r=await call('/api/game-session','GET',{cookie:jwt});assert.equal(r.status,200);assert.equal((await r.json()).user.id,'did:privy:session-a');

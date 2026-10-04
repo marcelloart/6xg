@@ -9,3 +9,8 @@ let n=0;await assert.rejects(startGameSession({...settings,fetcher:async()=>({ok
 await assert.rejects(startGameSession({...settings,fetcher:async()=>({ok:true,json:async()=>({user:{id:'did:privy:other'}})})}),/belum sesuai/);
 await assert.rejects(startGameSession({...settings,getAccessToken:async()=>null,fetcher:()=>{throw Error('must not request');}}),/belum siap/);
 console.log('Game session: credentialed bootstrap, cookie confirmation, identity mismatch and failure handling passed.');
+for(const [twitterPhoto,expected] of [['https://pbs.twimg.com/profile_images/123/photo_normal.jpg','https://pbs.twimg.com/profile_images/123/photo.jpg'],['https://evil.example/a.jpg',null],[undefined,null]]){
+ let payload;await startGameSession({...settings,twitterPhoto,fetcher:async(url,options)=>{if(options.method==='POST')payload=JSON.parse(options.body);return {ok:true,json:async()=>({user:{id:userId}})};}});
+ assert.deepEqual(payload,{twitterPhoto:expected});assert.equal(payload.userId,undefined);
+}
+console.log('Game session: only sanitized cosmetic X picture is carried; identity still comes from token.');

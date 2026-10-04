@@ -2,6 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {usePrivy,useLogin} from '@privy-io/react-auth';
 import {startGameSession} from './game-session.js';
+import {AccountAvatar} from './account-avatar.jsx';
 
 export function LandingAccount({cfg}){
   const {ready,authenticated,user,getAccessToken,logout}=usePrivy();
@@ -13,7 +14,7 @@ export function LandingAccount({cfg}){
     if(opening.current)return;opening.current=true;setBusy(true);setError('');
     const id=currentUser.current;
     try{
-      await startGameSession({gameOrigin:cfg.gameOrigin,userId:id,getAccessToken});
+      await startGameSession({gameOrigin:cfg.gameOrigin,userId:id,twitterPhoto:user?.twitter?.profilePictureUrl,getAccessToken});
       if(currentUser.current!==id)throw new Error('Akun berubah. Silakan coba kembali.');
       history.replaceState(null,'','/');window.location.assign(cfg.playUrl||cfg.gameOrigin+'/');
     }catch(e){setError(e.message||'Game belum dapat dibuka. Silakan coba kembali.');dialog().showModal();}
@@ -47,7 +48,7 @@ export function LandingAccount({cfg}){
   const begin=()=>{dialog().close();setError('');login({disableSignup:false});};
   const signOut=async()=>{setBusy(true);try{const response=await fetch(new URL('/api/game-session/logout',cfg.gameOrigin),{method:'POST',credentials:'include'});if(!response.ok)throw new Error('Logout failed');await logout();}catch{setError('Belum dapat keluar. Coba lagi.');}finally{setBusy(false);}};
   return <>
-    <button className="account-btn" aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'} onClick={()=>dialog().showModal()}><span className="login-symbol" aria-hidden="true">{authenticated?'✓':'↗'}</span>{authenticated?name:'Daftar / Masuk'}</button>
+    <button className="account-btn" aria-label={authenticated?'Buka akun pemain':'Daftar atau masuk'} onClick={()=>dialog().showModal()}>{authenticated?<AccountAvatar profile={summary} accountURL={user?.twitter?.profilePictureUrl} className="login-symbol"/>:<span className="login-symbol" aria-hidden="true">↗</span>}{authenticated?name:'Daftar / Masuk'}</button>
     {createPortal(<>
       <p className="account-eyebrow">AKUN LADANG BARA</p>
       <h3>{authenticated?'Selamat datang, '+name+'.':'Satu akun. Kebun milikmu.'}</h3>
