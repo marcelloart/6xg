@@ -1,4 +1,10 @@
-# Aset visual Ladang Bara
+# Visual assets — 6XG Harvest
+
+## Animated human residents
+
+The gardener, construction worker, and neighbor are adapted from [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox): Gardener_Male_01, Construction_Male_01, and Female_Adult_03. Their walk, breathing idle, crouching care, and working clips come from the same library. Copyright (c) 2020 Microsoft; [MIT license](assets/people/LICENSE-Microsoft.md), included with the shipped models. These human assets use MIT, separately from the CC0 environment below.
+
+The original FBX meshes are converted to indexed glTF with independent 81-bone rigs, shared photographic clothing/face textures, in-place locomotion, and 30 Hz animation clips. Textures are capped at 1024 px for browser memory. Residents are visual characters: they do not spend coins, harvest crops, or write account saves. There are seven residents on desktop and three in the light/mobile view. Source file hashes and processed asset hashes are recorded in `assets/people/sources.json`.
 
 Aset pemindaian 3D, tekstur PBR, atlas tanaman, dan pencahayaan HDRI berasal dari ambientCG dan Poly Haven. Semua sumber berikut berlisensi CC0-1.0. Berkas dikirim dari domain game; browser pemain tidak perlu mengakses situs penyedia.
 

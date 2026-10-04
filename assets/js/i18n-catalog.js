@@ -550,7 +550,7 @@ window.BaraTranslations={
  "3D · Ringan": "3D · Low",
  "2D · Paling ringan": "2D · Lightweight",
  "Ultra memakai tekstur 4096 × 4096 dan render hingga 3840 × 2160 sesuai bentuk layar. Cocok untuk perangkat dengan grafis kuat. Mengubah kualitas akan memuat ulang game.": "Ultra uses 4096 × 4096 textures and renders up to 3840 × 2160 to match the screen shape. Recommended for devices with powerful graphics. Changing quality reloads the game.",
- "Animasi angin, daun, dan air": "Wind, leaf, and water animation",
+ "Animasi lingkungan dan penduduk": "World and resident animation",
  "Suara kebun": "Farm audio",
  "Volume utama": "Master volume",
  "Efek permainan": "Game effects",

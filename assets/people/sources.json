@@ -1,0 +1,312 @@
+{
+  "provider": "Microsoft Rocketbox",
+  "source": "https://github.com/microsoft/Microsoft-Rocketbox",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2020 Microsoft",
+  "sourceFiles": [
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Export/Female_Adult_03.fbx",
+      "sha": "9ff910a80e1572c35f9064bfe649c58898f946c2",
+      "size": 791312
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Female_Adult_03.png",
+      "sha": "35cec2f4a349a8d082b498aa65a09097de9150c1",
+      "size": 400279
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Textures/f003_body_color.tga",
+      "sha": "6e7e0bba4a2c5fd119c2f40bf3886ec2ebd89af0",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Textures/f003_body_normal.tga",
+      "sha": "9d67f0877bd2a0c3cf7bc87f6912fb08d0e9961e",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Textures/f003_head_color.tga",
+      "sha": "b185268832e1b05b2e30434b714ed1a50c79726f",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Textures/f003_head_normal.tga",
+      "sha": "cbbd2e6c901da2c10c37556ac4324e3a4d2b8f40",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Female_Adult_03/Textures/f003_opacity_color.tga",
+      "sha": "7967eb62237314e3c76ae437a259f94052a032c3",
+      "size": 16777260
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Construction_Male_01.png",
+      "sha": "a9694163605361e9df0cc4d6a13c484a4ee4f702",
+      "size": 516253
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Export/Construction_Male_01.fbx",
+      "sha": "cfcf667eb5c712e5a1510a2ea3e46d157b49ea42",
+      "size": 676496
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_body_color.tga",
+      "sha": "ea180a862d949f5f16c1c430362ae199b8d572df",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_body_normal.tga",
+      "sha": "500a390f9b8e390d153470e8272d91a48b2b8dd7",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_head_color.tga",
+      "sha": "bb0038aba62407f7823420e1a6114f8980a81888",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_head_normal.tga",
+      "sha": "e39487ceee1de795906f90fa73e7bc509e23da10",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_helmet_color.tga",
+      "sha": "45f8a87ad06cc30d215e4071b228622b1588c9e1",
+      "size": 6291500
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_helmet_normal.tga",
+      "sha": "c0e59e8c934a0a64e169b00db7c115156fe9cf67",
+      "size": 6291500
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_opacity_color.tga",
+      "sha": "bf2c986d67533db898c19b2e9f0e695a0043623e",
+      "size": 524332
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_opacity_normal.tga",
+      "sha": "0abd0308bf2384bfb6b0719f8d894c4f644dc41b",
+      "size": 393260
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_tools_color.tga",
+      "sha": "ae5872a6808aa115c84aff5a5d8859ac7bedab6f",
+      "size": 3145772
+    },
+    {
+      "path": "Assets/Avatars/Professions/Construction_Male_01/Textures/m111_tools_normal.tga",
+      "sha": "748260cd9aadd421032675eb92842564e9377935",
+      "size": 3145772
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Export/Gardener_Male_01.fbx",
+      "sha": "d1def87bb530743db2df841edb77c607d8924937",
+      "size": 517152
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Gardener_Male_01.png",
+      "sha": "36531b57453063ed1ac11a00942d9a2a3ca02524",
+      "size": 458679
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Textures/m106_body_color.tga",
+      "sha": "5ccd297d5609765d8d6cfccbc34113a94944d27a",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Textures/m106_body_normal.tga",
+      "sha": "0296d982f9657f6296a82f680762c185efd1badd",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Textures/m106_head_color.tga",
+      "sha": "cbcb8b66787378c76bb74c810f14208d721606ba",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Textures/m106_head_normal.tga",
+      "sha": "2fefd2d9076cc0a3dcf0d2b90e37e373428c8f7c",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Professions/Gardener_Male_01/Textures/m106_opacity_color.tga",
+      "sha": "1eda6be82167a0956c40000eaaabe96094c70dbd",
+      "size": 16777260
+    },
+    {
+      "path": "Assets/Animations/all_animations_max_motextr_static/m_crouch_idle.max.fbx",
+      "sha": "cded1a52cd9e0683a3fdcda768ac70617a78d88f",
+      "size": 2106496
+    },
+    {
+      "path": "Assets/Animations/all_animations_max_motextr_static/m_idle_breathe_01.max.fbx",
+      "sha": "735b406c2f19cf233f042bfe0424c2a15c053c95",
+      "size": 1397280
+    },
+    {
+      "path": "Assets/Animations/all_animations_max_motextr_static/m_work_mid.max.fbx",
+      "sha": "13b5de9500e6654cfb491180d27b56e051115970",
+      "size": 2477312
+    },
+    {
+      "path": "Assets/Animations/all_animations_max_motextr_xy/m_walk_neutral.max.fbx",
+      "sha": "f8816638330d02fb31920d46851188b920d66ab1",
+      "size": 958512
+    }
+  ],
+  "processing": {
+    "format": "glTF 2.0",
+    "textures": "WebP, maximum 1024 pixels",
+    "animation": "30 Hz; in-place locomotion; preserve character bone lengths",
+    "geometry": "indexed, shared between instances",
+    "characters": [
+      "Gardener_Male_01",
+      "Construction_Male_01",
+      "Female_Adult_03"
+    ],
+    "clips": [
+      "m_walk_neutral",
+      "m_idle_breathe_01",
+      "m_crouch_idle",
+      "m_work_mid"
+    ]
+  },
+  "files": [
+    {
+      "path": "assets/people/builder.bin",
+      "bytes": 1686620,
+      "sha256": "b667a9ce4d99c6e018c1a5b50a8088e5dac7b1fb24b17e0ca56bd64a6f22d42a"
+    },
+    {
+      "path": "assets/people/builder.gltf",
+      "bytes": 440509,
+      "sha256": "a5606649ddb4582ec99a10c62f49e6a8bdf6146b3dcc1f1f3b1a025cd44d0acb"
+    },
+    {
+      "path": "assets/people/f003_body_color.webp",
+      "bytes": 123526,
+      "sha256": "3fd576ef4b63c8714f993e82f605dcb9eb78d26667dfc91aa83c07140a387f7f"
+    },
+    {
+      "path": "assets/people/f003_body_normal.webp",
+      "bytes": 133460,
+      "sha256": "10f57bcc2396506aafda35ca3d0a5f213f773b71aad63c52be36e9e6e59447b3"
+    },
+    {
+      "path": "assets/people/f003_head_color.webp",
+      "bytes": 129834,
+      "sha256": "e7e95f0d97813e40208ef759320a67a1d04da2986c05c053b66d1933fcf9748e"
+    },
+    {
+      "path": "assets/people/f003_head_normal.webp",
+      "bytes": 163930,
+      "sha256": "25fb34c65da04da8d96aeb80b155320c3ad8457ca75195fabba2d5feeb7b1d00"
+    },
+    {
+      "path": "assets/people/f003_opacity_color.webp",
+      "bytes": 477744,
+      "sha256": "58b29f44671a9f27e12527e4bd0cbe1a645bcee47876c1f2fd601f2f481856ee"
+    },
+    {
+      "path": "assets/people/gardener.bin",
+      "bytes": 1416764,
+      "sha256": "15fc86d95339800c438ee025544cfe3975afbff9f6baa98cd0db9ce22851b0f7"
+    },
+    {
+      "path": "assets/people/gardener.gltf",
+      "bytes": 439057,
+      "sha256": "885dcb56583507a1f49bccb17439a359fa197874bc08dd22b835140d370a1e1e"
+    },
+    {
+      "path": "assets/people/LICENSE-Microsoft.md",
+      "bytes": 1066,
+      "sha256": "17474e386e0b9e1a700cc3d06b2b0882a2c376d9c6b49c7f8274409b8f8d2352"
+    },
+    {
+      "path": "assets/people/m106_body_color.webp",
+      "bytes": 79978,
+      "sha256": "79843779d2c79f47b876d17e70d8f057a739f8325b4f175d18a5edeade6205e4"
+    },
+    {
+      "path": "assets/people/m106_body_normal.webp",
+      "bytes": 123870,
+      "sha256": "c575d2997d29e4aa5c4febd7fa24764bf78cbd1bdbbbd043000048f7aca3463b"
+    },
+    {
+      "path": "assets/people/m106_head_color.webp",
+      "bytes": 182862,
+      "sha256": "12af0f4052c49a7c240bb53b0d51b2711be5d8532919cf49adf8c6bf65cdb45e"
+    },
+    {
+      "path": "assets/people/m106_head_normal.webp",
+      "bytes": 181296,
+      "sha256": "e545390d6b8c7b9c4bb338f0ae1632d79baa22a2488250bc634483200809687a"
+    },
+    {
+      "path": "assets/people/m106_opacity_color.webp",
+      "bytes": 401964,
+      "sha256": "bb61116cf9fd9157ec03811dd9e0024c1eb80cffd486f74c900d7a591bb1ef6f"
+    },
+    {
+      "path": "assets/people/m111_body_color.webp",
+      "bytes": 263952,
+      "sha256": "172e543ab05bac2c7b729bb1ba4d105394a335d2da386f0822f044429fbc5a91"
+    },
+    {
+      "path": "assets/people/m111_body_normal.webp",
+      "bytes": 158112,
+      "sha256": "11c63f75fdd5990da05a32160e79ff84a965b05131c896e66c808175aa02a31c"
+    },
+    {
+      "path": "assets/people/m111_head_color.webp",
+      "bytes": 184398,
+      "sha256": "7a5111a10f3f330c9d1150b1d08bcb5403c3df9ed1594607bf0e25bf50eabd20"
+    },
+    {
+      "path": "assets/people/m111_head_normal.webp",
+      "bytes": 178118,
+      "sha256": "512ad32c78ef9227a8a95bb0a53d8d7c12269c6184da27f36d12da89fc9c6157"
+    },
+    {
+      "path": "assets/people/m111_helmet_color.webp",
+      "bytes": 40710,
+      "sha256": "37dbd0c4650aaebd4edbba6bb3a7dfa90b1f3fbb41bed19d1fcd11207111742d"
+    },
+    {
+      "path": "assets/people/m111_helmet_normal.webp",
+      "bytes": 34706,
+      "sha256": "0c0a42b205c8f388cbabbb971a15ab8974c8942f5f9620233e2b1c1526163023"
+    },
+    {
+      "path": "assets/people/m111_opacity_color.webp",
+      "bytes": 87420,
+      "sha256": "16713c0c969de775b1ca1ee27ea093b68d1a256767a57319969e1e440fe132b5"
+    },
+    {
+      "path": "assets/people/m111_opacity_normal.webp",
+      "bytes": 51452,
+      "sha256": "a9749475ba0bf72cdf4811ee927c84c03789c33feb83842f3f7d15a0a6a5d53b"
+    },
+    {
+      "path": "assets/people/m111_tools_color.webp",
+      "bytes": 162152,
+      "sha256": "deda684f104fe089078f41ea595f91294b9cae6b647a2d3aeaba81e13213b47c"
+    },
+    {
+      "path": "assets/people/m111_tools_normal.webp",
+      "bytes": 213818,
+      "sha256": "afd24e038e5ac9c3641328a0c98c25e8bed016658f5e45779e9d7682a725c1f5"
+    },
+    {
+      "path": "assets/people/neighbor.bin",
+      "bytes": 1680852,
+      "sha256": "0b6bb3965b30b8705ba3f398bf749dc87fcf66f91bcd3e32e2d0ec62580d4782"
+    },
+    {
+      "path": "assets/people/neighbor.gltf",
+      "bytes": 443390,
+      "sha256": "0113f485fa42b6047dabe8d95ddb117b7b68719b2751df579f48d679ac3da331"
+    }
+  ]
+}
