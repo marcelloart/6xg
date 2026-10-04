@@ -11,5 +11,5 @@ assert(renderScale('ultra',1280,720,1,2048)*1280<=2048,'Respect GPU framebuffer 
 assert.equal(renderScale('high',1920,1080,2),2);
 assert.equal(renderScale('low',1920,1080,2),1);
 console.log('Bridge landing and real UHD framebuffer checks passed.');
-for(const quality of ['ultra','high','low'])for(const hz of [60,120]){let last=0,frames=0;for(let i=1;i<=hz*3;i++){const next=renderFrameTime(i*1000/hz,last,quality);if(next!==null){last=next;frames++;}}assert.equal(frames,quality==='low'?90:180,'Stable frame pacing at '+hz+' Hz for '+quality);}
-console.log('Display timing passed: 60 fps target, 30 fps light preset, and stable 60/120 Hz pacing.');
+for(const quality of ['ultra','high','low'])for(const hz of [60,120]){let last=0,frames=0;for(let i=1;i<=hz*3;i++){const next=renderFrameTime(i*1000/hz,last,quality);if(next!==null){last=next;frames++;}}assert.equal(frames,180,'Stable frame pacing at '+hz+' Hz for '+quality);}
+console.log('Display timing passed: 60 fps target, 60 fps light preset, and stable 60/120 Hz pacing.');

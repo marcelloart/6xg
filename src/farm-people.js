@@ -49,8 +49,9 @@ export async function loadPerson(type){
 
 export function createPerson(asset,height=38){
  const root=new THREE.Group(),model=cloneSkeleton(asset.model);const scale=height/asset.model.userData.height;model.scale.setScalar(scale);model.position.y=-asset.model.userData.ground*scale;root.add(model);
- const mixer=new THREE.AnimationMixer(model),actions=Object.fromEntries(asset.clips.map(c=>[c.name,mixer.clipAction(c)]));actions.idle.play();mixer.update(.01);
- return{root,model,mixer,actions,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
+ const mixer=new THREE.AnimationMixer(model),actions=Object.fromEntries(asset.clips.map(c=>[c.name,mixer.clipAction(c)])),animationWeights={},animationVelocity={};for(const [name,action]of Object.entries(actions)){animationWeights[name]=name==='idle'?1:0;animationVelocity[name]=0;action.setEffectiveWeight(animationWeights[name]);action.enabled=name==='idle';}actions.idle.play();mixer.update(.01);
+ const pose=[];model.traverse(bone=>{if(bone.isBone)pose.push({bone,rotation:bone.quaternion.clone()});});
+ return{root,model,mixer,actions,animationWeights,animationVelocity,pose,walkRate:.65,turnSpeed:0,mode:'idle',path:[],wait:0,task:null,currentSpeed:0,yieldTime:0};
 }
 
 export class FarmPeople {
@@ -58,7 +59,20 @@ export class FarmPeople {
   // A small shared set of detailed skinned meshes keeps mobile memory bounded.
   this.ready=Promise.allSettled(TYPES.map(async type=>{this.assets[type]=await loadPerson(type);})).then(()=>{for(let i=0;i<TYPES.length;i++){const type=TYPES[i],asset=this.assets[type];if(!asset)continue;const person=createPerson(asset,36+(i%3)*1.4);Object.assign(person,{id:i,type,cycle:i,wait:i*.8,speed:walkingSpeed(i)});person.root.position.set(1485+i*22,this.heightAt(1485+i*22,964),964);person.root.rotation.y=Math.PI;this.layer.add(person.root);this.people.push(person);}});
  }
- setAction(person,name){if(person.mode===name)return;const next=person.actions[name]||person.actions.idle,old=person.actions[person.mode];if(name!=='walk')next.reset();next.enabled=true;next.stopFading().stopWarping().setEffectiveWeight(1).setEffectiveTimeScale(name==='walk'?Math.max(.25,person.currentSpeed/17.5):1).play();old?.stopWarping().crossFadeTo(next,.55,false);person.mode=name;}
+ setAction(person,name){if(!person.actions[name])name='idle';if(person.mode===name)return;const next=person.actions[name];if((person.animationWeights[name]||0)<.0001&&name!=='walk')next.reset();next.stopFading().stopWarping().play();person.mode=name;}
+ faceDirection(person,heading,delta){const angle=turn(person.root.rotation.y,heading),target=Math.sign(angle)*Math.min(2.4,Math.sqrt(12*Math.abs(angle)));person.turnSpeed=approach(person.turnSpeed,target,6*delta);let step=person.turnSpeed*delta;if(Math.sign(step)===Math.sign(angle)&&Math.abs(step)>Math.abs(angle)){step=angle;person.turnSpeed=0;}person.root.rotation.y+=step;}
+ updateAnimation(person,delta){
+  // A new target starts from the current mixture, even when a previous transition is interrupted.
+  // Restarting Three's fade clocks restores old weights and causes a visible one-frame pose jump.
+  const weights=person.animationWeights,velocities=person.animationVelocity,omega=10,decay=Math.exp(-omega*delta);let sum=0;
+  for(const name of Object.keys(person.actions)){const target=Number(name===person.mode),error=weights[name]-target,change=(velocities[name]+omega*error)*delta;const next=target+(error+change)*decay;weights[name]=Math.max(0,Math.min(1,next));velocities[name]=next===weights[name]?(velocities[name]-omega*change)*decay:0;sum+=weights[name];}
+  person.walkRate+=(Math.max(.25,person.currentSpeed/17.5)-person.walkRate)*(1-Math.exp(-delta/.2));
+  for(const [name,action]of Object.entries(person.actions)){const weight=weights[name]/sum;action.stopFading().stopWarping().setEffectiveWeight(weight);action.enabled=weight>.0001||name===person.mode;action.setEffectiveTimeScale(name==='walk'?person.walkRate:name==='work'?.82:1);}
+  person.mixer.update(delta);
+  // Filter capture noise without replacing the imported skeletal motion. A short visual delay
+  // keeps interrupted transitions and fast wrist keyframes within a continuous angular speed.
+  const alpha=1-Math.exp(-delta/.035);for(const joint of person.pose){const angle=joint.rotation.angleTo(joint.bone.quaternion),blend=Math.min(alpha,angle?6*delta/angle:1);joint.rotation.slerp(joint.bone.quaternion,blend);joint.bone.quaternion.copy(joint.rotation);}
+ }
  tasks(farm,now,person){const tasks=[];
   if(this.jobs){const job=this.jobs[person.type];if(job){const target=job.targetKind==='plot'?farm.s.plots.find(p=>p.id===job.id):farm.s.buildings.find(b=>b.slot===job.slot);if(target){let [w,h]=job.targetKind==='plot'?[60,60]:this.navigation.footprints[target.kind]||[130,116];if(target.rotation%2)[w,h]=[h,w];const margin=job.targetKind==='plot'?4:14;for(const [dx,dy]of [[0,h/2+margin],[w/2+margin,0],[0,-h/2-margin],[-w/2-margin,0]]){const point={x:target.x+dx,y:target.y+dy};if(this.navigation.open(point))tasks.push({...point,face:{x:target.x,y:target.y},mode:job.mode,key:job.key,workJob:job,construction:job.construction});}}return tasks;}
    const rest={gardener:{x:1460,y:964},builder:{x:1440,y:947},neighbor:{x:1740,y:965}}[person.type];return this.navigation.open(rest)?[{...rest,face:{x:1593,y:920},mode:'idle',key:'rest:'+person.type}]:[];
@@ -78,15 +92,15 @@ export class FarmPeople {
     const yielding=this.people.some(other=>other!==person&&other.id<person.id&&distance(probe,{x:other.root.position.x,y:other.root.position.z})<12&&distance(probe,{x:other.root.position.x,y:other.root.position.z})<distance({x:p.x,y:p.z},{x:other.root.position.x,y:other.root.position.z}));
     person.yieldTime=yielding?.4:Math.max(0,person.yieldTime-delta);const paused=person.yieldTime>0;
     person.blockedFor=yielding?(person.blockedFor||0)+delta:0;if(person.blockedFor>.8&&person.task&&length){const start={x:p.x,y:p.z},avoid=this.people.filter(other=>other!==person&&other.currentSpeed<1).map(other=>({x:other.root.position.x,y:other.root.position.z}));for(const side of [1,-1]){const aside={x:p.x-dz/length*22*side,y:p.z+dx/length*22*side};if(!this.navigation.clear(start,aside)||avoid.some(other=>(aside.x-start.x)*(start.x-other.x)+(aside.y-start.y)*(start.y-other.y)<0||distance(aside,other)<20))continue;const route=this.navigation.route(aside,person.task,avoid);if(route.length){person.path=[aside,...route];break;}}person.blockedFor=0;}
-    person.root.rotation.y+=turn(person.root.rotation.y,heading)*(1-Math.exp(-4*delta));
+    this.faceDirection(person,heading,delta);
     const aligned=Math.max(0,Math.cos(turn(person.root.rotation.y,heading))),braking=person.path.length===1?Math.sqrt(2*14*length):person.speed;
     person.currentSpeed=approach(person.currentSpeed,paused?0:Math.min(person.speed,braking)*aligned,14*delta);
     const travel=paused?0:Math.min(length,person.currentSpeed*delta);p.x+=length?dx/length*travel:0;p.z+=length?dz/length*travel:0;
-    if(length<.25||travel>=length){if(!paused){p.x=target.x;p.z=target.y;person.path.shift();}}
-    if(person.path.length){this.setAction(person,paused&&person.currentSpeed<.4?'idle':'walk');person.actions.walk.setEffectiveTimeScale(Math.max(.25,person.currentSpeed/17.5));}
+    if(length<.01||travel>=length){if(!paused){p.x=target.x;p.z=target.y;person.path.shift();}}
+    if(person.path.length){this.setAction(person,paused&&person.currentSpeed<.4?'idle':'walk');}
     else{person.currentSpeed=0;const task=person.task;this.setAction(person,task?.mode||'idle');person.wait=task?.workJob?.seconds??(task?.mode==='idle'?3+person.id%3:7+(person.id%3)*3);}
-   }else{person.currentSpeed=0;if(person.task){person.root.rotation.y+=turn(person.root.rotation.y,Math.atan2(person.task.face.x-p.x,person.task.face.y-p.z))*(1-Math.exp(-4*delta));}person.wait-=delta;if(person.wait<=0&&!person.inFlight){const task=person.task;if(task?.workJob?.action&&this.onWork){person.inFlight=true;Promise.resolve().then(()=>this.onWork(task.workJob)).catch(()=>false).finally(()=>{person.inFlight=false;if(person.task===task){person.task=null;person.path=[];person.wait=2;this.setAction(person,'idle');}});}else if(task?.workJob){person.wait=1;}else this.chooseTask(person,farm,now);}}
-   p.y=this.heightAt(p.x,p.z);person.mixer.update(delta);
+   }else{person.currentSpeed=0;if(person.task){this.faceDirection(person,Math.atan2(person.task.face.x-p.x,person.task.face.y-p.z),delta);}person.wait-=delta;if(person.wait<=0&&!person.inFlight){const task=person.task;if(task?.workJob?.action&&this.onWork){person.inFlight=true;Promise.resolve().then(()=>this.onWork(task.workJob)).catch(()=>false).finally(()=>{person.inFlight=false;if(person.task===task){person.task=null;person.path=[];person.wait=2;this.setAction(person,'idle');}});}else if(task?.workJob){person.wait=1;}else this.chooseTask(person,farm,now);}}
+   p.y=this.heightAt(p.x,p.z);this.updateAnimation(person,delta);
   }
  }
  dispose(){for(const p of this.people){p.mixer.stopAllAction();p.mixer.uncacheRoot(p.model);}this.layer.removeFromParent();for(const a of Object.values(this.assets)){const geometries=new Set(),materials=new Set(),textures=new Set();a.model.traverse(o=>{if(!o.isMesh)return;geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);for(const t of Object.values(m))if(t?.isTexture)textures.add(t);}});for(const t of textures)t.dispose();for(const m of materials)m.dispose();for(const g of geometries)g.dispose();}this.people=[];}

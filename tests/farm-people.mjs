@@ -13,7 +13,7 @@ for(const id of ['gardener','neighbor','builder']){
  const asset=await new GLTFLoader().parseAsync(JSON.stringify(gltf),'');const bounds=new THREE.Box3().setFromObject(asset.scene);asset.scene.userData.height=bounds.max.y-bounds.min.y;asset.scene.userData.ground=bounds.min.y;
  assets[id]={model:asset.scene,clips:asset.animations};const a=createPerson(assets[id]),b=createPerson(assets[id]);let skins=0,triangles=0;asset.scene.traverse(o=>{if(o.isSkinnedMesh){skins++;assert(o.skeleton.bones.length>=50);triangles+=o.geometry.index.count/3;}});assert(skins>0);assert(triangles<12000);
  const skinA=[],skinB=[];a.model.traverse(o=>{if(o.isSkinnedMesh)skinA.push(o);});b.model.traverse(o=>{if(o.isSkinnedMesh)skinB.push(o);});assert.notEqual(skinA[0].skeleton,skinB[0].skeleton);assert.equal(skinA[0].geometry,skinB[0].geometry);
- for(const name of ['idle','walk','tend','work']){a.mixer.stopAllAction();a.actions[name].play();a.mixer.update(.1);a.model.updateMatrixWorld(true);const hand=a.model.getObjectByName('Bip01_R_Hand'),start=hand.getWorldPosition(new THREE.Vector3());a.mixer.update(.7);a.model.updateMatrixWorld(true);assert(hand.getWorldPosition(new THREE.Vector3()).distanceTo(start)>.001,name+' is skeletal motion');const pose=new THREE.Box3().setFromObject(a.model);assert(pose.min.y>-12&&pose.min.y<10,'feet near ground '+id+' '+name+':'+pose.min.y);assert(pose.max.y<65,'No stretched limbs '+id+' '+name);}
+ for(const name of ['idle','walk','tend','work']){a.mixer.stopAllAction();a.actions[name].enabled=true;a.actions[name].setEffectiveWeight(1).play();a.mixer.update(.1);a.model.updateMatrixWorld(true);const hand=a.model.getObjectByName('Bip01_R_Hand'),start=hand.getWorldPosition(new THREE.Vector3());a.mixer.update(.7);a.model.updateMatrixWorld(true);assert(hand.getWorldPosition(new THREE.Vector3()).distanceTo(start)>.001,name+' is skeletal motion');const pose=new THREE.Box3().setFromObject(a.model);assert(pose.min.y>-12&&pose.min.y<10,'feet near ground '+id+' '+name+':'+pose.min.y);assert(pose.max.y<65,'No stretched limbs '+id+' '+name);}
  assert.equal(b.mode,'idle');console.log(id,triangles+' triangles, 4 skeletal clips, independent skeletons');
 }
 const sizes=Object.fromEntries(Object.keys(F.BUILDINGS).map(kind=>{const p=F.footprint(kind,0);return[kind,[p.w,p.h]];}));
@@ -46,3 +46,15 @@ gardener.root.position.set(1460,0,964);people.people[1].root.position.set(1740,0
 for(let frame=0;frame<1800;frame++)people.update(farm,1791106939676,frame*1000/60,{residentJobs:people.jobs});
 assert(builder.root.position.distanceTo(new THREE.Vector3(1440,0,947))<5,'An idle farmer does not permanently block the builder: walk around stationary residents');
 console.log('Pedestrian avoidance passed: stationary residents cannot trap another worker.');
+for(const type of ['gardener','builder','neighbor'])for(const hz of [30,60,120]){
+ const actor=createPerson(assets[type]),controller=Object.create(FarmPeople.prototype),bones=[];actor.currentSpeed=12;actor.model.traverse(o=>{if(o.isBone)bones.push(o);});const last=bones.map(b=>b.quaternion.clone());
+ for(let frame=0;frame<hz*6;frame++){
+  // Interrupt fades before they finish, as job changes, arrival and pause can do in a live game.
+  if(frame%Math.max(1,Math.round(hz*.07))===0)controller.setAction(actor,['walk','tend','work','idle'][Math.floor(frame/Math.max(1,Math.round(hz*.07)))%4]);
+  controller.updateAnimation(actor,1/hz);
+  const total=Object.values(actor.actions).reduce((n,a)=>n+a.getEffectiveWeight(),0);assert(Math.abs(total-1)<1e-6,'Interrupted animation weights stay normalized');
+  for(let i=0;i<bones.length;i++){assert(last[i].angleTo(bones[i].quaternion)<=6/hz+1e-4,'No one-frame skeletal pose snap: '+type+' at '+hz+' Hz');last[i].copy(bones[i].quaternion);}
+  const yaw=actor.root.rotation.y;controller.faceDirection(actor,frame%hz<hz/2?Math.PI:0,1/hz);assert(Math.abs(actor.root.rotation.y-yaw)<=2.4/hz+1e-6,'Turning has a bounded continuous speed');
+ }
+}
+console.log('Animation continuity passed: all three rigs, interrupted tasks, normalized blending and smooth body turns at 30/60/120 Hz.');
