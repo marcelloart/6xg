@@ -114,7 +114,7 @@ test('only the configured game origin receives CORS permission', async () => {
   assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
 });
 test('health checks the migration and missing auth fails closed', async () => {
-  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:10,buildingSales:true,fishing:true,pierUpgrades:true,sharedAvatars:true,riverSpecies:9});
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:10,buildingSales:true,fishing:true,pierUpgrades:true,sharedAvatars:true,riverSpecies:9,fishingOddsVersion:3,fishingOdds:{arapaima:10,tilapia:3272,carp:1785,catfish:1510,snakehead:873,gourami:1033,pacu:755,pangasius:517,knifefish:245}});
   const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
   try {
     const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});

@@ -17,3 +17,5 @@ html,body.game-page{width:100%;height:100%;overflow:hidden;margin:0}
 
 /* Keep the level card close to the resources after removing the map caption. */
 @media(min-width:761px){.game-page .progress-badge{top:80px}}
+
+.harvest-menu-brand .harvest-logo{display:block;width:144px;height:72px;object-fit:contain}.harvest-account-brand .harvest-logo{display:block;width:190px;height:95px;object-fit:contain;margin:0 auto 18px}
