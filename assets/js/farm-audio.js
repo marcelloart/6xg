@@ -1,12 +1,12 @@
 'use strict';
-// Original, lightweight farm foley. No remote audio, autoplay, or microphone access.
+// Farm foley and locally hosted CC0 field recordings, unlocked by a player gesture.
 class FarmAudio {
- constructor({contextFactory,storage,random=Math.random,onChange=()=>{}}={}){
+ constructor({contextFactory,storage,random=Math.random,onChange=()=>{},fetcher=globalThis.fetch?.bind(globalThis)}={}){
   this.contextFactory=contextFactory||(()=>{const Audio=window.AudioContext||window.webkitAudioContext;return Audio?new Audio({latencyHint:'interactive'}):null;});
   try{this.storage=storage===undefined?window.localStorage:storage;}catch{this.storage=null;}
   this.random=random;this.onChange=onChange;this.settings={enabled:true,volume:.65,effects:.8,ambience:.35};
   try{const saved=JSON.parse(this.storage?.getItem('6xg:audio'));if(saved&&typeof saved==='object'){if(typeof saved.enabled==='boolean')this.settings.enabled=saved.enabled;for(const key of['volume','effects','ambience'])if(Number.isFinite(saved[key]))this.settings[key]=Math.max(0,Math.min(1,saved[key]));}}catch{}
-  this.ctx=null;this.unlocked=false;this.everUnlocked=false;this.active=false;this.visible=true;this.unavailable=false;this.voices=new Set();this.loops=[];this.environmentBuffers={};this.cooldowns=new Map();this.construction=new Map();this.nextHammer=0;this.nextBird=0;
+  this.ctx=null;this.unlocked=false;this.everUnlocked=false;this.active=false;this.visible=true;this.unavailable=false;this.voices=new Set();this.loops=[];this.environmentBuffers={};this.cooldowns=new Map();this.construction=new Map();this.nextHammer=0;this.nextBird=0;this.fetcher=fetcher;this.animalBuffers={};this.animalLoads=new Map();this.animalCalls=new Map();this.nextAnimalVoice=0;
  }
  init(context){
   this.ctx=context;const c=this.ctx;
@@ -36,7 +36,27 @@ class FarmAudio {
  setActive(value){value=Boolean(value);if(value===this.active)return;this.active=value;this.updateGains();if(value)this.startAmbience();else{this.stopAmbience();this.stopVoices();this.resetFarm();}}
  setVisible(value){this.visible=Boolean(value);this.updateGains();if(!this.visible){this.stopAmbience();this.stopVoices();this.resetFarm();this.suspend();}else if(this.everUnlocked)return this.unlock();}
  suspend(){if(this.ctx?.state==='running')this.ctx.suspend().catch(()=>{});}
- resetFarm(){this.construction.clear();this.nextHammer=0;this.nextBird=0;}
+ resetFarm(){this.construction.clear();this.nextHammer=0;this.nextBird=0;this.animalCalls.clear();this.nextAnimalVoice=0;}
+ async loadAnimalSound(kind){
+  if(this.animalBuffers[kind])return this.animalBuffers[kind];if(this.animalLoads.has(kind))return this.animalLoads.get(kind);
+  if(!this.fetcher||!this.ctx?.decodeAudioData||!['cow','chicken'].includes(kind))return null;
+  const context=this.ctx,promise=(async()=>{try{const response=await this.fetcher('./assets/animals/'+kind+'.mp3?v=field-recording-1');if(!response.ok)return null;const buffer=await context.decodeAudioData(await response.arrayBuffer());let peak=0;for(let ch=0;ch<buffer.numberOfChannels;ch++){const data=buffer.getChannelData(ch);for(let i=0;i<data.length;i++)peak=Math.max(peak,Math.abs(data[i]));}
+   const duration=Math.min(buffer.duration,kind==='cow'?3.4:3),data=buffer.getChannelData(0),windows=[];for(let offset=0;offset+duration<=buffer.duration;offset+=.5){let energy=0;const start=Math.floor(offset*buffer.sampleRate),end=Math.floor((offset+duration)*buffer.sampleRate);for(let i=start;i<end;i+=128)energy+=data[i]*data[i];windows.push({offset,energy});}windows.sort((a,b)=>b.energy-a.energy);const offsets=[];for(const w of windows)if(offsets.every(o=>Math.abs(w.offset-o)>duration)){offsets.push(w.offset);if(offsets.length===3)break;}
+   return this.animalBuffers[kind]={buffer,volume:.18/Math.max(.1,peak),duration,offsets:offsets.length?offsets:[0]};
+  }catch{return null;}})();this.animalLoads.set(kind,promise);return promise;
+ }
+ playAnimal(kind,{pan=0,strength=1}={}){
+  if(!this.ctx||this.ctx.state!=='running'||!this.unlocked||!this.active||!this.visible||!this.settings.enabled||!this.settings.volume||!this.settings.effects)return false;
+  const sample=this.animalBuffers[kind];if(!sample)return false;const c=this.ctx,t=c.currentTime;if(t<this.nextAnimalVoice)return false;this.nextAnimalVoice=t+sample.duration+.6;
+  const source=c.createBufferSource(),gain=c.createGain();source.buffer=sample.buffer;const volume=sample.volume*Math.max(0,Math.min(1,strength));gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(volume,t+.08);gain.gain.setValueAtTime(volume,t+sample.duration-.12);gain.gain.linearRampToValueAtTime(0,t+sample.duration);source.connect(gain);const route=this.voiceRoute(gain,pan,'effects');this.connectVoice(source,[gain,...route]);source.start(t,sample.offsets[Math.floor(this.random()*sample.offsets.length)],sample.duration);source.stop(t+sample.duration+.02);return true;
+ }
+ observeAnimals(farm,camera,now){
+  const pens=new Map();for(const a of farm.s.livestock?.animals||[]){const b=farm.s.buildings.find(b=>b.slot===a.slot&&b.readyAt<=now);if(b)pens.set(a.kind+':'+a.slot,{kind:a.kind,building:b});}
+  for(const key of this.animalCalls.keys())if(!pens.has(key))this.animalCalls.delete(key);
+  for(const[key,pen]of pens){const position=this.spatial(pen.building,camera);if(position.strength<.08)continue;void this.loadAnimalSound(pen.kind);if(!this.animalCalls.has(key))this.animalCalls.set(key,this.ctx.currentTime+1.5+this.random()*3);
+   if(this.ctx.currentTime>=this.animalCalls.get(key)&&this.playAnimal(pen.kind,position))this.animalCalls.set(key,this.ctx.currentTime+(pen.kind==='cow'?22:12)+this.random()*12);
+  }
+ }
  makeNoise(seconds,soft,seam=false){
   const buffer=this.ctx.createBuffer(1,Math.ceil(this.ctx.sampleRate*seconds),this.ctx.sampleRate),data=buffer.getChannelData(0);let previous=0;
   for(let i=0;i<data.length;i++){const n=this.random()*2-1;previous=soft?(previous+.025*n)/1.025:n;data[i]=soft?previous*3.5:n;}
@@ -93,6 +113,7 @@ class FarmAudio {
  observe(farm,camera,now){
   if(!this.active||!this.visible||!this.unlocked||this.ctx?.state!=='running'||!this.settings.enabled||!this.settings.volume)return;
   this.startAmbience();const t=this.ctx.currentTime;
+  this.observeAnimals(farm,camera,now);
   const weather=globalThis.FarmWeather?.at(now)||{rain:0,wind:1},rain=this.loops.find(l=>l.kind==='rain'),wind=this.loops.find(l=>l.kind==='wind');if(rain)this.ramp(rain.gain.gain,weather.rain*.42,.7);if(wind)this.ramp(wind.gain.gain,.2*weather.wind,.7);
   const river={x:640+110*Math.sin(camera.y/270),y:camera.y},water=this.loops.find(l=>l.kind==='water'),position=this.spatial(river,camera);
   if(water){this.ramp(water.gain.gain,.22*position.strength,.4);if(water.panner)this.ramp(water.panner.pan,position.pan,.25);}

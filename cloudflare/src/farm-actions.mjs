@@ -15,6 +15,7 @@ const specs={
  kit:[['kind'],a=>Object.hasOwn(F.BUILDINGS,a.kind),f=>a=>f.buildingUnlocked(a.kind)?f.buyBuildKit(a.kind):{ok:false,message:'Bangunan ini belum terbuka.'}],
  build:[['kind','point','rotation'],a=>Object.hasOwn(F.BUILDINGS,a.kind)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.build(a.kind,a.point,a.rotation)],
  upgrade:[['slot'],a=>int(a.slot,0,23),f=>a=>f.upgradeBuilding(a.slot)],
+ 'building-sell':[['slot','kind','startedAt'],a=>int(a.slot,0,23)&&Object.hasOwn(F.BUILDINGS,a.kind)&&int(a.startedAt,1,4102444800000),f=>a=>f.sellBuilding(a.slot,a)],
  'friend-water':[['code','plot'],a=>F.friendCode(a.code)&&int(a.plot,0,80),f=>a=>({ok:false})],
  'friend-gift':[['code','crop','qty'],a=>F.friendCode(a.code)&&Object.hasOwn(F.CROPS,a.crop)&&int(a.qty,1,5),f=>a=>({ok:false})],
  'move-building':[['slot','point','rotation'],a=>int(a.slot,0,23)&&point(a.point)&&int(a.rotation,0,3),f=>a=>f.moveBuilding(a.slot,a.point,a.rotation)],

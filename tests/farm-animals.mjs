@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {createAnimal,updateAnimal,animalCells} from '../src/farm-animals.js';
+import {animalFixtures} from './animal-fixtures.mjs';
+const assets=await animalFixtures();
+for(const kind of['cow','chicken']){
+ const a=createAnimal(assets[kind],kind==='cow'?39:16,1),b=createAnimal(assets[kind],kind==='cow'?39:16,2);let triangles=0,skins=[];a.model.traverse(o=>{if(o.isSkinnedMesh){skins.push(o);triangles+=o.geometry.index.count/3;assert(o.skeleton.bones.length>=16);}});assert(skins.length&&triangles>1500&&triangles<10000);const other=[];b.model.traverse(o=>{if(o.isSkinnedMesh)other.push(o);});assert.notEqual(skins[0].skeleton,other[0].skeleton);assert.equal(skins[0].geometry,other[0].geometry);
+ for(const mode of['walk','eat','idle']){a.mode=mode;a.cell=null;a.wait=100;for(const[name,action]of Object.entries(a.actions)){a.weights[name]=Number(name===mode);action.setEffectiveWeight(a.weights[name]);}a.mixer.update(.1);a.model.updateMatrixWorld(true);const skin=skins[0],initial=skin.skeleton.boneMatrices.slice();for(let i=0;i<45;i++)updateAnimal(a,1/60);skin.skeleton.update();assert(initial.some((n,i)=>Math.abs(n-skin.skeleton.boneMatrices[i])>.0001),kind+' '+mode+' changes a real skeleton');const bounds=new THREE.Box3().setFromObject(a.root);assert(bounds.max.y<60&&bounds.min.y>-8,kind+' no exploding skin');}
+ a.cell=animalCells(kind,2)[0];a.root.position.set(a.cell.x,0,a.cell.z);a.wait=0;let maxStep=0;for(let frame=0;frame<1800;frame++){const before=a.root.position.clone();updateAnimal(a,1/60);maxStep=Math.max(maxStep,a.root.position.distanceTo(before));assert(Math.abs(a.root.position.x-a.cell.x)<=a.cell.rx+.01);assert(Math.abs(a.root.position.z-a.cell.z)<=a.cell.rz+.01);}assert(maxStep<.09,kind+' walks gently without snapping');const position=a.root.position.clone(),time=a.mixer.time;updateAnimal(a,3,false);assert(position.equals(a.root.position));assert.equal(a.mixer.time,time);updateAnimal(a,300);assert(a.root.position.distanceTo(position)<.3,'Resume never teleports');
+ for(let count=1;count<=12;count++){const cells=animalCells(kind,count);assert.equal(cells.length,count);assert(cells.every(c=>c.height>5&&Math.abs(c.x)<65&&c.z<65));assert.equal(new Set(cells.map(c=>c.x+':'+c.z)).size,count,'Each animal has its own space');}
+ console.log(kind+': organic geometry, independent skeletons, 3 clips, smooth movement and bounded pen layout verified');
+}

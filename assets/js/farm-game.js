@@ -37,13 +37,13 @@ function center(){
    if(fit<1)camera.zoomAt(fit);const b=bounds();camera.pan(camera.width/2-(b.left+b.right)/2,(top+bottom)/2-(b.top+b.bottom)/2);}
  }
 }
-function closePanel(){panel=null;document.body.classList.remove('panel-open');$('farmPanel').hidden=true;document.querySelectorAll('.toolbar button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-expanded','false');});renderSelection();}
+function closePanel(){buildingSaleTarget=null;panel=null;document.body.classList.remove('panel-open');$('farmPanel').hidden=true;document.querySelectorAll('.toolbar button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-expanded','false');});renderSelection();}
 function openPanel(view){
  if(!gate.canPlay||!entered||visiting)return;
  pickup.reset();
  placement=null;pendingBuild=null;$('placementDock').hidden=true;
  if(panel===view){closePanel();return;}
- panel=view;document.body.classList.add('panel-open');selectedPlot=null;selectedBuilding=null;$('plotInfo').hidden=true;$('farmPanel').hidden=false;
+ if(view!=='building-sale')buildingSaleTarget=null;panel=view;document.body.classList.add('panel-open');selectedPlot=null;selectedBuilding=null;$('plotInfo').hidden=true;$('farmPanel').hidden=false;
  for(const [name,id]of[['farm','openFarm'],['shop','openShop'],['build','openBuild'],['inventory','openInventory'],['layout','openLayout'],['goals','openGoals'],['production','openProduction'],['livestock','openLivestock'],['friends','openFriends'],['more','openMore']]){const active=view===name||(name==='more'&&['inventory','layout','goals','production','livestock','friends'].includes(view));$(id).classList.toggle('active',active);$(id).setAttribute('aria-expanded',String(active));}
  renderPanel();$('panelBody').parentElement.scrollTop=0;if(view==='friends'&&!communityLoaded)loadFriends();
 }
@@ -88,6 +88,8 @@ function renderPanel(){
  }else if(panel==='more'){
   $('panelLabel').textContent=harvestT_farm_game_js('KEGIATAN KEBUN');$('panelTitle').textContent=harvestT_farm_game_js('Ada banyak yang bisa dilakukan.');$('panelCopy').textContent=harvestT_farm_game_js('Pilih kegiatan, lalu kembali menjelajah kebunmu.');
   body.innerHTML='<div class="more-grid">'+[['layout','✥',harvestT_farm_game_js('Atur'),harvestT_farm_game_js('Petak dan tata letak')],['production','🍲',harvestT_farm_game_js('Olah'),harvestT_farm_game_js('Masak hasil panen')],['goals','🎯',harvestT_farm_game_js('Tujuan'),harvestT_farm_game_js('Misi dan pesanan')],['livestock','🐔',harvestT_farm_game_js('Ternak'),harvestT_farm_game_js('Pakan, telur, susu')],['friends','👥',harvestT_farm_game_js('Teman'),harvestT_farm_game_js('Kunjungi kebun')],['inventory','📦',harvestT_farm_game_js('Tas'),harvestT_farm_game_js('Persediaan dan jurnal')]].map(([key,icon,name,copy])=>'<button data-action="panel" data-key="'+key+'"><span aria-hidden="true">'+icon+'</span><b>'+name+'</b><small>'+copy+'</small></button>').join('')+'</div>';
+ }else if(panel==='building-sales'){renderBuildingSales(body);
+ }else if(panel==='building-sale'){renderBuildingSale(body);
  }else if(panel==='upgrades'){renderUpgrades(body);
  }else if(panel==='livestock'){renderLivestock(body);
  }else if(panel==='friends'){renderFriends(body);
@@ -97,10 +99,11 @@ function renderPanel(){
   $('panelLabel').textContent=harvestT_farm_game_js('LUMBUNG DAN CATATAN');$('panelTitle').textContent=harvestT_farm_game_js('Hasil kerja tanganmu.');$('panelCopy').textContent=harvestT_farm_game_js('Pantau persediaan dan perjalanan kebunmu.');
   body.innerHTML=harvestT_farm_game_js('<div class="store-wallet"><span>Hasil panen <b>')+farm.used+' / '+farm.capacity+harvestT_farm_game_js('</b></span><span>Total dipanen <b>')+format(s.stats.harvested)+'</b></span></div><div class="item-actions">'+action(harvestT_farm_game_js('Jual hasil di pasar'),'shop','sell')+action(harvestT_farm_game_js('Jual olahan'),'shop','goods',1,false,true)+'</div><div class="inventory-grid">'+Object.entries(F.CROPS).map(([k,c])=>(harvestT_farm_game_js("<article><span>")+(c.icon)+harvestT_farm_game_js("</span><b>")+(c.name)+harvestT_farm_game_js("</b><small>")+(s.seeds[k])+harvestT_farm_game_js(" bibit · ")+(s.produce[k])+harvestT_farm_game_js(" panen</small></article>"))).join('')+harvestT_farm_game_js('</div><div class="catalog-heading"><h3>Hasil olahan</h3><span>Siap dijual</span></div><div class="inventory-grid">')+Object.entries(F.RECIPES).map(([k,r])=>(harvestT_farm_game_js("<article><span>")+(picture(k,r.icon))+harvestT_farm_game_js("</span><b>")+(r.name)+harvestT_farm_game_js("</b><small>")+(s.production.goods[k])+harvestT_farm_game_js(" olahan</small></article>"))).join('')+harvestT_farm_game_js('</div><div class="catalog-heading"><h3>Hasil ternak</h3></div><div class="inventory-grid">')+Object.entries(F.ANIMAL_PRODUCTS).map(([k,v])=>`<article><span>${picture(k,v.icon)}</span><b>${v.name}</b><small>${s.livestock.produce[k]} unit</small></article>`).join('')+harvestT_farm_game_js('</div><div class="item"><h3>Bahan bangunan</h3>')+Object.entries(F.MATERIALS).map(([k,m])=>`<div class="inventory-stat"><span>${m.icon} ${m.name}</span><b>${s.materials[k]}</b></div>`).join('')+harvestT_farm_game_js('</div><h3 class="section-title">Jurnal kebun</h3>')+s.log.map(e=>'<div class="log-entry">'+escape(harvestT_farm_game_js(e.text))+'<small>'+new Date(e.at).toLocaleTimeString(typeof BaraI18n!=='undefined'?BaraI18n.locale:'id-ID',{hour:'2-digit',minute:'2-digit'})+'</small></div>').join('');
  }
+ if(panel==='build'||panel==='layout')body.innerHTML=action(harvestWords('Sell buildings','Jual bangunan'),'panel','building-sales',1,false,true)+body.innerHTML;
  if(panel==='build')body.innerHTML=action(harvestWords('Upgrade my buildings','Upgrade bangunanku'),'panel','upgrades',1,false,true)+body.innerHTML;
 }
 function renderSelection(){
- if(selectedBuilding!==null){const b=farm.s.buildings.find(b=>b.slot===selectedBuilding);$('plotInfo').hidden=!b||Boolean(panel)||!entered;if(b&&!$('plotInfo').hidden){$('plotLabel').textContent=harvestT_farm_game_js('BANGUNANMU');$('plotTitle').textContent=F.BUILDINGS[b.kind].name+' · Lv. '+farm.buildingLevel(b);$('plotCopy').textContent=F.BUILDINGS[b.kind].benefit+' · '+(b.readyAt<=farm.now()?harvestT_farm_game_js('Selesai'):harvestT_farm_game_js('Membangun ')+countdown(b.readyAt-farm.now()));$('plotActions').innerHTML=(Object.values(F.ANIMALS).some(a=>a.building===b.kind)?action(harvestT_farm_game_js('Rawat ternak'),'livestock-pen',b.slot):'')+(Object.values(F.RECIPES).some(r=>r.building===b.kind)?action(harvestT_farm_game_js('Buka produksi'),'workshop',b.slot):'')+(F.UPGRADE_KINDS.includes(b.kind)?action(harvestWords('Upgrade','Upgrade'),'panel','upgrades',1,false,true):'')+action(harvestT_farm_game_js('Pindahkan bangunan'),'move-building',b.slot)+action(harvestT_farm_game_js('Tata letak'),'panel','layout',1,false,true);}return;}
+ if(selectedBuilding!==null){const b=farm.s.buildings.find(b=>b.slot===selectedBuilding);$('plotInfo').hidden=!b||Boolean(panel)||!entered;if(b&&!$('plotInfo').hidden){$('plotLabel').textContent=harvestT_farm_game_js('BANGUNANMU');$('plotTitle').textContent=F.BUILDINGS[b.kind].name+' · Lv. '+farm.buildingLevel(b);$('plotCopy').textContent=F.BUILDINGS[b.kind].benefit+' · '+(b.readyAt<=farm.now()?harvestT_farm_game_js('Selesai'):harvestT_farm_game_js('Membangun ')+countdown(b.readyAt-farm.now()));$('plotActions').innerHTML=(Object.values(F.ANIMALS).some(a=>a.building===b.kind)?action(harvestT_farm_game_js('Rawat ternak'),'livestock-pen',b.slot):'')+(Object.values(F.RECIPES).some(r=>r.building===b.kind)?action(harvestT_farm_game_js('Buka produksi'),'workshop',b.slot):'')+(F.UPGRADE_KINDS.includes(b.kind)?action(harvestWords('Upgrade','Upgrade'),'panel','upgrades',1,false,true):'')+action(harvestT_farm_game_js('Pindahkan bangunan'),'move-building',b.slot)+action(harvestT_farm_game_js('Tata letak'),'panel','layout',1,false,true)+buildingSaleButton(b);}return;}
  const p=farm.s.plots[selectedPlot];$('plotInfo').hidden=selectedPlot===null||!p||Boolean(panel)||!entered;
  if($('plotInfo').hidden)return;
  $('plotLabel').textContent=harvestT_farm_game_js('PETAK ')+String(selectedPlot+1).padStart(2,'0');
@@ -189,6 +192,9 @@ function onAction(event){
  else if(type==='locate-building'){const v=farm.s.buildings.find(v=>v.slot===Number(key));if(v){closePanel();camera.focus(v.x,v.y);selectedBuilding=v.slot;renderSelection();}}
  else if(type==='material')transact('material',{material:key,qty},harvestT_farm_game_js('Membeli ')+qty+' '+F.MATERIALS[key].name.toLowerCase()+'.','buy');
  else if(type==='decor-preview'&&key==='sunsetConservatory')beginDecorationPreview();
+ else if(type==='review-building-sale')reviewBuildingSale(Number(key));
+ else if(type==='confirm-building-sale')void confirmBuildingSale();
+ else if(type==='cancel-building-sale'){const back=buildingSaleBack;closePanel();openPanel(back);}
  else if(type==='upgrade-building')transact('upgrade',{slot:Number(key)},harvestWords('Upgrade started.','Upgrade dimulai.'),'build');
  else if(type==='build')beginPlacement({kind:key});
  else if(type==='region')beginPlacement({kind:'garden',count:F.REGIONS[key].count,region:key});

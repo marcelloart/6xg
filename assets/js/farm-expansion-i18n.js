@@ -1,5 +1,15 @@
 'use strict';
 Object.assign(globalThis.BaraTranslations,{
+ 'Pilih daratan di peta. Posisi ini berada di sungai atau di luar peta.':'Choose land on the map. This position is in the river or outside the map.',
+ 'Bangunan ini sudah tidak tersedia.':'This building is no longer available.',
+ 'Tunggu pembangunan atau upgrade selesai sebelum menjual.':'Wait for construction or the upgrade to finish before selling.',
+ 'Ambil semua olahan dan selesaikan antrean bangunan ini sebelum menjual.':'Collect all crafted goods and finish this building’s queue before selling.',
+ 'Bangunan ini masih menampung ternak dan belum bisa dijual.':'This building still houses animals and cannot be sold yet.',
+ 'Jual hasil panen atau tambah penyimpanan lain terlebih dahulu.':'Sell stored goods or add other storage first.',
+ 'Panen petak yang akan ditutup terlebih dahulu sebelum menjual bangunan ini.':'Harvest the plots that will close before selling this building.',
+ 'Sisakan ruang untuk koin dan bahan pengembalian terlebih dahulu.':'Make room for the returned coins and materials first.',
+ 'Bangunan telah berubah. Buka kembali rincian penjualannya.':'The building has changed. Review its sale details again.',
+ 'Bangunan dijual dengan pengembalian 50%.':'Building sold with a 50% refund.',
  'Sisakan satu bibit atau 5 koin untuk panen berikutnya.':'Keep one seed or 5 coins for your next harvest.',
  'Antrean per bangunan berjalan bergiliran, termasuk saat game ditutup. Upgrade membuka antrean tambahan.':'Each building processes its queue in order, even while the game is closed. Upgrades add queue slots.',
  'Kebun anggur':'Vineyard','Kebun botani':'Botanical garden','Kawasan ini sudah dibuka.':'This area is already unlocked.','Siapkan level dan koin untuk membuka kawasan.':'Reach the required level and save coins to unlock this area.',' dibuka · 6 petak baru.':' unlocked · 6 new plots.',

@@ -100,6 +100,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const inventory=(v,list,max,legacy=null)=>{check(object(v)&&Object.keys(v).every(k=>list.includes(k))&&(legacy?legacy.every(k=>Object.hasOwn(v,k)):Object.keys(v).length===list.length));return Object.fromEntries(list.map(k=>{const value=Object.hasOwn(v,k)?v[k]:0;check((legacy||Object.hasOwn(v,k))&&integer(value,0,max));return[k,value];}));};
  const buildingLevel=(b,now)=>b.upgrade?.readyAt<=now?b.upgrade.targetLevel:(b.level||1);
  const upgradeDuration=(kind,target)=>BUILDINGS[kind].seconds*1000*target*2;
+ const upgradeCost=(kind,target)=>({cost:Object.fromEntries(Object.entries(BUILDINGS[kind].cost).map(([k,n])=>[k,Math.ceil(n*target*1.5)])),coins:target*50});
  const queueCapacity=(b,now)=>3+buildingLevel(b,now)-1;
  const complete=(s,kind,now)=>s.buildings.filter(b=>b.kind===kind&&b.readyAt<=now).reduce((n,b)=>n+buildingLevel(b,now),0);
  const capacity=(s,now=s.lastSeen)=>20+80*complete(s,'barn',now)+40*complete(s,'shed',now);
@@ -111,11 +112,17 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;if(v.useAccountPhoto!==undefined){check(typeof v.useAccountPhoto==='boolean');clean.useAccountPhoto=v.useAccountPhoto;}if(v.photo!=null){check(typeof v.photo==='string'&&v.photo.length>=128&&v.photo.length<=16384&&/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(v.photo)&&(v.photo.length-23)%4===0);clean.photo=v.photo;}return clean;};
  const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90],bench:[90,60],kitchen:[130,116],juicery:[130,116],bakery:[130,116],planter:[48,48],coop:[130,136],cowshed:[160,156],greenhouse:[160,144]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
  const overlaps=(a,b,gap=5)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap;
- const onLand=(p,size)=>integer(p.x,1000+Math.ceil(size.w/2),2190-Math.ceil(size.w/2))&&integer(p.y,630+Math.ceil(size.h/2),1760-Math.ceil(size.h/2));
+ const onLand=(p,size)=>{
+  if(!integer(p.x,Math.ceil(size.w/2),3200-Math.ceil(size.w/2))||!integer(p.y,Math.ceil(size.h/2),2200-Math.ceil(size.h/2)))return false;
+  // Both banks are usable. Check the entire footprint against the curved river.
+  const top=p.y-size.h/2,bottom=p.y+size.h/2,centers=[top,bottom].map(y=>640+110*Math.sin(y/270));
+  for(let k=Math.ceil((top/270-Math.PI/2)/Math.PI);(Math.PI/2+k*Math.PI)*270<=bottom;k++)centers.push(640+110*Math.sin(Math.PI/2+k*Math.PI));
+  return p.x+size.w/2<=Math.min(...centers)-108||p.x-size.w/2>=Math.max(...centers)+108;
+ };
  const defaultPlot=id=>PLOTS[id]||{id,x:1080+(id-45)%12*68,y:1460+Math.floor((id-45)/12)*74};
  function placement(s,kind,point,rotation=0,{ignoreBuilding=null,ignorePlots=[],props=true}={}){
   const size=footprint(kind,rotation),rect={...point,...size};
-  if(!integer(rotation,0,3)||!onLand(point,size))return{ok:false,message:harvestT_farm_engine_js('Pilih tanah terbuka di lembah, jauh dari sungai dan tepi hutan.')};
+  if(!integer(rotation,0,3)||!onLand(point,size))return{ok:false,message:harvestT_farm_engine_js('Pilih daratan di peta. Posisi ini berada di sungai atau di luar peta.')};
   if(s.buildings.some(b=>b.slot!==ignoreBuilding&&overlaps(rect,{...b,...footprint(b.kind,b.rotation)})))return{ok:false,message:harvestT_farm_engine_js('Posisi bertabrakan dengan bangunan lain.')};
   // Unopened entries are future defaults, not occupied land. Only active plots block placement.
   if(s.plots.some(p=>p.id<unlocked(s)&&!ignorePlots.includes(p.id)&&overlaps(rect,{...p,...footprint('plot')})))return{ok:false,message:harvestT_farm_engine_js('Posisi bertabrakan dengan petak tanam.')};
@@ -204,7 +211,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   buildingLevel(b){return buildingLevel(b,this.now());}
   queueCapacity(b){return queueCapacity(b,this.now());}
   animalCapacity(b){const a=Object.values(ANIMALS).find(v=>v.building===b.kind);return a?a.capacity+2*(this.buildingLevel(b)-1):0;}
-  upgradeQuote(slot){const now=this.now(),b=this.s.buildings.find(v=>v.slot===slot);if(!b||!UPGRADE_KINDS.includes(b.kind))return{ok:false,message:harvestT_farm_engine_js('Bangunan ini tidak memiliki upgrade.')};if(b.readyAt>now||b.upgrade)return{ok:false,message:harvestT_farm_engine_js('Tunggu pekerjaan bangunan selesai.')};const target=(b.level||1)+1;if(target>5)return{ok:false,message:harvestT_farm_engine_js('Bangunan sudah level maksimum.')};const required=Math.max(BUILDING_LEVEL[b.kind],(target-1)*3),cost=Object.fromEntries(Object.entries(BUILDINGS[b.kind].cost).map(([k,n])=>[k,Math.ceil(n*target*1.5)])),coins=target*50,seconds=upgradeDuration(b.kind,target)/1000;return{ok:this.level>=required&&this.s.coins>=coins&&Object.entries(cost).every(([k,n])=>this.s.materials[k]>=n),target,required,cost,coins,seconds,message:harvestT_farm_engine_js('Siapkan level, koin, dan bahan untuk upgrade.')};}
+  upgradeQuote(slot){const now=this.now(),b=this.s.buildings.find(v=>v.slot===slot);if(!b||!UPGRADE_KINDS.includes(b.kind))return{ok:false,message:harvestT_farm_engine_js('Bangunan ini tidak memiliki upgrade.')};if(b.readyAt>now||b.upgrade)return{ok:false,message:harvestT_farm_engine_js('Tunggu pekerjaan bangunan selesai.')};const target=(b.level||1)+1;if(target>5)return{ok:false,message:harvestT_farm_engine_js('Bangunan sudah level maksimum.')};const required=Math.max(BUILDING_LEVEL[b.kind],(target-1)*3),{cost,coins}=upgradeCost(b.kind,target),seconds=upgradeDuration(b.kind,target)/1000;return{ok:this.level>=required&&this.s.coins>=coins&&Object.entries(cost).every(([k,n])=>this.s.materials[k]>=n),target,required,cost,coins,seconds,message:harvestT_farm_engine_js('Siapkan level, koin, dan bahan untuk upgrade.')};}
   upgradeBuilding(slot){const q=this.upgradeQuote(slot);if(!q.ok)return q;const b=this.s.buildings.find(v=>v.slot===slot),now=this.now();for(const[k,n]of Object.entries(q.cost))this.s.materials[k]-=n;this.s.coins-=q.coins;b.level||=1;b.upgrade={startedAt:now,readyAt:now+q.seconds*1000,targetLevel:q.target};this.note(harvestT_farm_engine_js('Upgrade dimulai. Manfaat lama tetap aktif sampai selesai.'));return{ok:true,target:q.target,readyAt:b.upgrade.readyAt};}
   get level(){return levelFor(this.s.progress.xp);}
   cropUnlocked(k){return Object.hasOwn(CROPS,k)&&(this.level>=CROP_LEVEL[k]||this.s.progress.grandfatheredCrops.includes(k));}
@@ -269,6 +276,34 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
    const startedAt=this.now();this.s.buildings.push({kind,slot,x:point.x,y:point.y,rotation,level:1,upgrade:null,startedAt,readyAt:startedAt+BUILDINGS[kind].seconds*1000});this.note((harvestT_farm_engine_js("Mulai membangun ")+(BUILDINGS[kind].name.toLowerCase())+harvestT_farm_engine_js(".")));return{ok:true};
   }
   moveBuilding(slot,point,rotation=0){const b=this.s.buildings.find(b=>b.slot===slot);if(!b)return{ok:false,message:harvestT_farm_engine_js('Pilih bangunan yang ingin dipindahkan.')};const valid=placement(this.s,b.kind,point,rotation,{ignoreBuilding:slot});if(!valid.ok)return valid;Object.assign(b,{x:point.x,y:point.y,rotation});this.note((harvestT_farm_engine_js("Memindahkan ")+(BUILDINGS[b.kind].name.toLowerCase())+harvestT_farm_engine_js(".")));return{ok:true};}
+  buildingSaleQuote(slot){
+   const now=this.now(),b=this.s.buildings.find(v=>v.slot===slot);
+   if(!b)return{ok:false,message:harvestT_farm_engine_js('Bangunan ini sudah tidak tersedia.')};
+   // Base construction consumes materials only. Kit coins purchased those same
+   // materials, so they must not be refunded a second time as construction coins.
+   const cost={...BUILDINGS[b.kind].cost};let coins=0;
+   for(let target=2;target<=b.level;target++){const paid=upgradeCost(b.kind,target);coins+=paid.coins;for(const k of materialKeys)cost[k]+=paid.cost[k];}
+   const refund={coins:Math.floor(coins/2),materials:Object.fromEntries(materialKeys.map(k=>[k,Math.floor(cost[k]/2)]))};
+   const remaining={...this.s,buildings:this.s.buildings.filter(v=>v!==b)},nextCapacity=capacity(remaining,now),nextPlots=Math.min(this.s.plots.length,unlocked(remaining,now));
+   const quote={slot:b.slot,kind:b.kind,startedAt:b.startedAt,level:b.level,refund,nextCapacity,nextPlots,lostStorage:capacity(this.s,now)-nextCapacity,lostPlots:this.unlocked-nextPlots};
+   const deny=message=>({...quote,ok:false,message:harvestT_farm_engine_js(message)});
+   if(b.readyAt>now||b.upgrade)return deny('Tunggu pembangunan atau upgrade selesai sebelum menjual.');
+   if(this.s.production.jobs.some(j=>j.slot===slot))return deny('Ambil semua olahan dan selesaikan antrean bangunan ini sebelum menjual.');
+   if(this.s.livestock.animals.some(a=>a.slot===slot))return deny('Bangunan ini masih menampung ternak dan belum bisa dijual.');
+   if(this.used>nextCapacity)return deny('Jual hasil panen atau tambah penyimpanan lain terlebih dahulu.');
+   if(this.s.plots.slice(nextPlots,this.unlocked).some(p=>p.crop))return deny('Panen petak yang akan ditutup terlebih dahulu sebelum menjual bangunan ini.');
+   if(this.s.coins+refund.coins>1e9||materialKeys.some(k=>this.s.materials[k]+refund.materials[k]>10000))return deny('Sisakan ruang untuk koin dan bahan pengembalian terlebih dahulu.');
+   return{...quote,ok:true};
+  }
+  sellBuilding(slot,identity){
+   const q=this.buildingSaleQuote(slot);
+   if(identity&&(q.kind!==identity.kind||q.startedAt!==identity.startedAt))return{ok:false,message:harvestT_farm_engine_js('Bangunan telah berubah. Buka kembali rincian penjualannya.')};
+   if(!q.ok)return q;
+   this.s.buildings=this.s.buildings.filter(b=>b.slot!==slot);this.s.coins+=q.refund.coins;
+   for(const k of materialKeys)this.s.materials[k]+=q.refund.materials[k];
+   this.note(harvestT_farm_engine_js('Bangunan dijual dengan pengembalian 50%.'));
+   return{ok:true,slot,refund:q.refund};
+  }
   movePlot(id,point){const p=this.s.plots[id];if(!p||id>=this.unlocked)return{ok:false,message:harvestT_farm_engine_js('Petak tidak tersedia.')};const valid=placement(this.s,'plot',point,0,{ignorePlots:[id]});if(!valid.ok)return valid;Object.assign(p,{x:point.x,y:point.y});this.note((harvestT_farm_engine_js("Memindahkan petak ")+(id+1)+harvestT_farm_engine_js(". Tanaman tetap tumbuh.")));return{ok:true};}
   regionQuote(key){this.now();const r=REGIONS[key];if(!r||this.s.regions.includes(key))return{ok:false,message:harvestT_farm_engine_js('Kawasan ini sudah dibuka.')};const space=this.gardenQuote(r.count);return{...r,ok:space.ok&&this.level>=r.level&&this.s.coins>=r.coins,message:space.ok?harvestT_farm_engine_js('Siapkan level dan koin untuk membuka kawasan.'):space.message};}
   unlockRegion(key,point,rotation=0){const q=this.regionQuote(key);if(!q.ok)return q;const before=this.s.coins,result=this.expandGarden(point,q.count,rotation);if(!result.ok)return result;this.s.coins=before-q.coins;this.s.regions.push(key);this.note(q.name+harvestT_farm_engine_js(' dibuka · 6 petak baru.'));return{ok:true,region:key};}

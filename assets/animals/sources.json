@@ -1,0 +1,9 @@
+{
+  "license": "CC0-1.0",
+  "assets": [
+    {"id":"cow","author":"Lyndon Daniels","source":"https://opengameart.org/content/realtime-ranchers-3d-model-pack","changes":"Organic cow mesh and source 2K coat/normal textures. Added deforming 16-joint quadruped skeleton, idle, walking and grazing animation; textures compressed to WebP."},
+    {"id":"chicken","author":"Čestmír Dammer / TinyWorlds; UV photographs by Rick Hoppmann","source":"https://opengameart.org/content/chicken-animated","changes":"Kelgar hen, original photographic feather and normal textures; original skeletal idle, walk and eating animations baked from IK to glTF."},
+    {"id":"cow.mp3","author":"Joseph SARDIN","source":"https://bigsoundbank.com/vache-qui-meugle-s0546.html","description":"Cow Moos #1, original outdoor field recording, sound 546."},
+    {"id":"chicken.mp3","author":"Joseph SARDIN","source":"https://bigsoundbank.com/poules-et-ponte-s0978.html","description":"Hens Lays, original outdoor field recording, sound 978."}
+  ]
+}

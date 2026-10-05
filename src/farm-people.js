@@ -16,18 +16,18 @@ class Frontier {
  pop(){const list=this.items,first=list[0],last=list.pop();if(list.length){let i=0;while(i*2+1<list.length){let child=i*2+1;if(child+1<list.length&&list[child+1].score<list[child].score)child++;if(last.score<=list[child].score)break;list[i]=list[child];i=child;}list[i]=last;}return first.id;}
  get length(){return this.items.length;}
 }
-const limits={left:1040,right:2170,top:700,bottom:1720};
+const limits={left:20,right:3180,top:20,bottom:2180};
 const trees=[[1408,867],[1788,859],[1050,910],[1108,1650],[2130,870],[2180,1570]];
 
 /** Navigation is visual only. It never writes to a player's farm or inventory. */
 export class FarmPeopleNavigation {
- constructor(footprints){this.footprints=footprints;this.step=8;this.columns=Math.floor((limits.right-limits.left)/this.step)+1;this.rows=Math.floor((limits.bottom-limits.top)/this.step)+1;this.blocks=[];this.signature='';}
+ constructor(footprints){this.footprints=footprints;this.step=16;this.columns=Math.floor((limits.right-limits.left)/this.step)+1;this.rows=Math.floor((limits.bottom-limits.top)/this.step)+1;this.blocks=[];this.signature='';}
  update(farm,now){const plots=farm.s.plots.slice(0,farm.unlocked),buildings=farm.s.buildings;
   const signature=JSON.stringify([plots.map(p=>[p.id,p.x,p.y]),buildings.map(b=>[b.slot,b.kind,b.x,b.y,b.rotation])]);if(signature===this.signature)return false;this.signature=signature;
   this.blocks=[{x:1593,y:872,w:154,h:130},...trees.map(([x,y])=>({x,y,w:36,h:36})),...plots.map(p=>({x:p.x,y:p.y,w:60,h:60})),...buildings.map(b=>{let [w,h]=this.footprints[b.kind]||[130,116];if(b.rotation%2)[w,h]=[h,w];return{x:b.x,y:b.y,w:w+18,h:h+18};})];
   this.free=new Uint8Array(this.columns*this.rows);for(let id=0;id<this.free.length;id++)this.free[id]=Number(this.open(this.point(id)));return true;
  }
- open(p){return p.x>=limits.left&&p.x<=limits.right&&p.y>=limits.top&&p.y<=limits.bottom&&!this.blocks.some(b=>Math.abs(p.x-b.x)<b.w/2&&Math.abs(p.y-b.y)<b.h/2);}
+ open(p){const river=640+110*Math.sin(p.y/270),bridge=Math.abs(p.y-1115)<25&&p.x>375&&p.x<795;return p.x>=limits.left&&p.x<=limits.right&&p.y>=limits.top&&p.y<=limits.bottom&&(Math.abs(p.x-river)>118||bridge)&&!this.blocks.some(b=>Math.abs(p.x-b.x)<b.w/2&&Math.abs(p.y-b.y)<b.h/2);}
  point(id){return{x:limits.left+(id%this.columns)*this.step,y:limits.top+Math.floor(id/this.columns)*this.step};}
  nearest(p,visible=false){let best=-1,d=Infinity;const candidates=[];for(let i=0;i<this.free.length;i++){if(!this.free[i])continue;const q=this.point(i),next=(p.x-q.x)**2+(p.y-q.y)**2;if(next<d){d=next;best=i;}if(visible)candidates.push([next,i]);}if(!visible||best<0||this.clear(p,this.point(best)))return best;candidates.sort((a,b)=>a[0]-b[0]);return candidates.find(([,id])=>this.clear(p,this.point(id)))?.[1]??-1;}
  clear(a,b){const count=Math.max(1,Math.ceil(distance(a,b)/4));for(let i=0;i<=count;i++){const f=i/count;if(!this.open({x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}))return false;}return true;}
