@@ -153,6 +153,41 @@
       "path": "Assets/Animations/all_animations_max_motextr_xy/m_walk_neutral.max.fbx",
       "sha": "f8816638330d02fb31920d46851188b920d66ab1",
       "size": 958512
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Export/Male_Adult_10.fbx",
+      "sha": "b7ab6eb1c2e4611c6cf2435b11717de23c60fb14",
+      "size": 541104
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Male_Adult_10.png",
+      "sha": "25b6d9deed0d75d6ec8403150021fdb9eb0ecc28",
+      "size": 457608
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Textures/m024_body_color.tga",
+      "sha": "b978eb0ff3fd3e6cebee133a7a2ff594b4e8eeaf",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Textures/m024_body_normal.tga",
+      "sha": "52e8d633f28ffeb69b48d4939b840c8d46cbdc0e",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Textures/m024_head_color.tga",
+      "sha": "df934ee3e279fb844e8c8217d214d3d139587dab",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Textures/m024_head_normal.tga",
+      "sha": "09c52c5789540a1975bfa46ba8abe00d0dfbca63",
+      "size": 12582956
+    },
+    {
+      "path": "Assets/Avatars/Adults/Male_Adult_10/Textures/m024_opacity_color.tga",
+      "sha": "51ddd6bec6e6f3abb9a6ce2522d1416082a31474",
+      "size": 4194348
     }
   ],
   "processing": {
@@ -163,14 +198,16 @@
     "characters": [
       "Gardener_Male_01",
       "Construction_Male_01",
-      "Female_Adult_03"
+      "Female_Adult_03",
+      "Male_Adult_10"
     ],
     "clips": [
       "m_walk_neutral",
       "m_idle_breathe_01",
       "m_crouch_idle",
       "m_work_mid"
-    ]
+    ],
+    "fishing": "Distinct Male_Adult_10 rig; captured breathing blended with continuous fishing poses, two-bone arm IK and wrist targets attached to the grip and rotating crank."
   },
   "files": [
     {
@@ -322,6 +359,41 @@
       "path": "assets/people/builder-motion.bin",
       "bytes": 10768,
       "sha256": "44237ebfc19496a690656f1098f509024d971892fbf5e3887bf481bba5e56977"
+    },
+    {
+      "path": "assets/people/angler.bin",
+      "bytes": 445140,
+      "sha256": "4bedb66a3a6cba8790d2bc00194c332283d2952add18375e58de4a62b1969454"
+    },
+    {
+      "path": "assets/people/angler.gltf",
+      "bytes": 182926,
+      "sha256": "582ad0b12e341c2fbcfd1305b0e50fb561dacb1221fc79aa3f570d40bcae345e"
+    },
+    {
+      "path": "assets/people/m024_body_color.webp",
+      "bytes": 95774,
+      "sha256": "de46dade56f0e004413437a3a8ff141f5e786d1aa6d3a02215507fa55592a49c"
+    },
+    {
+      "path": "assets/people/m024_body_normal.webp",
+      "bytes": 152132,
+      "sha256": "6433d198c0a62ed41309c689e909db2e7233e191315987de37c77f370ab0c17f"
+    },
+    {
+      "path": "assets/people/m024_head_color.webp",
+      "bytes": 112464,
+      "sha256": "1d5400e91665f9005a49ad6363c6304f316a2ed3ff0bec18ac9669d494a62655"
+    },
+    {
+      "path": "assets/people/m024_head_normal.webp",
+      "bytes": 154304,
+      "sha256": "0c8e540c6a8989baa79303ca5281360b701e2fef5d2058206275299484eee111"
+    },
+    {
+      "path": "assets/people/m024_opacity_color.webp",
+      "bytes": 322326,
+      "sha256": "184e6731462ec700c865c11faf847d8c1bc0b52544910b0f9bd89afb3150b4e4"
     }
   ],
   "motionNotes": "Pelvis Y motion retained; forward Z locomotion removed from walk loops. World navigation owns walking displacement. Stride timing uses captured walking distance."

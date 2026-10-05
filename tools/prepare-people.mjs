@@ -15,11 +15,13 @@ globalThis.FileReader=class {readAsArrayBuffer(blob){blob.arrayBuffer().then(b=>
 const output='assets/people';await fs.mkdir(output,{recursive:true});
 const motions={walk:'all_animations_max_motextr_xy/m_walk_neutral.max.fbx',idle:'all_animations_max_motextr_static/m_idle_breathe_01.max.fbx',tend:'all_animations_max_motextr_static/m_crouch_idle.max.fbx',work:'all_animations_max_motextr_static/m_work_mid.max.fbx'};
 const clips={};for(const [name,file]of Object.entries(motions)){const model=await read('Animations/'+file);clips[name]=model.animations[0];clips[name].name=name;}
-const sources={gardener:'Professions/Gardener_Male_01',builder:'Professions/Construction_Male_01',neighbor:'Adults/Female_Adult_03'};
+const sources={gardener:'Professions/Gardener_Male_01',builder:'Professions/Construction_Male_01',neighbor:'Adults/Female_Adult_03',angler:'Adults/Male_Adult_10'};
+const requested=process.argv.slice(2);
 for(const [id,folder]of Object.entries(sources)){
+ if(requested.length&&!requested.includes(id))continue;
  const name=folder.split('/').pop(),model=await read('Avatars/'+folder+'/Export/'+name+'.fbx'),maps=new Map();model.animations=[];for(const light of [...model.children].filter(o=>o.isLight))model.remove(light);
  model.traverse(o=>{if(!o.isMesh)return;o.geometry=mergeVertices(o.geometry);const uv=o.geometry.attributes.uv;for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i));o.material=(Array.isArray(o.material)?o.material:[o.material]).map(m=>{const map=m.map?.userData.file,normal=m.normalMap?.userData.file,alpha=!!m.alphaMap;const converted=new THREE.MeshStandardMaterial({name:m.name,color:0xffffff,roughness:.82,metalness:0,side:alpha?THREE.DoubleSide:THREE.FrontSide,alphaTest:alpha?.45:0});maps.set(m.name,{map,normal,alpha});return converted;});});
- const animations=Object.values(clips).map(original=>{const clip=original.clone();clip.tracks=clip.tracks.filter(t=>model.getObjectByName(t.name.split('.')[0])&&!/Footsteps/.test(t.name)&&!t.name.endsWith('.scale')).map(t=>{
+ const animations=Object.values(clips).filter(clip=>id!=='angler'||clip.name==='idle').map(original=>{const clip=original.clone();clip.tracks=clip.tracks.filter(t=>model.getObjectByName(t.name.split('.')[0])&&!/Footsteps/.test(t.name)&&!t.name.endsWith('.scale')).map(t=>{
    if(!t.name.endsWith('.position'))return t;const bone=model.getObjectByName(t.name.split('.')[0]),p=bone.position;const values=t.values.slice();
    // Rocketbox uses Y for height and Z for forward motion. Navigation supplies
    // walking displacement; copying captured Z here makes every walk loop jump back.
@@ -36,4 +38,4 @@ for(const [id,folder]of Object.entries(sources)){
  await fs.writeFile(output+'/'+id+'.gltf',JSON.stringify(gltf));console.log(id,animations.map(c=>[c.name,c.duration,c.tracks.length]));
 }
 await fs.copyFile(path.resolve('../human-source/LICENSE.md'),output+'/LICENSE-Microsoft.md');
-await import('./prepare-people-motion.mjs');
+if(!requested.length||requested.some(id=>id!=='angler'))await import('./prepare-people-motion.mjs');
