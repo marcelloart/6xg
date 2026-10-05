@@ -5,9 +5,10 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import {bridgeBounds,renderScale,farmRoads} from '../src/farm-visuals.js';
 import {modelInstance} from '../src/farm-assets.js';
+import {upgradedBuilding} from '../src/farm-buildings.js';
 const errors=[],window={};
 const source=fs.readFileSync('src/farm-3d.js','utf8').replace(/^import .*;\r?\n/gm,'');
-const context={THREE,mergeGeometries,bridgeBounds,renderScale,farmRoads,modelInstance,window,FARM_TEXTURE_URLS:{},console:{error:(...args)=>errors.push(args),warn:()=>{}}};
+const context={THREE,mergeGeometries,bridgeBounds,renderScale,farmRoads,modelInstance,upgradedBuilding,window,FARM_TEXTURE_URLS:{},console:{error:(...args)=>errors.push(args),warn:()=>{}}};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('assets/js/farm-engine.js','utf8')+'\nwindow.BaraFarm=BaraFarm;'+fs.readFileSync('assets/js/farm-camera.js','utf8')+'\nwindow.Camera=FarmCamera;',context);
 vm.runInContext(source+'\nwindow.GeometryTests={mergeStatic,disposeGeometry,FarmRenderer3D,windMaterial,makeRiverGeometry,makeRiverBedGeometry,riverBedHeight,riverMaterial,terrainPath,terrainRoad,terrainHeight};',context);
@@ -86,3 +87,40 @@ lighting.updateDaylight(Date.parse('2026-10-04T12:00:00+07:00'));const noon=ligh
 lighting.updateDaylight(Date.parse('2026-10-04T22:00:00+07:00'));assert.equal(lighting.sun.intensity,0);assert(lighting.moon.intensity>0);assert(lighting.materials.window.emissiveIntensity>0);assert(lighting.scene.environmentIntensity<.325);
 lighting.updateDaylight(Date.parse('2026-10-04T06:15:00+07:00'));assert(lighting.sun.position.x>1610&&lighting.sun.intensity<noon);lighting.updateDaylight(Date.parse('2026-10-04T17:45:00+07:00'));assert(lighting.sun.position.x<1610);
 console.log('Actual 3D scene lighting passed: moving sunlight, moon fill, glowing windows, and environment exposure.');
+
+// Every real upgrade tier must have a distinct, valid silhouette and must fit
+// the existing collision rectangle, even during scaffolding and after rotation.
+for(const kind of window.BaraFarm.UPGRADE_KINDS){
+ let height=0;const silhouettes=new Set();
+ for(let level=1;level<=5;level++){
+  const model=renderer.building(kind,true,level),bounds=new THREE.Box3().setFromObject(model),size=window.BaraFarm.footprint(kind);
+  assert(bounds.max.y>height,kind+' level '+level+' changes the building silhouette');height=bounds.max.y;
+  let vertices=0,meshes=0;model.traverse(o=>{if(!o.isMesh)return;meshes++;vertices+=o.geometry.attributes.position.count;for(const value of o.geometry.attributes.position.array)assert(Number.isFinite(value),kind+' finite architecture');});
+  silhouettes.add([bounds.max.y,vertices,bounds.max.x-bounds.min.x,bounds.max.z-bounds.min.z].join(':'));
+  if(level===1)continue;
+  assert(bounds.min.x>=-size.w/2-.01&&bounds.max.x<=size.w/2+.01,kind+' tier '+level+' width fits existing land');
+  assert(bounds.min.z>=-size.h/2-.01&&bounds.max.z<=size.h/2+.01,kind+' tier '+level+' depth fits existing land');
+  assert(meshes<24,kind+' static architecture is batched for mobile rendering');
+  assert(Math.abs(model.userData.roofHeight-bounds.max.y)<.01);assert.equal(model.userData.buildingLevel,level);
+  model.rotation.y=Math.PI/2;const rotated=new THREE.Box3().setFromObject(model),quarter=window.BaraFarm.footprint(kind,1);
+  assert(rotated.min.x>=-quarter.w/2-.01&&rotated.max.x<=quarter.w/2+.01);assert(rotated.min.z>=-quarter.h/2-.01&&rotated.max.z<=quarter.h/2+.01);
+  const buildingWork=renderer.building(kind,true,level,true),workBounds=new THREE.Box3().setFromObject(buildingWork);
+  assert(workBounds.max.y>bounds.max.y,'Scaffolding shows construction without granting the next design');
+  assert(workBounds.min.x>=-size.w/2-.01&&workBounds.max.x<=size.w/2+.01);assert(workBounds.min.z>=-size.h/2-.01&&workBounds.max.z<=size.h/2+.01);
+ }
+ assert.equal(silhouettes.size,5,kind+' has five distinct visual designs');
+}
+const lateArt=Object.create(FarmRenderer3D.prototype);lateArt.catalogue={};lateArt.catalogueQueue=['barn'];
+assert.equal(lateArt.buildingArtKey('barn',1),'barn');assert.equal(lateArt.buildingArtKey('barn',3),'barn@3');lateArt.buildingArtKey('barn',3);
+assert.equal(lateArt.catalogueQueue.filter(v=>v?.key==='barn@3').length,1,'Repeated panel renders queue one thumbnail per tier');
+console.log('All 50 building designs passed: distinct silhouette, finite geometry, original footprint, rotated fit, scaffolding and bounded preview requests.');
+
+let architectureTime=2200000;const architectureFarm=new window.BaraFarm.Farm({clock:()=>architectureTime});architectureFarm.s.coins=5000;architectureFarm.s.materials={wood:500,stone:500,meat:500};architectureFarm.s.progress.xp=12000;
+assert(architectureFarm.build('barn',{x:1170,y:740}).ok);architectureTime+=90000;architectureFarm.now();assert(architectureFarm.upgradeBuilding(0).ok);architectureTime=architectureFarm.s.buildings[0].upgrade.readyAt;architectureFarm.now();
+renderer.syncFarm(architectureFarm,architectureTime);const tier2=renderer.farmModels.get('building:0').model;assert.equal(tier2.userData.buildingLevel,2);
+assert(architectureFarm.upgradeBuilding(0).ok);architectureTime=architectureFarm.s.buildings[0].upgrade.readyAt-1;renderer.syncFarm(architectureFarm,architectureTime);assert.equal(renderer.farmModels.get('building:0').model.userData.buildingLevel,2,'The level 3 design is not granted before work completes');
+const restoredArchitecture=new window.BaraFarm.Farm({save:architectureFarm.serialize(),clock:()=>architectureTime});architectureTime++;restoredArchitecture.now();renderer.syncFarm(restoredArchitecture,architectureTime);
+const tier3=renderer.farmModels.get('building:0').model;assert.equal(tier3.userData.buildingLevel,3,'The model changes at the exact saved upgrade deadline after reload');assert.notEqual(tier2,tier3);assert.equal(tier3.position.x,1170);assert.equal(tier3.position.z,740);
+renderer.updateSelection(restoredArchitecture,{placement:{kind:'barn',moveBuilding:0,point:{x:2100,y:1450},rotation:1,lifted:true,valid:true},now:architectureTime});
+const movingTier3=renderer.preview.children.find(o=>o.userData.buildingLevel===3);assert(movingTier3,'Moving an upgraded building previews its existing design');assert.equal(movingTier3.rotation.y,Math.PI/2);renderer.updateSelection(restoredArchitecture,{placement:null,now:architectureTime});
+console.log('Visual upgrade lifecycle passed: old design during work, exact completion, saved tier after reload, unchanged location and matching move preview.');
