@@ -179,3 +179,13 @@ Cuplikan pada landing page berasal dari render game sebenarnya dengan kebun cont
 ## Tampilan ponsel (1.7.1)
 
 Layar hingga 760 px memakai empat menu utama: Kebun, Toko, Bangun, Lainnya. Atur, Olah, Tujuan, Ternak, Teman, dan Tas ada di Lainnya. Tas juga bisa dibuka dari indikator penyimpanan. Status level memakai indikator kecil; ketuk untuk melihat XP, misi dan pesanan. Panduan ada di Menu. Rotasi kamera dibuka melalui tombol opsi kamera. Tombol Kembali ke kebun memusatkan rumah dan petak aktif di area bermain ponsel, dengan sudut 30 derajat tetap. Tata letak memperhitungkan safe area layar, keyboard dan tinggi browser. Desktop tetap menyediakan semua menu utama.
+
+## River fishing
+
+Fishing unlocks at farmer level 3. Open Fishing (More → Fishing on phones), build a 90-second pier for 12 wood and 4 stone, and place it along either riverbank. The ramp snaps onto the shore; the bridge and other owned objects remain clear. Piers use the same placement and 1.5-second pickup controls as other buildings. A pier cannot move or sell during an active cast.
+
+Claim three starter earthworms once. Every cast spends one bait. Watch the float, set the hook during its seven-second bite window, then complete three timed reels in the green zone. Tilapia, carp, catfish and snakehead enter the shared farm bag, earn XP and can be sold in Shop → Fish. A landed fish waits if the bag fills during reeling. Cancelling or missing the bite consumes the bait.
+
+Earthworms cost 3 game coins; dough costs 5 and favors carp. Rain and Jakarta night influence species chances, using the existing farm weather and lighting clocks. Rod upgrades unlock at farmer levels 5 and 7. The personal journal stores the last eight catches and the largest catch. Fishing uses game coins only.
+
+The pier, rod, reel, hook, bobber, continuous fish bodies and ray-textured fins are modeled in src/farm-fishing.js. Cast arcs, line tension, surface ripples, submerged fish and landed catches animate smoothly. Catalogue pictures render the same models used in the world. Save schema v10 migrates previous farms in place. All bait spending, server-generated cast seeds, catch timing, stock and sales pass through authenticated atomic commands with retry receipts. Public farm visits exclude fishing inventory, equipment and cast clocks.

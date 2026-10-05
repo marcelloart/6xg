@@ -20,6 +20,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  });
  const MATERIALS=Object.freeze({wood:{name:harvestT_farm_engine_js('Kayu'),icon:'🪵',price:3},stone:{name:harvestT_farm_engine_js('Batu'),icon:'🪨',price:4},meat:{name:harvestT_farm_engine_js('Daging'),icon:'🥩',price:5}});
  const BUILDINGS=Object.freeze({
+  pier:{name:harvestT_farm_engine_js('Dermaga pancing'),icon:'🎣',seconds:90,cost:{wood:12,stone:4,meat:0},benefit:harvestT_farm_engine_js('Memancing di sungai')},
   barn:{name:harvestT_farm_engine_js('Lumbung'),icon:'🏚️',seconds:90,cost:{wood:6,stone:3,meat:1},benefit:harvestT_farm_engine_js('+80 ruang hasil panen')},
   house:{name:harvestT_farm_engine_js('Rumah'),icon:'🏡',seconds:60,cost:{wood:10,stone:5,meat:2},benefit:harvestT_farm_engine_js('+6 petak tanam')},
   shed:{name:harvestT_farm_engine_js('Gudang'),icon:'🛖',seconds:60,cost:{wood:8,stone:4,meat:1},benefit:harvestT_farm_engine_js('+40 ruang hasil panen')},
@@ -33,6 +34,50 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   greenhouse:{name:harvestT_farm_engine_js('Rumah kaca'),icon:'🌿',seconds:300,cost:{wood:45,stone:30,meat:5},benefit:harvestT_farm_engine_js('+9 petak tanam · kebun botani')},
   planter:{name:harvestT_farm_engine_js('Pot bunga hadiah'),icon:'🌻',seconds:15,cost:{wood:0,stone:0,meat:0},benefit:harvestT_farm_engine_js('Dekorasi dari pencapaian Panen Bertumbuh')}
  });
+ const FISH=Object.freeze({
+  tilapia:{name:harvestT_farm_engine_js('Nila'),enName:'Tilapia',idName:'Nila',icon:'🐟',sell:12,xp:5,min:16,max:34,color:'#889a83'},
+  carp:{name:harvestT_farm_engine_js('Ikan mas'),enName:'Carp',idName:'Ikan mas',icon:'🐟',sell:22,xp:7,min:22,max:48,color:'#bc924d'},
+  catfish:{name:harvestT_farm_engine_js('Lele'),enName:'Catfish',idName:'Lele',icon:'🐟',sell:26,xp:8,min:24,max:55,color:'#5c6b66'},
+  snakehead:{name:harvestT_farm_engine_js('Gabus'),enName:'Snakehead',idName:'Gabus',icon:'🐟',sell:45,xp:12,min:28,max:62,color:'#7a8060'}
+ });
+ const BAITS=Object.freeze({worm:{name:'Earthworm',idName:'Cacing',price:3},dough:{name:'Dough bait',idName:'Umpan adonan',price:5}});
+ const FISHING_LEVEL=3;
+ const fishingText=(en,id)=>typeof BaraI18n!=='undefined'&&BaraI18n.language==='id'?id:en;
+ const riverCenter=y=>640+110*Math.sin(y/270);
+ const pierPoint=(y,rotation=0)=>({x:Math.round(riverCenter(Math.round(y))+(rotation===2?-145:145)),y:Math.round(y),rotation});
+ const pierOnLand=(p,rotation=0)=>[0,2].includes(rotation)&&integer(p.y,90,2110)&&integer(p.x,0,3200)&&Math.abs(p.x-pierPoint(p.y,rotation).x)<=3&&Math.abs(p.y-1115)>=125;
+ const freshFishing=()=>({rod:1,bait:{worm:0,dough:0},starter:false,nextId:1,cast:null,fish:Object.fromEntries(Object.keys(FISH).map(k=>[k,0])),caught:0,best:0,records:[]});
+ function fishingConditions(at){
+  const hour=Math.floor((at+7*3600000)%86400000/3600000),slot=Math.floor(at/1800000);
+  const rain=n=>{let seed=Math.imul(n^60105,1597334677);seed=Math.imul(seed^(seed>>>16),2246822507);return((seed^(seed>>>13))>>>0)/4294967296>=.82?.72:0;};
+  const t=Math.max(0,Math.min(1,(at-slot*1800000)/120000)),blend=t*t*(3-2*t),wet=rain(slot-1)+(rain(slot)-rain(slot-1))*blend;
+  return{night:hour<6||hour>=18,rain:wet>.15};
+ }
+ const fishingBite=(start,seed)=>start+5000+seed%6000;
+ function fishingOutcome(seed,bait,rod,conditions){
+  const weights={tilapia:55,carp:25,catfish:17,snakehead:3+(rod-1)*5};
+  if(bait==='dough'){weights.carp+=20;weights.tilapia-=15;}
+  if(conditions.night)weights.catfish+=14;if(conditions.rain)weights.carp+=10;
+  const total=Object.values(weights).reduce((a,b)=>a+b,0);let pick=((Math.imul(seed^83117,1597334677)>>>0)%total),kind='tilapia';
+  for(const[k,w]of Object.entries(weights)){if(pick<w){kind=k;break;}pick-=w;}
+  const spec=FISH[kind],length=spec.min+((seed>>>8)%(spec.max-spec.min+1));return{kind,length};
+ }
+ function fishingStage(c,now){
+  if(!c)return'idle';if(c.reels===3)return'landed';if(now>c.expiresAt)return'escaped';if(!c.hookedAt)return now<c.biteAt?'waiting':'bite';
+  const target=c.hookedAt+(c.reels+1)*3000;return now<target-900?'reeling':now<=target+1600?'pull':'escaped';
+ }
+ function validateFishing(value,state){
+  const f=value;check(object(f)&&integer(f.rod,1,3)&&typeof f.starter==='boolean'&&integer(f.nextId,1,1e9)&&integer(f.caught,0,1e9)&&integer(f.best,0,62)&&Array.isArray(f.records)&&f.records.length<=8);
+  const clean={rod:f.rod,bait:inventory(f.bait,Object.keys(BAITS),1000),starter:f.starter,nextId:f.nextId,cast:null,fish:inventory(f.fish,Object.keys(FISH),10000),caught:f.caught,best:f.best,records:f.records.map(r=>{check(object(r)&&Object.hasOwn(FISH,r.kind)&&integer(r.length,FISH[r.kind].min,FISH[r.kind].max)&&integer(r.at,1,state.lastSeen));return{kind:r.kind,length:r.length,at:r.at};})};
+  check(f.caught>=clean.records.length&&Object.values(clean.fish).reduce((a,b)=>a+b,0)<=f.caught&&clean.records.every(r=>r.length<=f.best));
+  if(f.cast){const c=f.cast,b=state.buildings.find(b=>b.slot===c.slot);check(object(c)&&integer(c.id,1,f.nextId-1)&&b?.kind==='pier'&&b.readyAt<=c.startedAt&&integer(c.startedAt,b.readyAt,state.lastSeen)&&integer(c.seed,0,4294967295)&&Object.hasOwn(BAITS,c.bait)&&integer(c.rod,1,f.rod)&&c.biteAt===fishingBite(c.startedAt,c.seed)&&integer(c.reels,0,3));
+   const conditions=fishingConditions(c.startedAt);check(object(c.conditions)&&c.conditions.night===conditions.night&&c.conditions.rain===conditions.rain);
+   check((c.hookedAt===0&&c.reels===0&&c.expiresAt===c.biteAt+7000)||(integer(c.hookedAt,c.biteAt,Math.min(state.lastSeen,c.biteAt+7000))&&c.expiresAt===c.hookedAt+10600));
+   if(c.reels)check(state.lastSeen>=c.hookedAt+c.reels*3000-900);
+   clean.cast={id:c.id,slot:c.slot,startedAt:c.startedAt,seed:c.seed,bait:c.bait,rod:c.rod,conditions,biteAt:c.biteAt,expiresAt:c.expiresAt,hookedAt:c.hookedAt,reels:c.reels};
+  }return clean;
+ }
+
  const UPGRADE_KINDS=Object.freeze(['barn','shed','house','well','kitchen','juicery','bakery','coop','cowshed','greenhouse']);
  const REGIONS=Object.freeze({vineyard:{name:harvestT_farm_engine_js('Kebun anggur'),level:10,count:6,coins:300},botanical:{name:harvestT_farm_engine_js('Kebun botani'),level:14,count:6,coins:600}});
  const LEGACY_CROPS=Object.keys(CROPS).slice(0,9);
@@ -43,7 +88,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const keys=Object.keys(CROPS),materialKeys=Object.keys(MATERIALS);
  const LEVEL_XP=Object.freeze([0,30,80,150,260,420,650,950,1400,2000,2900,4200,6000,8500,12000]);
  const CROP_LEVEL=Object.freeze(Object.fromEntries(keys.map((k,i)=>[k,i+1])));
- const BUILDING_LEVEL=Object.freeze({barn:1,house:2,well:3,shed:4,bench:3,kitchen:2,juicery:7,bakery:8,planter:1,coop:3,cowshed:5,greenhouse:12});
+ const BUILDING_LEVEL=Object.freeze({pier:3,barn:1,house:2,well:3,shed:4,bench:3,kitchen:2,juicery:7,bakery:8,planter:1,coop:3,cowshed:5,greenhouse:12});
  const RECIPES=Object.freeze({
   soup:{name:harvestT_farm_engine_js('Sup wortel'),icon:'🍲',building:'kitchen',level:2,minutes:15,inputs:{carrot:3},yield:1,sell:16,xp:4},
   jam:{name:harvestT_farm_engine_js('Selai stroberi'),icon:'🍓',building:'kitchen',level:4,minutes:30,inputs:{strawberry:3},yield:1,sell:60,xp:9},
@@ -105,12 +150,12 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const complete=(s,kind,now)=>s.buildings.filter(b=>b.kind===kind&&b.readyAt<=now).reduce((n,b)=>n+buildingLevel(b,now),0);
  const capacity=(s,now=s.lastSeen)=>20+80*complete(s,'barn',now)+40*complete(s,'shed',now);
  const unlocked=(s,now=s.lastSeen)=>Math.min(s.expansions===undefined?45:MAX_PLOTS,9+6*complete(s,'house',now)+3*complete(s,'well',now)+9*complete(s,'greenhouse',now)+(s.expansions||0));
- const used=s=>keys.reduce((total,k)=>total+s.produce[k],0)+Object.keys(RECIPES).reduce((total,k)=>total+(s.production?.goods[k]||0),0)+Object.keys(ANIMAL_PRODUCTS).reduce((total,k)=>total+(s.livestock?.produce[k]||0),0);
+ const used=s=>Object.values(s.fishing?.fish||{}).reduce((a,b)=>a+b,0)+keys.reduce((total,k)=>total+s.produce[k],0)+Object.keys(RECIPES).reduce((total,k)=>total+(s.production?.goods[k]||0),0)+Object.keys(ANIMAL_PRODUCTS).reduce((total,k)=>total+(s.livestock?.produce[k]||0),0);
  const AVATARS=Object.freeze(['sprout','sunflower','apple','bee']);
  const defaultProfile=()=>({name:harvestT_farm_engine_js('Pekebun'),farmName:harvestT_farm_engine_js('Kebunku'),avatar:'sprout'});
  const defaultStats=()=>({harvested:0,earned:0});
  const profile=v=>{check(object(v));const clean={};for(const k of ['name','farmName']){check(typeof v[k]==='string'&&v[k].trim().length>=1&&v[k].trim().length<=24&&!/[\u0000-\u001f\u007f]/.test(v[k]));clean[k]=v[k].trim();}check(AVATARS.includes(v.avatar));clean.avatar=v.avatar;if(v.useAccountPhoto!==undefined){check(typeof v.useAccountPhoto==='boolean');clean.useAccountPhoto=v.useAccountPhoto;}if(v.photo!=null){check(typeof v.photo==='string'&&v.photo.length>=128&&v.photo.length<=16384&&/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(v.photo)&&(v.photo.length-23)%4===0);clean.photo=v.photo;}return clean;};
- const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({barn:[150,128],house:[130,116],shed:[112,104],well:[90,90],bench:[90,60],kitchen:[130,116],juicery:[130,116],bakery:[130,116],planter:[48,48],coop:[130,136],cowshed:[160,156],greenhouse:[160,144]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
+ const footprint=(kind,rotation=0)=>{const size=kind==='plot'?[60,60]:kind==='garden'?[196,136]:({pier:[240,100],barn:[150,128],house:[130,116],shed:[112,104],well:[90,90],bench:[90,60],kitchen:[130,116],juicery:[130,116],bakery:[130,116],planter:[48,48],coop:[130,136],cowshed:[160,156],greenhouse:[160,144]}[kind]||[60,60]);return rotation%2?{w:size[1],h:size[0]}:{w:size[0],h:size[1]};};
  const overlaps=(a,b,gap=5)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap;
  const onLand=(p,size)=>{
   if(!integer(p.x,Math.ceil(size.w/2),3200-Math.ceil(size.w/2))||!integer(p.y,Math.ceil(size.h/2),2200-Math.ceil(size.h/2)))return false;
@@ -122,7 +167,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const defaultPlot=id=>PLOTS[id]||{id,x:1080+(id-45)%12*68,y:1460+Math.floor((id-45)/12)*74};
  function placement(s,kind,point,rotation=0,{ignoreBuilding=null,ignorePlots=[],props=true}={}){
   const size=footprint(kind,rotation),rect={...point,...size};
-  if(!integer(rotation,0,3)||!onLand(point,size))return{ok:false,message:harvestT_farm_engine_js('Pilih daratan di peta. Posisi ini berada di sungai atau di luar peta.')};
+  if(!integer(rotation,0,3)||!(kind==='pier'?pierOnLand(point,rotation):onLand(point,size)))return{ok:false,message:harvestT_farm_engine_js('Pilih daratan di peta. Posisi ini berada di sungai atau di luar peta.')};
   if(s.buildings.some(b=>b.slot!==ignoreBuilding&&overlaps(rect,{...b,...footprint(b.kind,b.rotation)})))return{ok:false,message:harvestT_farm_engine_js('Posisi bertabrakan dengan bangunan lain.')};
   // Unopened entries are future defaults, not occupied land. Only active plots block placement.
   if(s.plots.some(p=>p.id<unlocked(s)&&!ignorePlots.includes(p.id)&&overlaps(rect,{...p,...footprint('plot')})))return{ok:false,message:harvestT_farm_engine_js('Posisi bertabrakan dengan petak tanam.')};
@@ -130,14 +175,14 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   return{ok:true};
  }
  function validateSave(save){
-  check(object(save)&&[4,5,6,7,8,9].includes(save.version)&&object(save.state));const modern=save.version>=5;
+  check(object(save)&&[4,5,6,7,8,9,10].includes(save.version)&&object(save.state));const modern=save.version>=5;
   const s=save.state;
   check(integer(s.coins,0,1e9)&&integer(s.lastSeen,1,MAX_TIME));
   const clean={coins:s.coins,lastSeen:s.lastSeen,seeds:inventory(s.seeds,keys,1000,save.version<9?LEGACY_CROPS:null),produce:inventory(s.produce,keys,10000,save.version<9?LEGACY_CROPS:null),materials:inventory(s.materials,materialKeys,10000)};
   check(Array.isArray(s.buildings)&&s.buildings.length<=(modern?MAX_BUILDINGS:LOTS.length));
   const slots=new Set();clean.buildings=s.buildings.map(b=>{
    check(object(b)&&integer(b.slot,0,(modern?MAX_BUILDINGS:LOTS.length)-1)&&!slots.has(b.slot)&&Object.hasOwn(BUILDINGS,b.kind)&&integer(b.startedAt,1,s.lastSeen)&&b.readyAt===b.startedAt+BUILDINGS[b.kind].seconds*1000&&b.readyAt<=MAX_TIME);
-   slots.add(b.slot);const base={slot:b.slot,kind:b.kind,startedAt:b.startedAt,readyAt:b.readyAt,level:1,upgrade:null};if(save.version>=9){check(integer(b.level,1,5)&&(UPGRADE_KINDS.includes(b.kind)||b.level===1));base.level=b.level;if(b.upgrade){const u=b.upgrade;check(UPGRADE_KINDS.includes(b.kind)&&object(u)&&u.targetLevel===b.level+1&&u.targetLevel<=5&&integer(u.startedAt,b.readyAt,s.lastSeen)&&u.readyAt===u.startedAt+upgradeDuration(b.kind,u.targetLevel)&&u.readyAt<=MAX_TIME);base.upgrade={startedAt:u.startedAt,readyAt:u.readyAt,targetLevel:u.targetLevel};}}if(modern){check(integer(b.rotation,0,3)&&onLand(b,footprint(b.kind,b.rotation)));Object.assign(base,{x:b.x,y:b.y,rotation:b.rotation});}return base;
+   slots.add(b.slot);const base={slot:b.slot,kind:b.kind,startedAt:b.startedAt,readyAt:b.readyAt,level:1,upgrade:null};if(save.version>=9){check(integer(b.level,1,5)&&(UPGRADE_KINDS.includes(b.kind)||b.level===1));base.level=b.level;if(b.upgrade){const u=b.upgrade;check(UPGRADE_KINDS.includes(b.kind)&&object(u)&&u.targetLevel===b.level+1&&u.targetLevel<=5&&integer(u.startedAt,b.readyAt,s.lastSeen)&&u.readyAt===u.startedAt+upgradeDuration(b.kind,u.targetLevel)&&u.readyAt<=MAX_TIME);base.upgrade={startedAt:u.startedAt,readyAt:u.readyAt,targetLevel:u.targetLevel};}}if(modern){check(integer(b.rotation,0,3)&&(b.kind==='pier'?pierOnLand(b,b.rotation):onLand(b,footprint(b.kind,b.rotation))));Object.assign(base,{x:b.x,y:b.y,rotation:b.rotation});}return base;
   });
   if(save.version>=7){
    const p=s.production,c=s.challenges;
@@ -157,6 +202,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   }
   if(save.version>=9){const c=s.community;check(object(c)&&integer(c.day,0,50000)&&Array.isArray(c.helped)&&c.helped.length<=5&&Array.isArray(c.gifts)&&c.gifts.length<=3&&Array.isArray(c.received)&&c.received.length<=8);clean.community={day:c.day,helped:c.helped.map(v=>{check(object(v)&&friendCode(v.code)&&integer(v.plot,0,80)&&integer(v.plantedAt,1,MAX_TIME));return{code:v.code,plot:v.plot,plantedAt:v.plantedAt};}),gifts:c.gifts.map(code=>{check(friendCode(code));return code;}),received:c.received.map(v=>{check(object(v)&&integer(v.at,1,s.lastSeen)&&typeof v.name==='string'&&v.name.length<=24&&['water','gift'].includes(v.type)&&(v.type==='water'||Object.hasOwn(CROPS,v.crop))&&integer(v.qty,1,5));return{at:v.at,name:v.name,type:v.type,qty:v.qty,...(v.type==='gift'?{crop:v.crop}:{})};})};check(new Set(c.gifts).size===c.gifts.length);}
   if(save.version>=9){check(Array.isArray(s.regions)&&s.regions.length<=2&&new Set(s.regions).size===s.regions.length&&s.regions.every(k=>Object.hasOwn(REGIONS,k))&&s.expansions>=s.regions.length*6);clean.regions=[...s.regions];}
+  if(save.version>=10)clean.fishing=validateFishing(s.fishing,clean);
   check(used(clean)<=capacity(clean));
   if(modern){check(integer(s.expansions,0,72));clean.expansions=s.expansions;clean.profile=profile(s.profile);check(object(s.stats)&&integer(s.stats.harvested,0,1e9)&&integer(s.stats.earned,0,1e12));clean.stats={harvested:s.stats.harvested,earned:s.stats.earned};}
   if(save.version>=6){
@@ -193,6 +239,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
    if(!this.s.social)this.s.social=freshSocial();
    if(!this.s.regions)this.s.regions=[];
    if(!this.s.community)this.s.community=freshCommunity(this.s.lastSeen);
+   if(!this.s.fishing)this.s.fishing=freshFishing();
    this.allocatedPlots=Math.min(this.s.plots.length,unlocked(this.s));
    if(!save){this.s.seeds.carrot=6;this.note(harvestT_farm_engine_js('Selamat datang! 6 bibit wortel untuk panen pertamamu.'));}
   }
@@ -207,7 +254,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   get unlocked(){this.now();return Math.min(this.s.plots.length,unlocked(this.s));}
   get used(){return used(this.s);}
   note(text){this.s.log.unshift({at:this.now(),text});this.s.log=this.s.log.slice(0,8);}
-  serialize(){this.now();return JSON.stringify({version:9,state:this.s});}
+  serialize(){this.now();return JSON.stringify({version:10,state:this.s});}
   buildingLevel(b){return buildingLevel(b,this.now());}
   queueCapacity(b){return queueCapacity(b,this.now());}
   animalCapacity(b){const a=Object.values(ANIMALS).find(v=>v.building===b.kind);return a?a.capacity+2*(this.buildingLevel(b)-1):0;}
@@ -221,6 +268,15 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   tutorialDismiss(dismissed){if(typeof dismissed!=='boolean')return{ok:false,message:harvestT_farm_engine_js('Pilihan panduan tidak valid.')};this.s.progress.tutorial.dismissed=dismissed;return{ok:true};}
   orders(){return this.s.progress.orders.offers.map((n,slot)=>{const t=ORDER_TEMPLATES[n],base=Object.entries(t.items).reduce((sum,[k,qty])=>sum+CROPS[k].sell*qty,0);return{...t,name:[harvestT_farm_engine_js('Bu Sari'),harvestT_farm_engine_js('Pak Bima'),'Maya'][slot],slot,id:slot+':'+this.s.progress.orders.rounds[slot]+':'+n,reward:Math.ceil(base*1.25),xp:8+t.level*4,ready:this.level>=t.level&&Object.entries(t.items).every(([k,qty])=>this.s.produce[k]>=qty)};});}
   deliverOrder(id){this.now();const order=this.orders().find(o=>o.id===id);if(!order||!order.ready)return{ok:false,message:harvestT_farm_engine_js('Pesanan sudah berganti atau hasil panen belum cukup.')};if(this.s.coins+order.reward>1e9)return{ok:false,message:harvestT_farm_engine_js('Kapasitas koin sudah penuh.')};for(const[k,qty]of Object.entries(order.items))this.s.produce[k]-=qty;this.s.coins+=order.reward;this.s.stats.earned=Math.min(1e12,this.s.stats.earned+order.reward);this.s.progress.tutorial.sold=Math.min(1e9,this.s.progress.tutorial.sold+(order.items.carrot||0));this.addXP(order.xp);this.countDaily('orders',1);const o=this.s.progress.orders;o.completed++;o.rounds[order.slot]++;const eligible=ORDER_TEMPLATES.map((t,i)=>({t,i})).filter(v=>v.t.level<=this.level);o.offers[order.slot]=eligible[(o.rounds[order.slot]+order.slot)%eligible.length].i;this.note((harvestT_farm_engine_js("Pesanan ")+(order.name)+harvestT_farm_engine_js(" selesai · +")+(order.reward)+harvestT_farm_engine_js(" koin · +")+(order.xp)+harvestT_farm_engine_js(" XP.")));return{ok:true,earned:order.reward,xp:order.xp};}
+  fishingStarter(){const f=this.s.fishing;if(this.level<FISHING_LEVEL)return{ok:false,message:fishingText('Fishing unlocks at level 3.','Memancing terbuka di level 3.')};if(f.starter)return{ok:false,message:fishingText('Your starter bait has already been claimed.','Umpan awal sudah diambil.')};if(f.bait.worm>997)return{ok:false,message:fishingText('Use some bait first.','Gunakan sebagian umpan dahulu.')};f.starter=true;f.bait.worm+=3;return{ok:true};}
+  buyBait(key,qty){if(this.level<FISHING_LEVEL||!Object.hasOwn(BAITS,key)||!integer(qty,1,100))return{ok:false,message:fishingText('This bait is not available.','Umpan belum tersedia.')};const f=this.s.fishing,cost=BAITS[key].price*qty;if(f.bait[key]+qty>1000||this.s.coins<cost)return{ok:false,message:fishingText('Not enough coins or bait storage is full.','Koin belum cukup atau penyimpanan umpan penuh.')};const future=this.used||keys.some(k=>this.s.seeds[k])||this.s.plots.some(p=>p.crop);if(!future&&this.s.coins-cost<5)return{ok:false,message:fishingText('Keep 5 coins for carrot seeds.','Sisakan 5 koin untuk bibit wortel.')};this.s.coins-=cost;f.bait[key]+=qty;return{ok:true};}
+  upgradeRod(){const f=this.s.fishing,target=f.rod+1,coins=target===2?120:300,wood=target===2?10:20,stone=target===2?0:10,level=target===2?5:7;if(target>3||this.level<level||this.s.coins<coins||this.s.materials.wood<wood||this.s.materials.stone<stone||f.cast)return{ok:false,message:fishingText('Finish fishing and prepare the required level, coins and materials.','Selesaikan memancing dan siapkan level, koin, serta bahan.')};this.s.coins-=coins;this.s.materials.wood-=wood;this.s.materials.stone-=stone;f.rod=target;return{ok:true,rod:target};}
+  startFishing(slot,bait,seed){const now=this.now(),f=this.s.fishing,b=this.s.buildings.find(b=>b.slot===slot);if(this.level<FISHING_LEVEL||b?.kind!=='pier'||b.readyAt>now||!Object.hasOwn(BAITS,bait)||!integer(seed,0,4294967295))return{ok:false,message:fishingText('Choose a completed fishing pier.','Pilih dermaga yang sudah selesai.')};if(f.cast&&fishingStage(f.cast,now)!=='escaped')return{ok:false,message:fishingText('Finish or cancel your current cast.','Selesaikan atau batalkan pancingan yang aktif.')};if(!f.bait[bait])return{ok:false,message:fishingText('Buy bait before casting.','Beli umpan sebelum melempar pancing.')};if(this.used>=this.capacity||f.nextId>=1e9||f.caught>=1e9)return{ok:false,message:fishingText('Make room in your bag before fishing.','Kosongkan ruang tas sebelum memancing.')};const biteAt=fishingBite(now,seed);if(biteAt+20000>MAX_TIME)return{ok:false,message:'Fishing is not available.'};f.bait[bait]--;f.cast={id:f.nextId++,slot,startedAt:now,bait,seed,rod:f.rod,conditions:fishingConditions(now),biteAt,expiresAt:biteAt+7000,hookedAt:0,reels:0};return{ok:true,id:f.cast.id};}
+  hookFish(id){const now=this.now(),f=this.s.fishing,c=f.cast;if(!c||c.id!==id)return{ok:false,message:fishingText('This cast has already ended.','Pancingan sudah selesai.')};if(fishingStage(c,now)==='escaped'){f.cast=null;return{ok:true,escaped:true};}if(fishingStage(c,now)!=='bite')return{ok:false,message:fishingText('Wait for the bobber to dip.','Tunggu pelampung tenggelam.')};c.hookedAt=now;c.expiresAt=now+10600;return{ok:true};}
+  reelFish(id){const now=this.now(),f=this.s.fishing,c=f.cast;if(!c||c.id!==id)return{ok:false,message:fishingText('This cast has already ended.','Pancingan sudah selesai.')};const stage=fishingStage(c,now);if(stage==='escaped'){f.cast=null;return{ok:true,escaped:true};}if(stage!=='pull'&&stage!=='landed')return{ok:false,message:fishingText('Reel when the marker reaches the green zone.','Gulung saat penanda masuk zona hijau.')};if(c.reels<3)c.reels++;if(c.reels<3)return{ok:true,reels:c.reels};const catchInfo=fishingOutcome(c.seed,c.bait,c.rod,c.conditions);if(this.used+1>this.capacity||f.fish[catchInfo.kind]>=10000)return{ok:true,landed:true,full:true};f.fish[catchInfo.kind]++;f.caught++;f.best=Math.max(f.best,catchInfo.length);f.records.unshift({...catchInfo,at:now});f.records=f.records.slice(0,8);f.cast=null;this.addXP(FISH[catchInfo.kind].xp);this.note(fishingText('Caught ','Menangkap ')+fishingText(FISH[catchInfo.kind].name,FISH[catchInfo.kind].idName)+' · '+catchInfo.length+' cm');return{ok:true,caught:catchInfo,xp:FISH[catchInfo.kind].xp};}
+  cancelFishing(id){const c=this.s.fishing.cast;if(!c||c.id!==id)return{ok:false,message:fishingText('This cast has already ended.','Pancingan sudah selesai.')};this.s.fishing.cast=null;return{ok:true};}
+  sellFish(kind,qty){const f=this.s.fishing;if(!Object.hasOwn(FISH,kind)||!integer(qty,1,10000)||f.fish[kind]<qty)return{ok:false,message:fishingText('Fish are not available in your bag.','Ikan belum tersedia di tas.')};const earned=FISH[kind].sell*qty;if(this.s.coins+earned>1e9)return{ok:false,message:fishingText('Coin storage is full.','Penyimpanan koin penuh.')};f.fish[kind]-=qty;this.s.coins+=earned;this.s.stats.earned=Math.min(1e12,this.s.stats.earned+earned);return{ok:true,earned};}
+
   buySeed(crop,qty=1){
    if(!Object.hasOwn(CROPS,crop)||!integer(qty,1,100))return{ok:false,message:harvestT_farm_engine_js('Jumlah bibit tidak valid.')};
    if(!this.cropUnlocked(crop))return{ok:false,message:(harvestT_farm_engine_js("")+(CROPS[crop].name)+harvestT_farm_engine_js(" terbuka di level ")+(CROP_LEVEL[crop])+harvestT_farm_engine_js("."))};
@@ -275,7 +331,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
    if(kind!=='planter')this.addXP(10);
    const startedAt=this.now();this.s.buildings.push({kind,slot,x:point.x,y:point.y,rotation,level:1,upgrade:null,startedAt,readyAt:startedAt+BUILDINGS[kind].seconds*1000});this.note((harvestT_farm_engine_js("Mulai membangun ")+(BUILDINGS[kind].name.toLowerCase())+harvestT_farm_engine_js(".")));return{ok:true};
   }
-  moveBuilding(slot,point,rotation=0){const b=this.s.buildings.find(b=>b.slot===slot);if(!b)return{ok:false,message:harvestT_farm_engine_js('Pilih bangunan yang ingin dipindahkan.')};const valid=placement(this.s,b.kind,point,rotation,{ignoreBuilding:slot});if(!valid.ok)return valid;Object.assign(b,{x:point.x,y:point.y,rotation});this.note((harvestT_farm_engine_js("Memindahkan ")+(BUILDINGS[b.kind].name.toLowerCase())+harvestT_farm_engine_js(".")));return{ok:true};}
+  moveBuilding(slot,point,rotation=0){const b=this.s.buildings.find(b=>b.slot===slot);if(!b)return{ok:false,message:harvestT_farm_engine_js('Pilih bangunan yang ingin dipindahkan.')};if(b.kind==='pier'&&this.s.fishing.cast?.slot===slot&&fishingStage(this.s.fishing.cast,this.now())!=='escaped')return{ok:false,message:fishingText('Finish fishing before moving the pier.','Selesaikan memancing sebelum memindahkan dermaga.')};const valid=placement(this.s,b.kind,point,rotation,{ignoreBuilding:slot});if(!valid.ok)return valid;Object.assign(b,{x:point.x,y:point.y,rotation});this.note((harvestT_farm_engine_js("Memindahkan ")+(BUILDINGS[b.kind].name.toLowerCase())+harvestT_farm_engine_js(".")));return{ok:true};}
   buildingSaleQuote(slot){
    const now=this.now(),b=this.s.buildings.find(v=>v.slot===slot);
    if(!b)return{ok:false,message:harvestT_farm_engine_js('Bangunan ini sudah tidak tersedia.')};
@@ -287,6 +343,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
    const remaining={...this.s,buildings:this.s.buildings.filter(v=>v!==b)},nextCapacity=capacity(remaining,now),nextPlots=Math.min(this.s.plots.length,unlocked(remaining,now));
    const quote={slot:b.slot,kind:b.kind,startedAt:b.startedAt,level:b.level,refund,nextCapacity,nextPlots,lostStorage:capacity(this.s,now)-nextCapacity,lostPlots:this.unlocked-nextPlots};
    const deny=message=>({...quote,ok:false,message:harvestT_farm_engine_js(message)});
+   if(b.kind==='pier'&&this.s.fishing.cast?.slot===slot)return{...quote,ok:false,message:fishingText('Finish or cancel fishing before selling the pier.','Selesaikan atau batalkan memancing sebelum menjual dermaga.')};
    if(b.readyAt>now||b.upgrade)return deny('Tunggu pembangunan atau upgrade selesai sebelum menjual.');
    if(this.s.production.jobs.some(j=>j.slot===slot))return deny('Ambil semua olahan dan selesaikan antrean bangunan ini sebelum menjual.');
    if(this.s.livestock.animals.some(a=>a.slot===slot))return deny('Bangunan ini masih menampung ternak dan belum bisa dijual.');
@@ -334,5 +391,5 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
   updateProfile(value){try{this.s.profile=profile(value);return{ok:true};}catch{return{ok:false,message:harvestT_farm_engine_js('Isi nama hingga 24 karakter dan pilih avatar atau foto JPG yang valid.')};}}
 
  }
- root.BaraFarm=Object.freeze({Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,LEVEL_XP,CROP_LEVEL,BUILDING_LEVEL,ORDER_TEMPLATES,RECIPES,ANIMALS,ANIMAL_PRODUCTS,REGIONS,UPGRADE_KINDS,buildingLevel,upgradeDuration,queueCapacity,friendCode,DAILY,ACHIEVEMENTS,farmDay,levelFor,footprint,validateSave});
+ root.BaraFarm=Object.freeze({FISH,BAITS,FISHING_LEVEL,pierPoint,pierOnLand,riverCenter,fishingConditions,fishingOutcome,fishingStage,freshFishing,Farm,CROPS,MATERIALS,BUILDINGS,LOTS,PLOTS,AVATARS,MAX_PLOTS,MAX_BUILDINGS,LEVEL_XP,CROP_LEVEL,BUILDING_LEVEL,ORDER_TEMPLATES,RECIPES,ANIMALS,ANIMAL_PRODUCTS,REGIONS,UPGRADE_KINDS,buildingLevel,upgradeDuration,queueCapacity,friendCode,DAILY,ACHIEVEMENTS,farmDay,levelFor,footprint,validateSave});
 })(globalThis);

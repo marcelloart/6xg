@@ -81,7 +81,11 @@ class FarmAudio {
  emit(name,{pan=0,strength=1,bus='effects',delay=0}={}){
   if(!this.ctx)return;
   const n=(duration,freq,volume,offset=0)=>this.noise(duration,freq,volume*strength,delay+offset,pan,bus),t=(freq,end,duration,volume,offset=0,type='sine')=>this.tone(freq,end,duration,volume*strength,delay+offset,pan,bus,type);
-  if(name==='plant'){n(.16,750,.26);n(.11,1500,.1,.12);t(92,42,.16,.12,.07);}
+  if(name==='cast'){n(.17,3000,.075);n(.32,950,.17,.32);t(180,70,.22,.035,.32);}
+  else if(name==='fish-bite'){n(.15,1600,.1);t(720,950,.09,.03);}
+  else if(name==='fish-reel'){for(let i=0;i<5;i++){n(.035,3200,.07,i*.055);t(270,240,.035,.014,i*.055);}}
+  else if(name==='fish-catch'){n(.45,1350,.2);n(.25,2500,.09,.15);for(const[i,f]of[523,659,784].entries())t(f,f,.3,.035,.15+i*.12);}
+  else if(name==='plant'){n(.16,750,.26);n(.11,1500,.1,.12);t(92,42,.16,.12,.07);}
   else if(name==='harvest'){n(.16,2400,.12);n(.2,1400,.12,.09);t(280,165,.13,.06,.08);for(const[i,f]of[523,659,784].entries())t(f,f,.2,.035,.18+i*.08);}
   else if(name==='buy'||name==='sell'){for(let i=0;i<3;i++){const f=(name==='sell'?1700+i*350:2300-i*250);t(f,f*.96,.17,.03,i*.085,'triangle');t(f*1.43,f*1.4,.1,.009,i*.085);n(.045,6000,.04,i*.085);}}
   else if(name==='hammer'||name==='build'){for(let i=0;i<(name==='build'?3:2);i++){n(.09,1400,.18,i*.2);t(115,55,.1,.11,i*.2);t(420,290,.06,.035,i*.2);}}

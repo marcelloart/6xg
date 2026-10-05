@@ -7,6 +7,14 @@ const exact=(value,keys)=>object(value)&&Object.keys(value).length===keys.length
 const int=(v,lo,hi)=>Number.isSafeInteger(v)&&v>=lo&&v<=hi;
 const point=p=>exact(p,['x','y'])&&int(p.x,0,3200)&&int(p.y,0,2200);
 const specs={
+ 'fish-starter':[[],()=>true,f=>()=>f.fishingStarter()],
+ 'fish-bait':[['bait','qty'],a=>Object.hasOwn(F.BAITS,a.bait)&&int(a.qty,1,100),f=>a=>f.buyBait(a.bait,a.qty)],
+ 'fish-rod':[[],()=>true,f=>()=>f.upgradeRod()],
+ 'fish-cast':[['slot','bait'],a=>int(a.slot,0,23)&&Object.hasOwn(F.BAITS,a.bait),f=>a=>f.startFishing(a.slot,a.bait,crypto.getRandomValues(new Uint32Array(1))[0])],
+ 'fish-hook':[['id'],a=>int(a.id,1,1e9),f=>a=>f.hookFish(a.id)],
+ 'fish-reel':[['id'],a=>int(a.id,1,1e9),f=>a=>f.reelFish(a.id)],
+ 'fish-cancel':[['id'],a=>int(a.id,1,1e9),f=>a=>f.cancelFishing(a.id)],
+ 'fish-sell':[['kind','qty'],a=>Object.hasOwn(F.FISH,a.kind)&&int(a.qty,1,10000),f=>a=>f.sellFish(a.kind,a.qty)],
  plant:[['id','crop'],a=>int(a.id,0,80)&&Object.hasOwn(F.CROPS,a.crop),f=>a=>f.plant(a.id,a.crop)],
  harvest:[['id'],a=>int(a.id,0,80),f=>a=>f.harvest(a.id)],
  seed:[['crop','qty'],a=>Object.hasOwn(F.CROPS,a.crop)&&int(a.qty,1,100),f=>a=>f.buySeed(a.crop,a.qty)],
@@ -45,7 +53,7 @@ export function parseAction(p){
 export function serverFarm(save,now){
  const farm=new F.Farm({save,clock:()=>now});
  // A legacy snapshot cannot dictate the server clock after migration.
- if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);const end=p.plantedAt+F.CROPS[p.crop].minutes*60000;if(p.wateredAt)p.wateredAt=Math.max(p.plantedAt,Math.min(now,end-1,p.wateredAt-shift));p.readyAt=end-(p.wateredAt?Math.min(F.CROPS[p.crop].minutes*6000,end-p.wateredAt):0);}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;if(b.upgrade){b.upgrade.startedAt=Math.max(b.readyAt,b.upgrade.startedAt-shift);b.upgrade.readyAt=b.upgrade.startedAt+F.upgradeDuration(b.kind,b.upgrade.targetLevel);}}const tails=new Map();for(const j of farm.s.production.jobs){j.startedAt=Math.max(1,j.startedAt-shift,farm.s.buildings.find(b=>b.slot===j.slot).readyAt,tails.get(j.slot)||0);j.readyAt=j.startedAt+F.RECIPES[j.recipe].minutes*60000;tails.set(j.slot,j.readyAt);}for(const a of farm.s.livestock.animals)if(a.fedAt){a.fedAt=Math.max(1,a.fedAt-shift,farm.s.buildings.find(b=>b.slot===a.slot).readyAt);a.readyAt=a.fedAt+F.ANIMALS[a.kind].minutes*60000;}for(const e of farm.s.log)e.at=Math.min(now,e.at);for(const v of farm.s.community.received)v.at=Math.min(now,v.at);for(const v of farm.s.community.helped)v.plantedAt=Math.max(1,v.plantedAt-shift);}
+ if(farm.s.lastSeen>now){const shift=farm.s.lastSeen-now;farm.s.lastSeen=now;for(const p of farm.s.plots)if(p.crop){p.plantedAt=Math.max(1,p.plantedAt-shift);const end=p.plantedAt+F.CROPS[p.crop].minutes*60000;if(p.wateredAt)p.wateredAt=Math.max(p.plantedAt,Math.min(now,end-1,p.wateredAt-shift));p.readyAt=end-(p.wateredAt?Math.min(F.CROPS[p.crop].minutes*6000,end-p.wateredAt):0);}for(const b of farm.s.buildings){b.startedAt=Math.max(1,b.startedAt-shift);b.readyAt=b.startedAt+F.BUILDINGS[b.kind].seconds*1000;if(b.upgrade){b.upgrade.startedAt=Math.max(b.readyAt,b.upgrade.startedAt-shift);b.upgrade.readyAt=b.upgrade.startedAt+F.upgradeDuration(b.kind,b.upgrade.targetLevel);}}const tails=new Map();for(const j of farm.s.production.jobs){j.startedAt=Math.max(1,j.startedAt-shift,farm.s.buildings.find(b=>b.slot===j.slot).readyAt,tails.get(j.slot)||0);j.readyAt=j.startedAt+F.RECIPES[j.recipe].minutes*60000;tails.set(j.slot,j.readyAt);}for(const a of farm.s.livestock.animals)if(a.fedAt){a.fedAt=Math.max(1,a.fedAt-shift,farm.s.buildings.find(b=>b.slot===a.slot).readyAt);a.readyAt=a.fedAt+F.ANIMALS[a.kind].minutes*60000;}if(farm.s.fishing.cast){const c=farm.s.fishing.cast,oldBite=c.biteAt;c.startedAt=Math.max(1,c.startedAt-shift);c.biteAt=c.startedAt+5000+c.seed%6000;c.conditions=F.fishingConditions(c.startedAt);if(c.hookedAt){c.hookedAt=c.biteAt+(c.hookedAt-oldBite);c.expiresAt=c.hookedAt+10600;}else c.expiresAt=c.biteAt+7000;}for(const r of farm.s.fishing.records)r.at=Math.min(now,r.at);for(const e of farm.s.log)e.at=Math.min(now,e.at);for(const v of farm.s.community.received)v.at=Math.min(now,v.at);for(const v of farm.s.community.helped)v.plantedAt=Math.max(1,v.plantedAt-shift);}
  farm.now();return farm;
 }
 const snapshot=(uid,row,now)=>({userId:uid,save:JSON.parse(serverFarm(row?JSON.parse(row.save):null,now).serialize()),revision:row?.revision||0,savedAt:row?.saved_at||null,serverTime:now,authoritative:true});

@@ -1,5 +1,9 @@
 'use strict';
 Object.assign(globalThis.BaraTranslations,{
+ 'Ikan':'Fish','Nila':'Tilapia','Ikan mas':'Carp','Lele':'Catfish','Gabus':'Snakehead',
+ 'Memancing':'Fishing',
+ 'Dermaga pancing':'Fishing pier',
+ 'Memancing di sungai':'River fishing',
  'Pilih daratan di peta. Posisi ini berada di sungai atau di luar peta.':'Choose land on the map. This position is in the river or outside the map.',
  'Bangunan ini sudah tidak tersedia.':'This building is no longer available.',
  'Tunggu pembangunan atau upgrade selesai sebelum menjual.':'Wait for construction or the upgrade to finish before selling.',

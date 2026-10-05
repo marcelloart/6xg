@@ -1,0 +1,61 @@
+'use strict';
+let fishingSlot=null,fishingBait='worm',fishingPaint='',fishingCue='',fishingLastTick=0;
+const fishWords=(en,id)=>harvestWords(en,id);
+const fishName=key=>fishWords(F.FISH[key].enName,F.FISH[key].idName);
+function fishingControls(now){
+ const f=farm.s.fishing,c=f.cast,stage=F.fishingStage(c,now),pier=farm.s.buildings.find(b=>b.slot===fishingSlot&&b.kind==='pier'),hasRoom=farm.used<farm.capacity;
+ const status={idle:fishWords('Ready for a quiet cast.','Siap melempar pancing.'),waiting:fishWords('Watch the bobber…','Perhatikan pelampung…'),bite:fishWords('A bite! Set the hook.','Ikan menggigit! Pasang kail.'),reeling:fishWords('Keep the line steady…','Jaga tali tetap stabil…'),pull:fishWords('Reel now!','Gulung sekarang!'),landed:fishWords('Fish on the line. Make room in your bag.','Ikan sudah didapat. Kosongkan ruang tas.'),escaped:fishWords('The fish slipped away. Try another cast.','Ikan terlepas. Coba lempar lagi.')};
+ let buttons='',meter='';
+ if(stage==='idle'||stage==='escaped')buttons=action(fishWords('Cast line','Lempar pancing'),'fish-cast',fishingSlot,1,!pier||pier.readyAt>now||farm.level<F.FISHING_LEVEL||!f.bait[fishingBait]||!hasRoom);
+ else if(stage==='waiting'||stage==='bite')buttons=action(stage==='bite'?fishWords('Set hook','Pasang kail'):fishWords('Waiting for a bite','Menunggu gigitan'),'fish-hook',c.id,1,stage!=='bite');
+ else buttons=action(stage==='landed'?fishWords('Keep fish','Simpan ikan'):fishWords('Reel','Gulung'),'fish-reel',c.id,1,!['pull','landed'].includes(stage)||(stage==='landed'&&!hasRoom));
+ if(c&&stage!=='escaped')buttons+=action(fishWords('Cancel','Batal'),'fish-cancel',c.id,1,false,true);
+ if(c?.hookedAt&&stage!=='landed'&&stage!=='escaped')meter='<div class="fishing-rhythm" aria-hidden="true"><span class="fishing-target"></span><i data-fishing-marker></i></div><div class="fishing-steps" aria-label="'+fishWords('Reel progress','Progres gulungan')+'">'+[0,1,2].map(i=>'<span class="'+(i<c.reels?'done':'')+'">'+(i<c.reels?'✓':i+1)+'</span>').join('')+'</div><small>'+fishWords('Tap Reel when the marker enters the green area.','Ketuk Gulung saat penanda masuk area hijau.')+'</small>';
+ else if(stage==='waiting')meter='<div class="fishing-wait"><i></i><span data-fishing-wait>'+fishWords('Waiting','Menunggu')+'</span></div>';
+ const warning=!hasRoom?'<p class="fishing-warning">'+fishWords('Your bag is full. Sell a catch below or open your bag.','Tas penuh. Jual ikan di bawah atau buka tas.')+'</p>':!f.bait[fishingBait]&&!c?'<p class="fishing-warning">'+fishWords('Choose a bait with stock or buy bait below.','Pilih umpan yang tersedia atau beli umpan di bawah.')+'</p>':'';
+ return'<div class="fishing-status" role="status" aria-live="polite">'+status[stage]+'</div>'+meter+warning+'<div class="item-actions fishing-main-action">'+buttons+'</div>';
+}
+function fishingBag(){const f=farm.s.fishing;return'<div class="catalog-heading"><h3>'+fishWords('Fish basket','Keranjang ikan')+'</h3><span>'+farm.used+' / '+farm.capacity+'</span></div><div class="fishing-catch-grid">'+Object.entries(F.FISH).map(([key,spec])=>'<article class="fishing-catch"><div class="fish-art">'+picture(key,spec.icon)+'</div><div><h3>'+fishName(key)+'</h3><p>'+f.fish[key]+' '+fishWords('in bag','di tas')+' · ◉ '+spec.sell+'</p><div class="item-actions">'+action(fishWords('Sell 1','Jual 1'),'fish-sell',key,1,!f.fish[key])+action(fishWords('Sell all','Jual semua'),'fish-sell',key,f.fish[key]||1,!f.fish[key],true)+'</div></div></article>').join('')+'</div><div class="item-actions">'+action(fishWords('Sell at store','Jual di toko'),'shop','fish',1,false,true)+'</div>';}
+function renderFishing(body){
+ const now=farm.now(),f=farm.s.fishing,piers=farm.s.buildings.filter(b=>b.kind==='pier'),current=F.fishingStage(f.cast,now),active=f.cast&&!['escaped','landed'].includes(current);
+ $('panelLabel').textContent=fishWords('RIVERSIDE','TEPI SUNGAI');$('panelTitle').textContent=fishWords('River fishing','Memancing di sungai');$('panelCopy').textContent='';
+ if(f.cast)fishingSlot=f.cast.slot;else if(!piers.some(b=>b.slot===fishingSlot))fishingSlot=piers[0]?.slot??null;
+ $('farmPanel').dataset.fishingActive=String(Boolean(active));fishingPaint='';
+ if(farm.level<F.FISHING_LEVEL){body.innerHTML='<div class="fishing-intro"><div class="fishing-equipment-art">'+picture('fishingRod','🎣')+'</div><h3>'+fishWords('A riverside escape','Waktu santai di sungai')+'</h3><p>'+fishWords('Reach level 3 to build your fishing pier, claim three starter baits and discover four river fish.','Capai level 3 untuk membangun dermaga, mengambil tiga umpan awal, dan menemukan empat jenis ikan sungai.')+'</p>'+action(fishWords('Keep growing','Lanjut berkebun'),'panel','farm')+'</div>';return;}
+ let head='';
+ if(piers.length){const b=piers.find(b=>b.slot===fishingSlot);head='<div class="fishing-station"><div class="fish-station-art">'+picture('pier','🎣')+'</div><div><b>'+fishWords('Fishing pier','Dermaga pancing')+' #'+(b.slot+1)+'</b><small>'+(b.readyAt>now?fishWords('Building · ','Membangun · ')+countdown(b.readyAt-now):fishWords('Rod level ','Level pancing ')+f.rod)+'</small></div>'+action(fishWords('View','Lihat'),'fish-view',b.slot,1,false,true)+'</div>';
+  if(piers.length>1&&!active)head+='<div class="fishing-pier-picker">'+piers.map(b=>action('#'+(b.slot+1),'fish-pier',b.slot,1,false,b.slot!==fishingSlot)).join('')+'</div>';
+ }else head='<div class="fishing-intro"><div class="fishing-equipment-art">'+picture('pier','🎣')+'</div><h3>'+fishWords('Your first fishing pier','Dermaga pancing pertamamu')+'</h3><p>'+fishWords('Place the pier along either riverbank. The ramp stays connected to land.','Letakkan dermaga di salah satu tepi sungai. Rampanya tetap tersambung ke daratan.')+'</p><div class="cost-list">'+buildingCosts('pier')+'</div><div class="item-actions">'+action(fishWords('Place pier','Letakkan dermaga'),'build','pier',1,!farm.canBuild('pier')||farm.s.buildings.length>=F.MAX_BUILDINGS)+action(fishWords('Get materials','Lengkapi bahan'),'building-shop','pier',1,false,true)+'</div></div>';
+ const baitPicker='<div class="fishing-baits" role="group" aria-label="'+fishWords('Choose bait','Pilih umpan')+'">'+Object.entries(F.BAITS).map(([key,b])=>'<button class="'+(key===fishingBait?'selected':'')+'" data-action="fish-bait-select" data-key="'+key+'" aria-pressed="'+(key===fishingBait)+'"><b>'+fishWords(b.name,b.idName)+'</b><small>'+f.bait[key]+' '+fishWords('available','tersedia')+'</small></button>').join('')+'</div>';
+ body.innerHTML=head+(piers.length?(!active?baitPicker:'')+'<section class="fishing-control" id="fishingControls">'+fishingControls(now)+'</section>':'');
+ if(active)return;
+ const conditions=F.fishingConditions(now),last=f.records[0];
+ if(last)body.innerHTML+='<div class="fishing-latest"><span>'+fishWords('LAST CATCH','TANGKAPAN TERAKHIR')+'</span><b>'+fishName(last.kind)+' · '+last.length+' cm</b></div>';
+ body.innerHTML+='<details class="fishing-equipment" '+(!f.starter?'open':'')+'><summary>'+fishWords('Bait & equipment','Umpan & perlengkapan')+'</summary><div class="fishing-gear">'+(!f.starter?'<p>'+fishWords('Three free earthworms for your first casts.','Tiga cacing gratis untuk pancingan pertamamu.')+'</p>'+action(fishWords('Claim starter bait','Ambil umpan awal'),'fish-starter',''):'')+'<div class="item-actions">'+Object.entries(F.BAITS).map(([key,b])=>action(fishWords(b.name,b.idName)+' ×5 · ◉ '+b.price*5,'fish-bait',key,5,farm.s.coins<b.price*5)).join('')+'</div><p>'+fishWords('Dough favors carp. Evening and rain change which fish are more likely to bite.','Adonan lebih menarik ikan mas. Malam dan hujan memengaruhi jenis ikan yang lebih mungkin menggigit.')+'</p>'+(f.rod<3?'<p>'+fishWords('Better rods improve your chances of catching snakehead. Next rod: level ','Pancing yang lebih baik memperbesar peluang menangkap gabus. Pancing berikutnya: level ')+(f.rod===1?5:7)+' · ◉ '+(f.rod===1?120:300)+' · '+(f.rod===1?10:20)+' '+fishWords('wood','kayu')+(f.rod===2?' · 10 '+fishWords('stone','batu'):'')+'</p>'+action(fishWords('Upgrade rod','Upgrade pancing'),'fish-rod','',1,Boolean(f.cast)||farm.level<(f.rod===1?5:7)||farm.s.coins<(f.rod===1?120:300)||farm.s.materials.wood<(f.rod===1?10:20)||farm.s.materials.stone<(f.rod===1?0:10)):'<p>'+fishWords('Your rod is fully upgraded.','Pancing sudah mencapai level maksimum.')+'</p>')+'</div></details>'+fishingBag()+'<details class="fishing-journal"><summary>'+fishWords('Fishing journal','Jurnal memancing')+' · '+f.caught+'</summary><p>'+fishWords('Largest catch','Tangkapan terbesar')+': '+f.best+' cm</p>'+f.records.map(r=>'<div><span>'+fishName(r.kind)+'</span><b>'+r.length+' cm</b></div>').join('')+'</details>';
+}
+function focusFishing(slot){const b=farm.s.buildings.find(b=>b.slot===Number(slot)&&b.kind==='pier');if(!b)return;fishingSlot=b.slot;const mobile=camera.width<=760;camera.focus(b.x+(b.rotation===2?1:-1)*(mobile?12:45),b.y);if(mobile)camera.zoomAt(1.35/camera.zoom);else if(camera.zoom<2)camera.zoomAt(2/camera.zoom);if(panel==='fishing'){if(mobile)camera.pan(0,-Math.min(180,camera.height*.2));else camera.pan(-215,0);}}
+function handleFishingAction(type,key,qty){
+ if(!type.startsWith('fish-'))return false;
+ const label=r=>r.escaped?fishWords('The fish escaped. Bait was used.','Ikan terlepas. Umpan sudah terpakai.'):r.full?fishWords('Fish landed. Make room, then keep it.','Ikan didapat. Kosongkan tas, lalu simpan.'):r.caught?fishName(r.caught.kind)+' · '+r.caught.length+' cm · +'+r.xp+' XP':fishWords('Ready.','Siap.');
+ if(type==='fish-bait-select'){if(Object.hasOwn(F.BAITS,key)){fishingBait=key;renderPanel();}}
+ else if(type==='fish-view')focusFishing(Number(key));
+ else if(type==='fish-pier'){fishingSlot=Number(key);focusFishing(fishingSlot);renderPanel();}
+ else if(type==='fish-starter')void transact(type,{},fishWords('Three starter baits added.','Tiga umpan awal ditambahkan.'),'buy');
+ else if(type==='fish-bait')void transact(type,{bait:key,qty},fishWords('Bait added to your kit.','Umpan masuk ke perlengkapan.'),'buy');
+ else if(type==='fish-rod')void transact(type,{},fishWords('Your fishing rod is upgraded.','Pancing berhasil di-upgrade.'),'complete');
+ else if(type==='fish-cast'){focusFishing(fishingSlot);void transact(type,{slot:fishingSlot,bait:fishingBait},fishWords('Line cast. Watch the bobber.','Pancing dilempar. Perhatikan pelampung.'),'cast');}
+ else if(type==='fish-hook')void transact(type,{id:Number(key)},r=>r.escaped?label(r):fishWords('Hook set. Reel with the rhythm.','Kail terpasang. Gulung sesuai ritme.'),'fish-reel');
+ else if(type==='fish-reel')void transact(type,{id:Number(key)},r=>{if(r.caught)audio.play('fish-catch');return label(r);},'fish-reel');
+ else if(type==='fish-cancel')void transact(type,{id:Number(key)},fishWords('Cast cancelled. Used bait is not returned.','Pancingan dibatalkan. Umpan terpakai tidak dikembalikan.'),'cancel');
+ else if(type==='fish-sell')void transact(type,{kind:key,qty},r=>fishWords('Fish sold · +','Ikan terjual · +')+r.earned+fishWords(' coins.',' koin.'),'sell');
+ return true;
+}
+function fishingView(){return panel==='fishing'||farm.s.fishing.cast?{slot:fishingSlot}:null;}
+function tickFishing(tick){
+ if(tick-fishingLastTick>80&&panel==='fishing'&&!document.hidden){fishingLastTick=tick;const now=Math.max(farm.s.lastSeen,serverClock()),c=farm.s.fishing.cast,stage=F.fishingStage(c,now),signature=(c?.id||0)+':'+stage+':'+(c?.reels||0)+':'+transactionBusy;
+  const controls=$('fishingControls');if(controls&&fishingPaint!==signature){fishingPaint=signature;controls.innerHTML=fishingControls(now);if(['idle','escaped','landed'].includes(stage)&&$('farmPanel').dataset.fishingActive==='true')renderPanel();}
+  const cue=(c?.id||0)+':'+stage+':'+(c?.reels||0);if(fishingCue!==cue){fishingCue=cue;if(stage==='bite'||stage==='pull')audio.play('fish-bite');}
+  const marker=document.querySelector('[data-fishing-marker]');if(marker&&c?.hookedAt){const target=c.hookedAt+(c.reels+1)*3000;marker.style.left=Math.max(0,Math.min(100,(now-target+3000)/4600*100))+'%';}
+  const wait=document.querySelector('[data-fishing-wait]');if(wait&&c)wait.textContent=fishWords('Waiting for a bite…','Menunggu gigitan…');
+ }requestAnimationFrame(tickFishing);
+}
