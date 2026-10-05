@@ -109,7 +109,12 @@
         "tilapia": 0,
         "carp": 0,
         "catfish": 0,
-        "snakehead": 0
+        "snakehead": 0,
+        "gourami": 0,
+        "pacu": 0,
+        "pangasius": 0,
+        "knifefish": 0,
+        "arapaima": 0
       },
       "caught": 0,
       "best": 0,
