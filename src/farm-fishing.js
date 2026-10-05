@@ -49,21 +49,61 @@ export function createFish(kind='tilapia'){
 }
 export function animateFish(model,time,strength=1){const f=model.userData.fish;if(!f)return;const p=f.body.geometry.attributes.position;for(let i=0;i<p.count;i++){const x=f.base[i*3],tailWeight=Math.max(0,-x/f.length+.22);p.setZ(i,f.base[i*3+2]+Math.sin(time*7.4+x*.11)*tailWeight*3.2*strength);}p.needsUpdate=true;f.tail.rotation.y=Math.sin(time*7.4-2.3)*.3*strength;for(let i=0;i<f.pectorals.length;i++)f.pectorals[i].rotation.x=Math.sin(time*3+i)*.08*strength;}
 
-export function createPier(materials,finished=true){
+function pierRoof(g,m,cx,width,depth,eaves,rise){
+ const points=[[cx-width/2,eaves,-depth/2],[cx+width/2,eaves,-depth/2],[cx+width/2,eaves,depth/2],[cx-width/2,eaves,depth/2]],positions=[],uv=[];
+ for(let i=0;i<4;i++){positions.push(...points[(i+1)%4],...points[i],cx,eaves+rise,0);uv.push(0,0,width/40,0,width/80,depth/80);}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.computeVertexNormals();geo.userData.buildingOwned=true;add(g,geo,m,0,0,0);
+ for(let i=0;i<4;i++)beam(g,m,points[i],points[(i+1)%4],1.5);
+}
+function pierArchitecture(g,m,level,metal){
+ const stone=m.stone,brass=physical('pier-brass','#b09251',.35,.7);
+ // All tiers keep the same landing, water access and collision footprint.
+ if(level>=2){
+  for(const x of[-86,-22,48])for(const z of[-38,38]){block(g,stone,x,-15,z,14,45,14);block(g,metal,x,8,z,15,2,15);}
+  for(const z of[-46,46])for(const x of[-98,-45,8,58]){block(g,m.darkWood,x,62,z,4,12,4);add(g,ball,brass,x,68,z,2.2);}
+  for(const z of[-46,46])block(g,m.wood,-21,64,z,164,3,4);
+  block(g,m.darkWood,30,27,-31,36,18,22);block(g,m.wood,30,37,-31,38,3,24);block(g,brass,30,31,-43,4,2,1);
+ }
+ if(level===3){
+  for(const x of[-30,54])for(const z of[-34,34]){block(g,m.darkWood,x,61,z,5,86,5);beam(g,m.wood,[x,83,z],[x+(x<0?15:-15),102,z],1.6);}
+  for(const z of[-34,34])block(g,m.wood,12,103,z,90,6,6);
+  pierRoof(g,m.roof||m.darkWood,12,106,86,105,22);
+ }
+ if(level>=4){
+  const top=level===5?132:112,cx=level===5?-20:-4,w=level===5?170:140,left=cx-w/2+8,right=cx+w/2-8;
+  for(const x of[left,right])for(const z of[-35,35]){block(g,stone,x,30,z,11,24,11);block(g,m.darkWood,x,(top+42)/2,z,6,top-42,6);block(g,brass,x,43,z,9,3,9);block(g,m.wood,x,top,z,11,6,11);beam(g,m.wood,[x,top-20,z],[x+(x<cx?18:-18),top,z],2);}
+  for(const z of[-35,35])block(g,m.wood,cx,top,z,w-10,6,7);
+  for(const x of[left,right])block(g,m.wood,x,top,0,7,6,78);
+  pierRoof(g,m.roof||m.darkWood,cx,w,94,top+3,level===5?26:30);
+  for(const z of[-46,46])for(let x=-88;x<54;x+=23){beam(g,m.darkWood,[x,30,z],[x+20,58,z],.9);beam(g,m.darkWood,[x,58,z],[x+20,30,z],.9);}
+  for(const x of[right])for(const z of[-35,35]){beam(g,brass,[x,top-4,z],[x,top-16,z],.55);add(g,ball,physical('pier-warm-lamp','#ffe2a1',.3),x,top-20,z,3,5,3);}
+  if(level===5){
+   pierRoof(g,m.roof||m.darkWood,cx,94,58,top+29,20);
+   add(g,ball,brass,cx,top+52,0,3);beam(g,brass,[cx,top+48,0],[cx,top+60,0],.8);
+   for(const z of[-32,32]){block(g,stone,45,25,z,15,14,15);block(g,m.soil,45,33,z,12,1,12);for(let i=0;i<5;i++)add(g,ball,m.green||m.darkWood,45+Math.sin(i*2)*4,38+i%2*3,z+Math.cos(i*2)*4,3,6,3);}
+   for(const z of[-44,44])block(g,brass,-21,65,z,164,1,1);
+  }
+ }
+}
+export function createPier(materials,finished=true,level=1,upgrading=false,merge=null){
  const g=new THREE.Group(),m=materials,metal=physical('pier-bolt','#727c76',.36,.65);
  for(const x of[-86,-22,48])for(const z of[-38,38]){block(g,m.darkWood,x,-5,z,9,64,9);add(g,new THREE.CylinderGeometry(6,6,2,16),metal,x,27,z);}
  for(const z of[-35,35])block(g,m.darkWood,-17,9,z,176,9,8);
  const boards=finished?19:5;for(let i=0;i<boards;i++){const x=-100+i*10.5;block(g,m.wood,x,16,0,9.8,4,92);for(const z of[-35,35])add(g,new THREE.CylinderGeometry(.75,.75,.8,8),metal,x,18.3,z);}
  if(!finished){block(g,m.wood,50,28,18,65,8,24);g.userData.roofHeight=30;return g;}
  for(const z of[-46,46]){for(const x of[-98,-45,8,58]){block(g,m.darkWood,x,36,z,4,40,4);add(g,new THREE.CylinderGeometry(3,3,1.5,12),metal,x,57,z);}block(g,m.wood,-21,51,z,164,4,4);block(g,m.wood,-21,36,z,164,2,3);}
- const ramp=block(g,m.wood,89,10,0,62,4,88);ramp.rotation.z=-.28;const rampSteps=[];for(let i=0;i<6;i++)rampSteps.push(block(g,m.darkWood,63+i*10,18-i*3,0,2,1,88));g.userData.pierRamp={ramp,steps:rampSteps};
+ const rampGroup=new THREE.Group();g.add(rampGroup);const ramp=block(rampGroup,m.wood,89,10,0,62,4,88);ramp.rotation.z=-.28;const rampSteps=[];for(let i=0;i<6;i++)rampSteps.push(block(rampGroup,m.darkWood,63+i*10,18-i*3,0,2,1,88));g.userData.pierRamp={ramp,steps:rampSteps};
  for(const z of[-12,12])for(const x of[-9,9])block(g,m.darkWood,x+5,28,z+17,2,22,2);for(let i=0;i<5;i++)block(g,m.wood,i*5-5,39,17,4.5,2,30);block(g,m.wood,5,53,3,25,4,3);
  const orange=physical('lifebuoy','#c86729',.62),rope=physical('rope','#d5c9a9',.92);
- const buoy=add(g,new THREE.TorusGeometry(10,3,12,36),orange,30,42,48);for(let i=0;i<4;i++){const a=i*TAU/4;const band=add(g,new THREE.TorusGeometry(3.2,.9,8,12),materials.plaster,30+Math.cos(a)*10,42+Math.sin(a)*10,48);band.rotation.set(Math.PI/2,a,0);}
+ const buoy=add(g,new THREE.TorusGeometry(10,3,12,36),orange,30,42,45);for(let i=0;i<4;i++){const a=i*TAU/4;const band=add(g,new THREE.TorusGeometry(3.2,.9,8,12),materials.plaster,30+Math.cos(a)*10,42+Math.sin(a)*10,45);band.rotation.set(Math.PI/2,a,0);}
  const loop=new THREE.CatmullRomCurve3([new THREE.Vector3(30,57,46),new THREE.Vector3(24,46,49),new THREE.Vector3(30,42,49)]);add(g,new THREE.TubeGeometry(loop,16,.55,5,false),rope,0,0,0);
- for(const x of[-72,-48])beam(g,metal,[x,22,44],[x,-20,56],1.1);for(let i=0;i<6;i++)beam(g,metal,[-72,18-i*6,46+i*1.7],[-48,18-i*6,46+i*1.7],.9);
+ for(const x of[-72,-48])beam(g,metal,[x,22,44],[x,-20,48.5],1.1);for(let i=0;i<6;i++)beam(g,metal,[-72,18-i*6,46+i*.5],[-48,18-i*6,46+i*.5],.9);
  block(g,m.darkWood,42,25,-17,24,15,18);block(g,m.wood,42,33,-17,26,2,20);for(const x of[31,53])block(g,metal,x,28,-17,1,12,20);
- const lantern=physical('pier-lantern','#fff0c0',.32);block(g,metal,-80,30,-27,10,2,10);for(const x of[-84,-76])for(const z of[-31,-23])beam(g,metal,[x,31,z],[x,43,z],.6);add(g,ball,lantern,-80,37,-27,3,5,3);add(g,new THREE.ConeGeometry(8,5,16),metal,-80,45,-27);g.userData.roofHeight=58;return g;
+ const lantern=physical('pier-lantern','#fff0c0',.32);block(g,metal,-80,30,-27,10,2,10);for(const x of[-84,-76])for(const z of[-31,-23])beam(g,metal,[x,31,z],[x,43,z],.6);add(g,ball,lantern,-80,37,-27,3,5,3);add(g,new THREE.ConeGeometry(8,5,16),metal,-80,45,-27);
+ pierArchitecture(g,m,level,metal);g.userData.buildingKind='pier';g.userData.buildingLevel=level;g.userData.roofHeight=new THREE.Box3().setFromObject(g).max.y;
+ if(upgrading){const top=g.userData.roofHeight+8;for(const x of[-107,58])for(const z of[-43,43]){block(g,m.darkWood,x,(18+top)/2,z,3,top-18,3);beam(g,m.wood,[x,27,z],[x===-107?58:-107,top-2,z],.7);}for(const z of[-43,43])block(g,m.wood,-24.5,top,z,168,2,4);}
+ // Keep the ramp unbatched: its slope follows the height of either riverbank.
+ return merge?merge(g):g;
 }
 export function createRod(level=1){
  const g=new THREE.Group(),graphite=physical('rod:'+level,level===3?'#34596e':level===2?'#574b37':'#343f38',.3,.15),cork=physical('cork','#b69862',.95),metal=physical('reel-metal','#99a7a3',.24,.8);
@@ -98,7 +138,7 @@ export class FishingScene{
   for(let i=0;i<p.count;i++){const v=curve.getPoint(i/(p.count-1));p.setXYZ(i,v.x,v.y,v.z);}p.needsUpdate=true;this.line.geometry.computeBoundingSphere();this.line.visible=Boolean(c&&stage!=='escaped'&&stage!=='landed');
   for(let i=0;i<this.ripples.length;i++){const progress=(time*.5+i/3)%1,r=this.ripples[i];r.visible=Boolean(c&&casting===1&&stage!=='escaped'&&stage!=='landed');r.position.set(float.x,worldWater+.2,float.z);r.scale.setScalar(3+progress*(bite?18:10));r.material.opacity=(1-progress)*(bite?.4:.2);}
   const swimming=c&&casting===1&&['bite','reeling','pull'].includes(stage);
-  if(swimming){if(this.swimKey!==c.id){if(this.swimFish){this.group.remove(this.swimFish);this.dispose(this.swimFish);}const outcome=this.rules.fishingOutcome(c.seed,c.bait,c.rod,c.conditions);this.swimFish=createFish(outcome.kind);this.swimFish.scale.setScalar(.32);this.group.add(this.swimFish);this.swimKey=c.id;}this.swimFish.visible=true;this.swimFish.position.set(float.x-this.swimFish.userData.fish.length*.16+Math.sin(time*1.6)*(pulling?1:4),float.y-7+Math.sin(time*2)*.6,float.z+Math.cos(time*1.6)*(pulling?1:4));this.swimFish.rotation.set(.06,Math.sin(time*1.6)*.15,.05);animateFish(this.swimFish,time,pulling?1.25:.6);}else if(this.swimFish)this.swimFish.visible=false;
+  if(swimming){if(this.swimKey!==c.id){if(this.swimFish){this.group.remove(this.swimFish);this.dispose(this.swimFish);}const outcome=this.rules.fishingOutcome(c.seed,c.bait,c.rod,c.conditions,this.rules.buildingLevel(b,now));this.swimFish=createFish(outcome.kind);this.swimFish.scale.setScalar(.32);this.group.add(this.swimFish);this.swimKey=c.id;}this.swimFish.visible=true;this.swimFish.position.set(float.x-this.swimFish.userData.fish.length*.16+Math.sin(time*1.6)*(pulling?1:4),float.y-7+Math.sin(time*2)*.6,float.z+Math.cos(time*1.6)*(pulling?1:4));this.swimFish.rotation.set(.06,Math.sin(time*1.6)*.15,.05);animateFish(this.swimFish,time,pulling?1.25:.6);}else if(this.swimFish)this.swimFish.visible=false;
   if(celebrating){if(this.catchKey!==last.at){if(this.catchFish){this.group.remove(this.catchFish);this.dispose(this.catchFish);}this.catchFish=createFish(last.kind);this.catchFish.scale.setScalar(.37);this.group.add(this.catchFish);this.catchKey=last.at;}const age=(now-last.at)/1000;this.catchFish.position.set(-112+Math.min(1,age/2)*48,worldWater+Math.sin(Math.min(1,age/2)*Math.PI)*48+Math.min(1,age/2)*26,-10);this.catchFish.rotation.set(.15,time*.5,.2);animateFish(this.catchFish,time,1.5);this.catchFish.visible=true;}else if(this.catchFish)this.catchFish.visible=false;
  }
  dispose(o){o.traverse(v=>{if(v.geometry&&!v.geometry.userData.cc0Shared)v.geometry.dispose();});}

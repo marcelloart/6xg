@@ -2,3 +2,5 @@
 
 @media(max-width:760px){.toolbar #openFishing{display:none}.farm-panel[data-view="fishing"][data-fishing-active="true"] .panel-content{padding:8px 16px 14px}.farm-panel[data-view="fishing"][data-fishing-active="true"] #panelTitle{font-size:19px;margin:2px 0 8px}.farm-panel[data-view="fishing"][data-fishing-active="true"] .panel-head{padding:12px 16px 0}}
 @media(max-width:760px){.farm-panel[data-view="fishing"]{left:12px;right:12px;top:auto;bottom:calc(90px + env(safe-area-inset-bottom));width:auto;max-height:50dvh;border-radius:22px}}
+
+.fishing-pier-upgrade{display:flex;align-items:center;gap:12px;margin:-2px 0 14px}.fishing-pier-upgrade>small{flex:1;font-size:12px;color:#65785e;line-height:1.5}.fishing-pier-upgrade .action{min-height:44px;flex:none}.pier-upgrade-benefit{padding:10px 12px;background:#e7eedf;border-radius:10px;font-size:13px;color:#466744}

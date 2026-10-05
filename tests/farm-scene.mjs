@@ -118,7 +118,7 @@ for(const kind of window.BaraFarm.UPGRADE_KINDS){
 const lateArt=Object.create(FarmRenderer3D.prototype);lateArt.catalogue={};lateArt.catalogueQueue=['barn'];
 assert.equal(lateArt.buildingArtKey('barn',1),'barn');assert.equal(lateArt.buildingArtKey('barn',3),'barn@3');lateArt.buildingArtKey('barn',3);
 assert.equal(lateArt.catalogueQueue.filter(v=>v?.key==='barn@3').length,1,'Repeated panel renders queue one thumbnail per tier');
-console.log('All 50 building designs passed: distinct silhouette, finite geometry, original footprint, rotated fit, scaffolding and bounded preview requests.');
+console.log('All '+window.BaraFarm.UPGRADE_KINDS.length*5+' building designs passed: distinct silhouette, finite geometry, original footprint, rotated fit, scaffolding and bounded preview requests.');
 
 let architectureTime=2200000;const architectureFarm=new window.BaraFarm.Farm({clock:()=>architectureTime});architectureFarm.s.coins=5000;architectureFarm.s.materials={wood:500,stone:500,meat:500};architectureFarm.s.progress.xp=12000;
 assert(architectureFarm.build('barn',{x:1170,y:740}).ok);architectureTime+=90000;architectureFarm.now();assert(architectureFarm.upgradeBuilding(0).ok);architectureTime=architectureFarm.s.buildings[0].upgrade.readyAt;architectureFarm.now();

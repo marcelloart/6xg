@@ -44,6 +44,7 @@ function openPanel(view){
  placement=null;pendingBuild=null;$('placementDock').hidden=true;
  if(panel===view){closePanel();return;}
  if(view==='fishing'&&selectedBuilding!==null&&farm.s.buildings.some(b=>b.slot===selectedBuilding&&b.kind==='pier'))fishingSlot=selectedBuilding;
+ if(view==='upgrades')upgradeFocus=selectedBuilding;
  if(view!=='building-sale')buildingSaleTarget=null;panel=view;document.body.classList.add('panel-open');selectedPlot=null;selectedBuilding=null;$('plotInfo').hidden=true;$('farmPanel').hidden=false;
  for(const [name,id]of[['farm','openFarm'],['shop','openShop'],['build','openBuild'],['inventory','openInventory'],['layout','openLayout'],['goals','openGoals'],['production','openProduction'],['livestock','openLivestock'],['friends','openFriends'],['fishing','openFishing'],['more','openMore']]){const active=view===name||(name==='more'&&['inventory','layout','goals','production','livestock','friends','fishing'].includes(view));$(id).classList.toggle('active',active);$(id).setAttribute('aria-expanded',String(active));}
  renderPanel();$('panelBody').parentElement.scrollTop=0;if(view==='friends'&&!communityLoaded)loadFriends();if(view==='fishing')focusFishing(farm.s.fishing.cast?.slot??fishingSlot);
