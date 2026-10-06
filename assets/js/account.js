@@ -8,12 +8,12 @@ function openAccountDialog(){
     authLoading=import(new URL(window.BARA_AUTH_ENTRY,document.baseURI).href)
       .then(module=>module.mountAuth())
       .catch(()=>{
-        authLoading=null;
+        authLoading=null;window.HarvestLoading?.fail();
         document.getElementById('accountBody').textContent=harvestT_account_js('Login belum dapat dimuat. Periksa koneksi, lalu buka Akun kembali.');
       });
   }
 }
 document.getElementById('accountButton').addEventListener('click',openAccountDialog);
 document.addEventListener('bara:account-open',openAccountDialog);
-const restore=()=>{if(!authLoading)authLoading=import(new URL(window.BARA_AUTH_ENTRY,document.baseURI).href).then(module=>module.mountAuth()).catch(()=>{authLoading=null;});};
-if('requestIdleCallback'in window)requestIdleCallback(restore,{timeout:2000});else setTimeout(restore,500);
+const restore=()=>{if(!authLoading)authLoading=import(new URL(window.BARA_AUTH_ENTRY,document.baseURI).href).then(module=>module.mountAuth()).catch(()=>{authLoading=null;window.HarvestLoading?.fail();});};
+if(window.BARA_PAGE==='game')restore();else if('requestIdleCallback'in window)requestIdleCallback(restore,{timeout:2000});else setTimeout(restore,500);
