@@ -1,4 +1,4 @@
-# 6XG — Ladang Bara
+# 6XG Harvest
 
 Game kebun di [6xg.online](https://6xg.online): beli bibit, tanam, tunggu matang, panen, jual hasil di toko, beli bahan, lalu bangun rumah dan lumbung. Dunia 3D memakai model kebun asli, tekstur alam, pencahayaan matahari, dan kamera yang dapat diputar.
 
@@ -189,3 +189,8 @@ Claim three starter earthworms once. Every cast spends one bait. Watch the float
 Earthworms cost 3 game coins; dough costs 5 and favors carp. Rain and Jakarta night influence species chances, using the existing farm weather and lighting clocks. Rod upgrades unlock at farmer levels 5 and 7. The personal journal stores the last eight catches and the largest catch. Fishing uses game coins only.
 
 The pier, rod, reel, hook, bobber, continuous fish bodies and ray-textured fins are modeled in src/farm-fishing.js. Cast arcs, line tension, surface ripples, submerged fish and landed catches animate smoothly. Catalogue pictures render the same models used in the world. Save schema v10 migrates previous farms in place. All bait spending, server-generated cast seeds, catch timing, stock and sales pass through authenticated atomic commands with retry receipts. Public farm visits exclude fishing inventory, equipment and cast clocks.
+
+
+## Pasar pemain
+
+Buka Toko → Pasar pemain untuk menjual dan membeli hasil kebun antarpemain dengan koin game, harga dan jumlah sendiri, stok titipan, serta riwayat transaksi. Rupiah, USD, dan crypto ditampilkan belum aktif sampai layanan pembayaran tersedia. Lihat [MARKETPLACE.md](MARKETPLACE.md) untuk aturan dan status integrasi.

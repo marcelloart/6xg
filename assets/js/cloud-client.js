@@ -61,10 +61,12 @@ class BaraFarmSession extends BaraCloudSession{
  accept(data){if(data.userId!==this.userId||!Number.isSafeInteger(data.revision)||data.revision<0||data.authoritative!==true||![6,7,8,9,10].includes(data.save?.version)||!Number.isSafeInteger(data.serverTime)||data.serverTime<1)throw new Error(harvestT_cloud_client_js('Perbarui game untuk memakai transaksi server.'));this.revision=data.revision;this.onState(data);this.onSaved(JSON.stringify(data.save),data.revision);return data;}
  async load(){const data=this.accept(await this.request('GET'));this.onStatus('synced',harvestT_cloud_client_js('Progres dan transaksi diperiksa server.'));return data;}
  changed(){}
- async action(type,args){if(this.saving||this.command)return{ok:false,message:harvestT_cloud_client_js('Transaksi sebelumnya sedang dikonfirmasi. Tunggu atau tekan Coba lagi.')};this.command={id:crypto.randomUUID(),revision:this.revision,type,args};return this.sendCommand();}
+ async action(type,args){return this.createCommand(type,args,'/api/farm-action');}
+ async marketAction(type,args){return this.createCommand(type,args,'/api/farm-market-action');}
+ async createCommand(type,args,path){if(this.saving||this.command)return{ok:false,message:harvestT_cloud_client_js('Transaksi sebelumnya sedang dikonfirmasi. Tunggu atau tekan Coba lagi.')};this.commandPath=path;this.command={id:crypto.randomUUID(),revision:this.revision,type,args};return this.sendCommand();}
  async sendCommand(){
   if(this.saving||!this.command)return{ok:false,message:harvestT_cloud_client_js('Menunggu konfirmasi server.')};this.saving=true;this.onStatus('saving',harvestT_cloud_client_js('Memeriksa transaksi…'));
-  try{const data=this.accept(await this.request('POST',this.command,'/api/farm-action'));this.command=null;this.onStatus('synced',harvestT_cloud_client_js('Progres tersimpan online.'));return data.result;}
+  try{const data=this.accept(await this.request('POST',this.command,this.commandPath||'/api/farm-action'));this.command=null;this.onStatus('synced',harvestT_cloud_client_js('Progres tersimpan online.'));return data.result;}
   catch(error){
    if(this.closed)return{ok:false,message:harvestT_cloud_client_js('Sesi telah berakhir.')};
    if(error.status&&error.status<500&&error.status!==429){this.command=null;if(error.data?.save)this.accept(error.data);else if(error.status===409)await this.load().catch(()=>{});this.onStatus('synced',error.message);return{ok:false,message:error.message};}
@@ -72,6 +74,7 @@ class BaraFarmSession extends BaraCloudSession{
   }finally{this.saving=false;}
  }
  async friends(){return this.request('GET',null,'/api/farm-friends',{social:true});}
+ async market(query={}){return this.request('GET',null,'/api/farm-market?'+new URLSearchParams(query),{social:true});}
  async visit(code){if(!/^[A-F0-9]{16}$/.test(code))throw new Error(harvestT_cloud_client_js('Masukkan kode kebun yang valid.'));return this.request('GET',null,'/api/farm-visit?code='+encodeURIComponent(code),{social:true});}
  async flush(){if(this.closed||this.saving)return;if(this.command)return this.sendCommand();try{await this.load();return{ok:true};}catch{this.onStatus('error',harvestT_cloud_client_js('Koneksi terputus. Muat kembali sebelum melakukan transaksi.'));return{ok:false,message:harvestT_cloud_client_js('Server belum dapat dihubungi.')};}}
  close(){super.close();this.command=null;}

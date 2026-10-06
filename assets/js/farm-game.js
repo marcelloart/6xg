@@ -13,7 +13,7 @@ const hudFormat=n=>camera.width<=760&&n>=10000?new Intl.NumberFormat(typeof Bara
 const duration=m=>m<60?m+harvestT_farm_game_js(' menit'):m===1440?harvestT_farm_game_js('1 hari'):m===60?harvestT_farm_game_js('1 jam'):m/60+harvestT_farm_game_js(' jam');
 const countdown=ms=>{const seconds=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=seconds%60;return h?h+(typeof BaraI18n!=='undefined'&&BaraI18n.language==='en'?'h ':'j ')+String(m).padStart(2,'0')+'m':String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');};
 const escape=text=>String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const action=(label,type,key,qty=1,disabled=false,soft=false)=>`<button class="action${soft?' soft':''}" data-action="${type}" data-key="${key}" data-qty="${qty}" ${disabled?'disabled':''}>${label}</button>`;
+const action=(label,type,key,qty=1,disabled=false,soft=false)=>`<button type="button" class="action${soft?' soft':''}" data-action="${type}" data-key="${key}" data-qty="${qty}" ${disabled?'disabled':''}>${label}</button>`;
 function toast(text,{preserveNames=false}={}){if(!preserveNames)text=harvestT_farm_game_js(text);$('toast').textContent=text;$('toast').hidden=false;$('announcer').textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').hidden=true;},3800);}
 function save(){
  if(!gate.canPlay||!activeSaveKey)return false;
@@ -46,7 +46,7 @@ function openPanel(view){
  if(view==='fishing'&&selectedBuilding!==null&&farm.s.buildings.some(b=>b.slot===selectedBuilding&&b.kind==='pier'))fishingSlot=selectedBuilding;
  if(view==='upgrades')upgradeFocus=selectedBuilding;
  if(view!=='building-sale')buildingSaleTarget=null;panel=view;document.body.classList.add('panel-open');selectedPlot=null;selectedBuilding=null;$('plotInfo').hidden=true;$('farmPanel').hidden=false;
- for(const [name,id]of[['farm','openFarm'],['shop','openShop'],['build','openBuild'],['inventory','openInventory'],['layout','openLayout'],['goals','openGoals'],['production','openProduction'],['livestock','openLivestock'],['friends','openFriends'],['fishing','openFishing'],['more','openMore']]){const active=view===name||(name==='more'&&['inventory','layout','goals','production','livestock','friends','fishing'].includes(view));$(id).classList.toggle('active',active);$(id).setAttribute('aria-expanded',String(active));}
+ for(const [name,id]of[['farm','openFarm'],['shop','openShop'],['build','openBuild'],['inventory','openInventory'],['layout','openLayout'],['goals','openGoals'],['production','openProduction'],['livestock','openLivestock'],['friends','openFriends'],['fishing','openFishing'],['more','openMore']]){const active=view===name||(name==='more'&&['inventory','layout','goals','production','livestock','friends','fishing','market'].includes(view));$(id).classList.toggle('active',active);$(id).setAttribute('aria-expanded',String(active));}
  renderPanel();$('panelBody').parentElement.scrollTop=0;if(view==='friends'&&!communityLoaded)loadFriends();if(view==='fishing')focusFishing(farm.s.fishing.cast?.slot??fishingSlot);
 }
 const sellingShop=()=>shop==='sell'||shop==='goods'||shop==='livestock'||shop==='fish';
@@ -92,11 +92,13 @@ function purchaseQuantity(type,key,initial=1){const p=purchaseInfo(type,key),val
 function refreshPurchaseQuantity(input,normalize=false){const p=purchaseInfo(input.dataset.type,input.dataset.key),raw=Number(input.value),max=Math.max(1,p.max),valid=input.value!==''&&Number.isSafeInteger(raw)&&raw>=1&&raw<=p.max,value=Math.max(1,Math.min(max,Number.isFinite(raw)?Math.trunc(raw):1));purchaseQuantities.set(input.dataset.type+':'+input.dataset.key,value);if(normalize)input.value=String(value);input.max=String(max);const message=fishWords('Enter a whole number from 1 to ','Isi bilangan bulat dari 1 sampai ')+max+'.';input.setCustomValidity(valid||normalize?'':message);input.setAttribute('aria-invalid',String(!valid&&!normalize));const button=input.parentElement.querySelector('button');button.dataset.qty=String(value);button.textContent=fishWords('Buy ','Beli ')+value+' '+p.name.toLowerCase()+' · ◉ '+format(value*p.price);button.disabled=transactionBusy||p.max<value||!p.allowed(value)||(!valid&&!normalize);const hint=input.parentElement.querySelector('.purchase-hint');hint.textContent=message;hint.hidden=valid||normalize;}
 function renderPanel(){
  if(!panel)return;
+ if(panel==='market'&&document.activeElement?.matches('.market-form input,.market-form select'))return;
  if(document.activeElement?.matches('.purchase-quantity')){refreshPurchaseQuantity(document.activeElement);return;}
  if(panel==='shop'&&document.activeElement?.id==='tradeQuantity'){refreshTradeQuantity();return;}
  $('shopTabs').hidden=panel!=='shop';document.querySelectorAll('[data-shop]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.shop===shop)));
  const body=$('panelBody'),s=farm.s;$('farmPanel').dataset.view=panel;$('farmPanel').dataset.shop=panel==='shop'?shop:'';
- if(panel==='fishing'){renderFishing(body);
+ if(panel==='market'){renderMarket(body);
+ }else if(panel==='fishing'){renderFishing(body);
  }else if(panel==='farm'){
   $('panelLabel').textContent=harvestT_farm_game_js('KEBUNMU');$('panelTitle').textContent=harvestT_farm_game_js('Tanam hari yang baik.');$('panelCopy').textContent=harvestT_farm_game_js('Pilih bibit lalu klik tanah kosong. Tanaman matang bisa langsung dipanen.');
   body.innerHTML='<div class="seed-shelf">'+Object.entries(F.CROPS).filter(([key])=>s.seeds[key]>0).map(([key,c])=>(harvestT_farm_game_js("<button class=\"seed-card ")+(selectedCrop===key?'selected':'')+harvestT_farm_game_js("\" data-action=\"select\" data-key=\"")+(key)+harvestT_farm_game_js("\"><div class=\"seed-art\">")+(picture(key,c.icon))+harvestT_farm_game_js("</div><h3>")+(c.name)+harvestT_farm_game_js("</h3><small>")+(duration(c.minutes))+harvestT_farm_game_js(" · ")+(s.seeds[key])+harvestT_farm_game_js(" bibit</small><span>")+(selectedCrop===key?harvestT_farm_game_js('✓ Dipilih'):harvestT_farm_game_js('Pilih bibit ↗'))+harvestT_farm_game_js("</span></button>"))).join('')+'</div>';
@@ -127,6 +129,8 @@ function renderPanel(){
   body.innerHTML=harvestT_farm_game_js('<div class="store-wallet"><span>Hasil panen <b>')+farm.used+' / '+farm.capacity+harvestT_farm_game_js('</b></span><span>Total dipanen <b>')+format(s.stats.harvested)+'</b></span></div><div class="item-actions">'+action(harvestT_farm_game_js('Jual hasil di pasar'),'shop','sell')+action(harvestT_farm_game_js('Jual olahan'),'shop','goods',1,false,true)+'</div><div class="inventory-grid">'+Object.entries(F.CROPS).map(([k,c])=>(harvestT_farm_game_js("<article><span>")+(c.icon)+harvestT_farm_game_js("</span><b>")+(c.name)+harvestT_farm_game_js("</b><small>")+(s.seeds[k])+harvestT_farm_game_js(" bibit · ")+(s.produce[k])+harvestT_farm_game_js(" panen</small></article>"))).join('')+harvestT_farm_game_js('</div><div class="catalog-heading"><h3>Hasil olahan</h3><span>Siap dijual</span></div><div class="inventory-grid">')+Object.entries(F.RECIPES).map(([k,r])=>(harvestT_farm_game_js("<article><span>")+(picture(k,r.icon))+harvestT_farm_game_js("</span><b>")+(r.name)+harvestT_farm_game_js("</b><small>")+(s.production.goods[k])+harvestT_farm_game_js(" olahan</small></article>"))).join('')+harvestT_farm_game_js('</div><div class="catalog-heading"><h3>Hasil ternak</h3></div><div class="inventory-grid">')+Object.entries(F.ANIMAL_PRODUCTS).map(([k,v])=>`<article><span>${picture(k,v.icon)}</span><b>${v.name}</b><small>${s.livestock.produce[k]} unit</small></article>`).join('')+harvestT_farm_game_js('</div><div class="item"><h3>Bahan bangunan</h3>')+Object.entries(F.MATERIALS).map(([k,m])=>`<div class="inventory-stat"><span>${m.icon} ${m.name}</span><b>${s.materials[k]}</b></div>`).join('')+harvestT_farm_game_js('</div><h3 class="section-title">Jurnal kebun</h3>')+s.log.map(e=>'<div class="log-entry">'+escape(harvestT_farm_game_js(e.text))+'<small>'+new Date(e.at).toLocaleTimeString(typeof BaraI18n!=='undefined'?BaraI18n.locale:'id-ID',{hour:'2-digit',minute:'2-digit'})+'</small></div>').join('');
  }
  if(panel==='inventory')body.innerHTML='<div class="fishing-collection-link">'+action(fishWords('Fish basket','Keranjang ikan'),'panel','fishing',1,false,true)+'</div>'+body.innerHTML;
+ if(panel==='shop')body.innerHTML='<div class="market-shop-link"><p>'+marketWords('Trade with other players','Berdagang dengan pemain lain')+'</p>'+action(marketWords('Player market','Pasar pemain'),'panel','market')+'</div>'+body.innerHTML;
+ if(panel==='more'){const grid=body.querySelector('.more-grid');grid?.insertAdjacentHTML('afterbegin','<button type="button" data-action="panel" data-key="market"><span aria-hidden="true">🧺</span><b>'+marketWords('Player market','Pasar pemain')+'</b><small>'+marketWords('Buy, sell and set your price','Beli, jual, dan tentukan harga')+'</small></button>');}
  if(panel==='build'||panel==='layout')body.innerHTML=action(harvestWords('Sell buildings','Jual bangunan'),'panel','building-sales',1,false,true)+body.innerHTML;
  if(panel==='build')body.innerHTML=action(harvestWords('Upgrade my buildings','Upgrade bangunanku'),'panel','upgrades',1,false,true)+body.innerHTML;
 }
@@ -205,6 +209,7 @@ function chooseLocation(point){
 function onAction(event){
  const b=event.target.closest('button[data-action]');if(!b||b.disabled||!gate.canPlay||!entered||visiting)return;
  const {action:type,key}=b.dataset,qty=Number(b.dataset.qty||1);
+ if(handleMarketAction(type,key))return;
  if(handleFishingAction(type,key,qty))return;
  if(type==='select'){selectedCrop=key;pendingBuild=null;placement=null;closePanel();toast(harvestT_farm_game_js('Bibit ')+F.CROPS[key].name.toLowerCase()+harvestT_farm_game_js(' dipilih. Klik petak kosong.'));renderUI();}
  else if(type==='plot')choosePlot(Number(key));

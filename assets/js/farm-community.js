@@ -35,7 +35,7 @@ async function visitFriend(raw){
  }catch(error){if(token===communityGeneration)toast(error.message);}finally{if(token===communityGeneration){communityVisitBusy=false;renderPanel();}}
 }
 function leaveVisit(){if(!visiting)return;const previous=visiting.camera;visiting=null;renderVisitHelp();document.body.classList.remove('visiting-farm');$('visitBanner').hidden=true;Object.assign(camera,previous);pickup.reset();selectedPlot=null;selectedBuilding=null;const url=new URL(location.href);url.searchParams.delete('visit');history.replaceState(null,'',url.href);renderUI();audio.setActive(gate.canPlay&&entered);}
-function resetCommunity(){communityGeneration++;communityVisitBusy=false;communityLoading=false;communityLoaded=false;communityFriends=[];communityError='';leaveVisit();livestockSlot=null;}
+function resetCommunity(){if(typeof resetMarket==='function')resetMarket();communityGeneration++;communityVisitBusy=false;communityLoading=false;communityLoaded=false;communityFriends=[];communityError='';leaveVisit();livestockSlot=null;}
 async function communityAction(type,key,qty=1){
  if(type==='pen'){livestockSlot=Number(key);renderPanel();}
  else if(type==='livestock-pen'){livestockSlot=Number(key);panel=null;openPanel('livestock');}

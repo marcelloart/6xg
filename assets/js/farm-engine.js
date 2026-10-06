@@ -62,7 +62,7 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  const riverCenter=y=>640+110*Math.sin(y/270);
  const pierPoint=(y,rotation=0)=>({x:Math.round(riverCenter(Math.round(y))+(rotation===2?-145:145)),y:Math.round(y),rotation});
  const pierOnLand=(p,rotation=0)=>[0,2].includes(rotation)&&integer(p.y,90,2110)&&integer(p.x,0,3200)&&Math.abs(p.x-pierPoint(p.y,rotation).x)<=3&&Math.abs(p.y-1115)>=125;
- const freshFishing=()=>({rod:1,bait:{worm:0,dough:0},starter:false,nextId:1,cast:null,fish:Object.fromEntries(Object.keys(FISH).map(k=>[k,0])),caught:0,best:0,records:[]});
+ const freshFishing=()=>({rod:1,bait:{worm:0,dough:0},starter:false,nextId:1,cast:null,fish:Object.fromEntries(Object.keys(FISH).map(k=>[k,0])),caught:0,traded:0,best:0,records:[]});
  function fishingConditions(at){
   const hour=Math.floor((at+7*3600000)%86400000/3600000),slot=Math.floor(at/1800000);
   const rain=n=>{let seed=Math.imul(n^60105,1597334677);seed=Math.imul(seed^(seed>>>16),2246822507);return((seed^(seed>>>13))>>>0)/4294967296>=.82?.72:0;};
@@ -100,7 +100,8 @@ const harvestT_farm_engine_js=value=>typeof BaraI18n!=='undefined'?BaraI18n.t(va
  function validateFishing(value,state){
   const f=value;check(object(f)&&integer(f.rod,1,3)&&typeof f.starter==='boolean'&&integer(f.nextId,1,1e9)&&integer(f.caught,0,1e9)&&integer(f.best,0,280)&&Array.isArray(f.records)&&f.records.length<=8);
   const clean={rod:f.rod,bait:inventory(f.bait,Object.keys(BAITS),1000),starter:f.starter,nextId:f.nextId,cast:null,fish:inventory(f.fish,Object.keys(FISH),10000,['tilapia','carp','catfish','snakehead']),caught:f.caught,best:f.best,records:f.records.map(r=>{check(object(r)&&Object.hasOwn(FISH,r.kind)&&integer(r.length,FISH[r.kind].min,FISH[r.kind].max)&&integer(r.at,1,state.lastSeen));return{kind:r.kind,length:r.length,at:r.at};})};
-  check(f.caught>=clean.records.length&&Object.values(clean.fish).reduce((a,b)=>a+b,0)<=f.caught&&clean.records.every(r=>r.length<=f.best));
+  clean.traded=f.traded??0;check(integer(clean.traded,0,1e9));
+  check(f.caught>=clean.records.length&&Object.values(clean.fish).reduce((a,b)=>a+b,0)<=f.caught+clean.traded&&clean.records.every(r=>r.length<=f.best));
   if(f.cast){const c=f.cast;check(c.poolVersion===undefined||[1,2,3].includes(c.poolVersion));const b=state.buildings.find(b=>b.slot===c.slot);check(object(c)&&integer(c.id,1,f.nextId-1)&&b?.kind==='pier'&&b.readyAt<=c.startedAt&&integer(c.startedAt,b.readyAt,state.lastSeen)&&integer(c.seed,0,4294967295)&&Object.hasOwn(BAITS,c.bait)&&integer(c.rod,1,f.rod)&&c.biteAt===fishingBite(c.startedAt,c.seed)&&integer(c.reels,0,3));
    const conditions=fishingConditions(c.startedAt);check(object(c.conditions)&&c.conditions.night===conditions.night&&c.conditions.rain===conditions.rain);
    check((c.hookedAt===0&&c.reels===0&&c.expiresAt===c.biteAt+7000)||(integer(c.hookedAt,c.biteAt,Math.min(state.lastSeen,c.biteAt+7000))&&c.expiresAt===c.hookedAt+10600));

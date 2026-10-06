@@ -23,3 +23,20 @@ Object.assign(globalThis.BaraTranslations,{
  'Panen kebun anggur':'Vineyard harvest','Festival labu':'Pumpkin festival','Kakao pilihan':'Selected cacao','Keranjang botani':'Botanical basket',
  'Tambahkan kebun teman yang membuka kunjungan terlebih dahulu.':'Add a friend who has enabled farm visits first.','Bantuan hari ini sudah mencapai batas 5 tanaman.':'Today’s help has reached the limit of 5 crops.','Pilih tanaman yang masih tumbuh dan belum disiram teman.':'Choose a growing crop that has not been watered by a friend.','Tanaman ini sudah kamu bantu.':'You have already helped this crop.','Kirim satu hadiah per teman, maksimal 3 teman per hari.':'Send one gift per friend, up to 3 friends each day.','Bibit milikmu belum cukup untuk hadiah ini.':'You do not have enough seeds for this gift.','Penyimpanan bibit teman sudah penuh.':'Your friend’s seed storage is full.'
 });
+
+Object.assign(globalThis.BaraTranslations,{
+ "LAPAK UNTUK PANENMU": "A STALL FOR YOUR HARVEST",
+ "Panenmu.": "Your harvest.",
+ "Hargamu.": "Your price.",
+ "Pasar pemain mempertemukan hasil kebun dan kebutuhan tetangga. Jual panen, bibit, olahan, hasil ternak, ikan, serta bahan dengan harga dan jumlah yang kamu tentukan.": "The player market connects your farm goods with your neighbours. Sell harvests, seeds, crafted goods, animal products, fish and materials at your chosen price and quantity.",
+ "AKTIF SEKARANG": "AVAILABLE NOW",
+ "BELUM AKTIF": "NOT ACTIVE",
+ "Koin game": "Game coins",
+ "Beli langsung dari pemain lain. Barang dititipkan saat dijual; koin masuk ke penjual setelah transaksi selesai.": "Buy directly from other players. Listed items are reserved; sellers receive coins when the trade completes.",
+ "Jumlah sendiri · Tanpa biaya koin": "Custom quantities · No coin fee",
+ "Pembayaran dan pencairan penjual akan tersedia setelah layanan pembayaran Indonesia terhubung.": "Payments and seller withdrawals will become available after an Indonesian payment service is connected.",
+ "Menunggu layanan pembayaran": "Awaiting payment setup",
+ "Transaksi internasional akan tersedia setelah layanan pembayaran dan akun penjual terhubung.": "International transactions will become available after the payment service and seller accounts are connected.",
+ "Transaksi crypto akan tersedia setelah layanan pembayaran dan jaringan yang didukung ditentukan.": "Crypto transactions will become available after the payment service and supported network are configured.",
+ "Koin game digunakan dalam permainan dan tidak dapat dicairkan sebagai uang. Buka Toko → Pasar pemain untuk berdagang.": "Game coins are used in the game and cannot be withdrawn as money. Open Shop → Player market to trade."
+});

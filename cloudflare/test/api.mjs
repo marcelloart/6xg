@@ -21,6 +21,7 @@ before(async () => {
   await db.exec((await readFile(new URL('../migrations/0001_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
   await db.exec((await readFile(new URL('../migrations/0002_farm_saves.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
   await db.exec((await readFile(new URL('../migrations/0003_farm_actions.sql', import.meta.url), 'utf8')).replaceAll('\n', ' '));
+  for (const name of ['0004_native_sessions.sql','0005_marketplace.sql']) await db.exec((await readFile(new URL('../migrations/'+name, import.meta.url), 'utf8')).replace(/^--.*$/gm,'').replaceAll('\n',' '));
 });
 beforeEach(async () => { await db.prepare('DELETE FROM saves').run(); await db.prepare('DELETE FROM farm_saves').run(); await db.prepare('DELETE FROM farm_actions').run(); });
 after(async () => { await mf?.dispose(); });
@@ -114,7 +115,7 @@ test('only the configured game origin receives CORS permission', async () => {
   assert.match(preflight.headers.get('access-control-allow-methods'), /PUT/);
 });
 test('health checks the migration and missing auth fails closed', async () => {
-  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:10,buildingSales:true,fishing:true,pierUpgrades:true,sharedAvatars:true,riverSpecies:9,fishingOddsVersion:3,fishingOdds:{arapaima:10,tilapia:3272,carp:1785,catfish:1510,snakehead:873,gourami:1033,pacu:755,pangasius:517,knifefish:245}});
+  assert.deepEqual((await call('GET', null, undefined, {path: '/health'})).body, {ok: true, authConfigured: true, storage: true, farmStorage:true,farmSaveVersion:10,buildingSales:true,fishing:true,pierUpgrades:true,sharedAvatars:true,marketplace:true,paymentCurrencies:['coins','idr','usd','crypto'],realMoneyPayments:false,riverSpecies:9,fishingOddsVersion:3,fishingOdds:{arapaima:10,tilapia:3272,carp:1785,catfish:1510,snakehead:873,gourami:1033,pacu:755,pangasius:517,knifefish:245}});
   const unconfigured = new Miniflare(convertV4MiniflareOptions({...options, bindings: {...bindings, PRIVY_VERIFICATION_KEY: ''}, d1Databases: {DB: 'empty-test-database'}, cf: false, telemetry: {enabled: false}}));
   try {
     const res = await unconfigured.dispatchFetch('https://api.example/api/save', {headers: {authorization: 'Bearer ' + await token()}});

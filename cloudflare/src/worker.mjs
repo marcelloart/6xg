@@ -3,6 +3,8 @@ import {integer, validateSave} from './save.mjs';
 import {loadFarm, runFarmAction, parseAction} from './farm-actions.mjs';
 
 import {socialData} from './farm-social.mjs';
+import {marketData,parseMarketAction,runMarketAction} from './farm-market.mjs';
+import {authorizeNative,exchangeNative,nativeIdentity,revokeNative} from './native-auth.mjs';
 
 const MAX_BODY = 49152;
 const requests = new Map();
@@ -22,6 +24,7 @@ function rateAllowed(identity) {
 
 async function authenticate(header, env) {
   if (!header.startsWith('Bearer ') || header.length > 16384) throw new TypeError('Invalid token');
+  if(header.slice(7).startsWith('6xg_native_'))return nativeIdentity(env.DB,header.slice(7));
   const pem = env.PRIVY_VERIFICATION_KEY.replaceAll('\\n', '\n');
   if (!cachedKey || cachedKey.pem !== pem) cachedKey = {pem, key: importSPKI(pem, 'ES256')};
   const {payload} = await jwtVerify(header.slice(7), await cachedKey.key, {
@@ -64,13 +67,15 @@ export default {
     if (origin && !origins.includes(origin)) return reply(403, {error: 'origin_not_allowed'});
     const path = new URL(request.url).pathname;
     if (path === '/health' && request.method === 'GET') {
-      let storage = false, farmStorage = false;
+      let storage = false, farmStorage = false, marketStorage = false;
       try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
-        farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first(); } catch {}
+        farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first();
+        marketStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'market_listings').first(); } catch {}
       const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 10, buildingSales: true, fishing: true, pierUpgrades: true, sharedAvatars: true, riverSpecies: 9, fishingOddsVersion: 3, fishingOdds: globalThis.BaraFarm.FISHING_ODDS});
+      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 10, buildingSales: true, fishing: true, pierUpgrades: true, sharedAvatars: true, marketplace: marketStorage, paymentCurrencies: ["coins","idr","usd","crypto"], realMoneyPayments: false, riverSpecies: 9, fishingOddsVersion: 3, fishingOdds: globalThis.BaraFarm.FISHING_ODDS});
     }
-    if (!['/api/save', '/api/farm-save', '/api/farm-action','/api/farm-friends','/api/farm-visit'].includes(path)) return reply(404, {error: 'not_found'});
+    const native=['/api/native-authorize','/api/native-exchange','/api/native-logout'].includes(path);
+    if (!native&&!['/api/save', '/api/farm-save', '/api/farm-action','/api/farm-friends','/api/farm-visit','/api/farm-market','/api/farm-market-action'].includes(path)) return reply(404, {error: 'not_found'});
     const farm = path !== '/api/save';
     // Table names come only from this fixed route allowlist.
     const table = farm ? 'farm_saves' : 'saves';
@@ -80,9 +85,29 @@ export default {
       headers['Access-Control-Max-Age'] = '600';
       return reply(200, {});
     }
+    if(native){
+      if(request.method!=='POST')return reply(405,{error:'method_not_allowed'});
+      if(!origins.includes(origin))return reply(403,{error:'origin_required'});
+      if(!rateAllowed('native-ip:'+(request.headers.get('cf-connecting-ip')||'unknown')))return reply(429,{error:'rate_limit'});
+      if(!env.DB)return reply(503,{error:'storage_unavailable'});
+      let body;try{body=await readBody(request);}catch(error){return reply(error instanceof RangeError?413:400,{error:'invalid_body'});}
+      let uid;
+      if(path!=='/api/native-exchange'){
+        const header=request.headers.get('authorization')||'';
+        if(path==='/api/native-authorize'&&header.includes('6xg_native_'))return reply(401,{error:'privy_login_required'});
+        if(path==='/api/native-logout'&&!header.startsWith('Bearer 6xg_native_'))return reply(401,{error:'native_session_required'});
+        try{uid=await authenticate(header,env);}catch{return reply(401,{error:'invalid_token'});}
+      }
+      try{
+        if(path==='/api/native-logout'){if(!body||Array.isArray(body)||Object.keys(body).length)return reply(400,{error:'invalid_body'});await revokeNative(env.DB,request.headers.get('authorization').slice(7));return reply(200,{ok:true});}
+        const result=path==='/api/native-authorize'?await authorizeNative(env.DB,uid,body):await exchangeNative(env.DB,body);
+        return reply(result.status,result.data);
+      }catch{return reply(503,{error:'storage_unavailable'});}
+    }
     const social=['/api/farm-friends','/api/farm-visit'].includes(path);
+    const market=['/api/farm-market','/api/farm-market-action'].includes(path);
     if(social&&request.method!=='GET')return reply(405,{error:'method_not_allowed'});
-    if (path === '/api/farm-action' ? request.method !== 'POST' : !['GET', 'PUT'].includes(request.method)) return reply(405, {error: 'method_not_allowed'});
+    if (path === '/api/farm-action'||path==='/api/farm-market-action' ? request.method !== 'POST' : path==='/api/farm-market'?request.method!=='GET':!['GET', 'PUT'].includes(request.method)) return reply(405, {error: 'method_not_allowed'});
     if (!env.PRIVY_APP_ID || !env.PRIVY_VERIFICATION_KEY) return reply(503, {error: 'auth_not_configured'});
     if (!rateAllowed('ip:' + (request.headers.get('cf-connecting-ip') || 'unknown'))) return reply(429, {error: 'rate_limit'});
     let uid;
@@ -90,6 +115,12 @@ export default {
     catch { return reply(401, {error: 'invalid_token'}); }
     if (!rateAllowed('user:' + uid)) return reply(429, {error: 'rate_limit'});
     if (!env.DB) return reply(503, {error: 'storage_unavailable'});
+    if(market){
+      if(path==='/api/farm-market'){try{const result=await marketData(env.DB,uid,new URL(request.url).searchParams);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}}
+      if(!origins.includes(origin))return reply(403,{error:'origin_required'});
+      let action;try{action=parseMarketAction(await readBody(request));}catch(error){return reply(error instanceof RangeError?413:400,{error:'invalid_market_action'});}
+      try{const result=await runMarketAction(env.DB,uid,action);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}
+    }
     if(social){try{const result=await socialData(env.DB,uid,path==='/api/farm-visit'?(new URL(request.url).searchParams.get('code')||''):null);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}}
     if(farm){
       if(request.method==='PUT')return reply(409,{error:'authoritative_actions_required',message:'Perbarui game untuk menggunakan transaksi server.'});
