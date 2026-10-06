@@ -7,5 +7,6 @@ window.BARA_ONLINE = Object.freeze({
   siteOrigin: 'https://6xg.online',
   gameOrigin: 'https://app.6xg.online',
   // Dedicated full-screen game. Authentication stays on the central landing site.
-  playUrl: 'https://app.6xg.online/'
+  // Only this fixed destination is allowed after the central login handoff.
+  playUrl: typeof location!=='undefined'&&new URLSearchParams(location.search).get('return')==='market'?'https://app.6xg.online/market':'https://app.6xg.online/'
 });

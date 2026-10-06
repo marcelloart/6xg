@@ -1,6 +1,10 @@
 # 6XG Harvest player market
 
-Players open **Shop → Player market** (also available through More on phones). They trade harvests, seeds, crafted goods, animal products, fish, and building materials. Quantities and prices are editable. The market has Buy, Sell, My listings, and History views.
+Players open **https://app.6xg.online/market** or **Shop → Player market** (also available through More on phones). The market has its own responsive page with a return-to-farm link and the same game-origin HttpOnly account session. It does not load the 3D map or an embedded game frame. Central login can return directly to this fixed market route; arbitrary return URLs are rejected by design.
+
+Players trade harvests, seeds, crafted goods, animal products, fish, and building materials. Quantities and prices are editable. The market has Buy, Sell, My listings, and History views.
+
+Visible Buy, My listings, and History views check for updates every five seconds after the previous response. New listings, changed stock, sold-out offers and history update without manual refresh. Already loaded pages are rebuilt so stale rows cannot survive on later pages. Focused quantity/price inputs and scroll position are preserved. Checks pause while hidden, offline, or confirming an action; reconnection and foreground return trigger immediate checks. Failed reads back off to at most thirty seconds. Unchanged responses do not rebuild the market content. Farm balances refresh every fifteen seconds; older responses cannot roll back a newer confirmed balance. Uncertain writes retry the original command ID on reconnection, on the regular sync, or through Retry confirmation, preserving idempotency.
 
 ## Coin transactions
 

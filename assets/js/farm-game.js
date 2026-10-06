@@ -39,6 +39,7 @@ function center(){
 }
 function closePanel(){buildingSaleTarget=null;panel=null;document.body.classList.remove('panel-open');$('farmPanel').hidden=true;document.querySelectorAll('.toolbar button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-expanded','false');});renderSelection();}
 function openPanel(view){
+ if(view==='market'){window.location.assign('/market');return;}
  if(!gate.canPlay||!entered||visiting)return;
  pickup.reset();
  placement=null;pendingBuild=null;$('placementDock').hidden=true;

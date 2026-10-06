@@ -2,17 +2,41 @@
 const marketWords=(en,id)=>typeof BaraI18n!=='undefined'&&BaraI18n.language==='en'?en:id;
 let marketView='browse',marketCurrency='coins',marketCategory='',marketLoaded=false,marketLoading=false,marketError='',marketData={listings:[],trades:[],next:null},marketGeneration=0,marketOwner=null,marketSelected=null;
 let marketDraft={item:'crop:carrot',qty:'1',price:'7'},marketBuyQty='1';
+let marketRefreshDue=0,marketRefreshFailures=0;
+let marketRenderPending=false,marketPointerDown=false;
+const MARKET_REFRESH_MS=5000;
 const marketLabels=()=>({crop:marketWords('Harvest','Panen'),seed:marketWords('Seeds','Bibit'),goods:marketWords('Crafted goods','Olahan'),animal:marketWords('Animal products','Hasil ternak'),fish:marketWords('Fish','Ikan'),material:marketWords('Materials','Bahan')});
 const marketCurrencyName=key=>({coins:marketWords('Game coins','Koin game'),idr:'Rupiah',usd:'USD',crypto:'Crypto'}[key]);
-function resetMarket(){marketGeneration++;marketOwner=null;marketLoaded=false;marketLoading=false;marketError='';marketData={listings:[],trades:[],next:null};marketSelected=null;marketDraft={item:'crop:carrot',qty:'1',price:'7'};}
-async function loadMarket(more=false){
- if(!authority||marketLoading||visiting)return;
- const generation=marketGeneration,session=authority,owner=activeSaveKey;marketLoading=true;marketError='';if(panel==='market')renderPanel();
- try{const query={view:marketView,currency:marketCurrency,...(marketCategory?{category:marketCategory}:{}),...(more&&marketData.next?{before:String(marketData.next)}:{})};const data=await session.market(query);
-  if(generation!==marketGeneration||session!==authority||owner!==activeSaveKey)return;
-  marketData={...data,...(more?{listings:[...(marketData.listings||[]),...data.listings]}:{})};marketLoaded=true;
- }catch(error){if(generation===marketGeneration)marketError=error.message;}
- finally{if(generation===marketGeneration){marketLoading=false;if(panel==='market')renderPanel();}}
+function resetMarket(){marketGeneration++;marketOwner=null;marketLoaded=false;marketLoading=false;marketError='';marketData={listings:[],trades:[],next:null};marketSelected=null;marketDraft={item:'crop:carrot',qty:'1',price:'7'};marketRefreshDue=0;marketRefreshFailures=0;marketRenderPending=false;}
+const marketContent=data=>JSON.stringify([data.listings||[],data.trades||[],data.next||null]);
+async function loadMarket(more=false,{quiet=false}={}){
+ if(!authority||authority.closed||marketLoading||visiting||marketView==='sell'||marketCurrency!=='coins'||more&&!marketData.next)return;
+ const generation=marketGeneration,session=authority,owner=activeSaveKey,previous=marketContent(marketData),hadError=Boolean(marketError),target=quiet?(marketData.listings||[]).length:0;
+ let changed=false;marketLoading=true;marketError='';if(!quiet&&panel==='market')renderPanel();
+ const current=()=>generation===marketGeneration&&session===authority&&owner===activeSaveKey&&!session.closed;
+ try{const query={view:marketView,currency:marketCurrency,...(marketCategory?{category:marketCategory}:{}),...(more?{before:String(marketData.next)}:{})};let data=await session.market(query);
+  if(!current())return;
+  // Rebuild every loaded page so new rows and sold-out rows never leave stale stock behind.
+  while(quiet&&data.next&&(data.listings||[]).length<target){const next=await session.market({...query,before:String(data.next)});if(!current())return;data={...next,listings:[...data.listings,...next.listings]};}
+  marketData={...data,...(more?{listings:[...(marketData.listings||[]),...data.listings]}:{})};marketLoaded=true;marketRefreshFailures=0;changed=hadError||previous!==marketContent(marketData);
+ }catch(error){if(current()){marketError=error.message;marketRefreshFailures++;changed=true;}}
+ finally{if(current()){marketLoading=false;marketRefreshDue=Date.now()+Math.min(30000,MARKET_REFRESH_MS*2**Math.min(Math.max(0,marketRefreshFailures-1),3));if(panel==='market'&&(!quiet||changed))renderMarketUpdate();}}
+}
+function refreshMarketPurchase(){
+ const input=$('marketBuyQty'),button=$('marketBuySubmit');if(!input||!button)return;
+ const offer=marketData.listings.find(v=>v.id===marketSelected),qty=Number(marketBuyQty),available=offer&&offer.status==='active'&&!offer.mine&&offer.expiresAt>serverClock(),valid=available&&/^\d+$/.test(marketBuyQty)&&qty>=1&&qty<=offer.qty;
+ input.max=String(available?offer.qty:0);button.disabled=!valid||transactionBusy;
+ $('marketBuyTotal').textContent=valid?'◉ '+format(qty*offer.unitPrice):'—';
+}
+function renderMarketUpdate(){
+ if(document.activeElement?.matches('.market-form input,.market-form select')){marketRenderPending=true;refreshMarketPurchase();return;}
+ marketRenderPending=false;
+ const scroll=$('panelBody').parentElement.scrollTop;renderPanel();refreshMarketPurchase();$('panelBody').parentElement.scrollTop=scroll;
+}
+function tickMarketUpdates(immediate=false){
+ if(panel==='market'&&marketRenderPending&&!marketPointerDown&&!document.activeElement?.matches('.market-form input,.market-form select'))renderMarketUpdate();
+ if(document.hidden||navigator.onLine===false||panel!=='market'||marketCurrency!=='coins'||marketView==='sell'||!gate.canPlay||!authority||authority.closed||authority.saving||authority.command||transactionBusy||visiting||marketLoading)return;
+ if(immediate||Date.now()>=marketRefreshDue)void loadMarket(false,{quiet:marketLoaded});
 }
 function marketProduct(category,item){const spec=FarmMarket.spec(category,item);return spec?{...spec,name:(category==='seed'?marketWords('Seeds · ','Bibit · '):'')+(category==='fish'&&typeof BaraI18n!=='undefined'&&BaraI18n.language==='id'?spec.idName:spec.name)}:null;}
 function marketFormInfo(){const [category,item]=marketDraft.item.split(':'),spec=marketProduct(category,item),stock=FarmMarket.count(farm,category,item),qty=Number(marketDraft.qty),price=Number(marketDraft.price);return{category,item,spec,stock,qty,price,valid:spec&&/^\d+$/.test(marketDraft.qty)&&/^\d+$/.test(marketDraft.price)&&qty>=1&&qty<=stock&&qty<=10000&&price>=1&&price<=1000000&&qty*price<=1e9};}
@@ -32,6 +56,7 @@ function renderMarket(body){
   body.innerHTML+='<section class="market-unavailable" role="status"><span aria-hidden="true">◇</span><h3>'+marketCurrencyName(marketCurrency)+' · '+marketWords('payments not active','pembayaran belum aktif')+'</h3><p>'+marketWords('Payments and seller withdrawals will become available after the payment service is connected.','Pembayaran dan pencairan penjual akan tersedia setelah layanan pembayaran terhubung.')+'</p><small>'+marketWords('Game coins stay in the game and cannot be withdrawn as money.','Koin game tetap digunakan dalam game dan tidak dapat dicairkan sebagai uang.')+'</small>'+action(marketWords('Open the coin market','Buka pasar koin'),'market-currency','coins')+'</section>';return;
  }
  body.innerHTML+='<div class="market-tabs" role="group" aria-label="'+marketWords('Market sections','Bagian pasar')+'">'+[['browse',marketWords('Buy','Beli')],['sell',marketWords('Sell','Jual')],['mine',marketWords('My listings','Dagangan saya')],['history',marketWords('History','Riwayat')]].map(([key,label])=>'<button type="button" data-action="market-view" data-key="'+key+'" aria-pressed="'+(marketView===key)+'">'+label+'</button>').join('')+'</div>';
+ if(marketView!=='sell'&&!marketLoaded&&!marketLoading)queueMicrotask(()=>{if(panel==='market')tickMarketUpdates();});
  if(marketError)body.innerHTML+='<p class="trade-warning" role="status">'+escape(marketError)+'</p>';
  if(marketView==='sell'){
   const items=FarmMarket.catalog().filter(v=>FarmMarket.count(farm,v.category,v.item)>0);
@@ -48,14 +73,13 @@ function renderMarket(body){
  }
  body.innerHTML+='<div class="market-list">'+(offers.map(v=>{const spec=marketProduct(v.category,v.item),expired=v.expiresAt<=serverClock(),available=v.status==='active'&&!expired,status=v.status==='sold'?marketWords('Sold out','Habis terjual'):v.status==='cancelled'?marketWords('Returned','Dikembalikan'):expired?marketWords('Expired','Kedaluwarsa'):v.qty+' '+marketWords('available','tersedia');
   return'<article class="market-offer"><div class="market-offer-art">'+picture(v.item,spec?.icon)+'</div><div class="market-offer-info"><small>'+marketLabels()[v.category]+'</small><h3>'+escape(spec?.name||v.item)+'</h3><div class="market-seller">'+friendAvatar(v.seller)+'<span>'+escape(v.seller?.name||marketWords('Farmer','Pekebun'))+'</span></div><div class="market-offer-price"><b>◉ '+format(v.unitPrice)+'</b><small>/ '+marketWords('item','barang')+'</small></div><small>'+status+'</small>'+(v.mine?v.status==='active'?action(marketWords('Return unsold items','Kembalikan sisa barang'),'market-cancel',v.id,1,transactionBusy,true):'':available?action(marketWords('View offer','Lihat penawaran'),'market-offer',v.id):'')+'</div></article>';}).join('')||'<div class="empty-state"><span>🧺</span><h3>'+marketWords(marketView==='mine'?'Your stall is waiting.':'Be the first to trade.',marketView==='mine'?'Lapakmu menunggu dagangan.':'Jadilah pedagang pertama.')+'</h3><p>'+marketWords(marketView==='mine'?'Create a listing in Sell.':'No listings in this category yet.',marketView==='mine'?'Pasang dagangan melalui Jual.':'Belum ada dagangan di kategori ini.')+'</p></div>')+'</div>'+(marketData.next?action(marketWords('Load more','Muat lagi'),'market-more','',1,marketLoading,true):'');
- if(!marketLoaded&&!marketLoading)void loadMarket();
 }
 async function marketTransact(type,args){
  if(!gate.canPlay||transactionBusy||visiting||!authority)return;
- const session=authority,generation=marketGeneration;transactionBusy=true;document.body.classList.add('transaction-busy');
+ const session=authority,generation=++marketGeneration;marketLoading=false;transactionBusy=true;document.body.classList.add('transaction-busy');
  try{const result=await session.marketAction(type,args);if(generation!==marketGeneration||session!==authority)return;
   if(result?.ok){marketSelected=null;marketLoaded=false;audio.play(type==='buy'?'buy':'sell');toast(marketWords(type==='buy'?'Purchase complete. Items are in your inventory.':type==='cancel'?'Unsold items returned to your inventory.':'Your listing is now available to players.',type==='buy'?'Pembelian selesai. Barang masuk ke persediaanmu.':type==='cancel'?'Sisa barang kembali ke persediaanmu.':'Daganganmu sudah tersedia untuk pemain.'));if(type==='list')marketView='mine';void loadMarket();}
-  else toast(result?.message||marketWords('Trade is awaiting confirmation.','Transaksi menunggu konfirmasi.'));
+  else{toast(result?.message||marketWords('Trade is awaiting confirmation.','Transaksi menunggu konfirmasi.'));if(!result?.pending)void loadMarket();}
  }catch(error){if(generation===marketGeneration)toast(error.message);}
  finally{transactionBusy=false;document.body.classList.remove('transaction-busy');renderUI();}
 }
@@ -71,10 +95,16 @@ function handleMarketAction(type,key){
 }
 document.addEventListener('input',event=>{
  if(event.target.closest('#marketListForm')){marketDraft={item:$('marketListItem').value,qty:$('marketListQty').value,price:$('marketListPrice').value};updateMarketForm();}
- if(event.target.id==='marketBuyQty'){marketBuyQty=event.target.value;const offer=marketData.listings.find(v=>v.id===marketSelected),qty=Number(marketBuyQty),valid=offer&&/^\d+$/.test(marketBuyQty)&&qty>=1&&qty<=offer.qty;$('marketBuySubmit').disabled=!valid||transactionBusy;$('marketBuyTotal').textContent=valid?'◉ '+format(qty*offer.unitPrice):'—';}
+ if(event.target.id==='marketBuyQty'){marketBuyQty=event.target.value;refreshMarketPurchase();}
 });
 document.addEventListener('change',event=>{if(event.target.id==='marketCategory'){marketCategory=event.target.value;marketLoaded=false;marketGeneration++;marketLoading=false;marketSelected=null;void loadMarket();}});
 document.addEventListener('submit',event=>{
  if(event.target.id==='marketListForm'){event.preventDefault();if(!event.target.reportValidity())return;const info=marketFormInfo();if(info.valid)void marketTransact('list',{category:info.category,item:info.item,qty:info.qty,unitPrice:info.price,currency:'coins'});}
- if(event.target.id==='marketBuyForm'){event.preventDefault();if(!event.target.reportValidity())return;const offer=marketData.listings.find(v=>v.id===marketSelected),qty=Number(marketBuyQty);if(offer&&Number.isSafeInteger(qty)&&qty>=1&&qty<=offer.qty)void marketTransact('buy',{listing:offer.id,version:offer.version,qty,unitPrice:offer.unitPrice,currency:'coins'});}
+ if(event.target.id==='marketBuyForm'){event.preventDefault();if(!event.target.reportValidity())return;const offer=marketData.listings.find(v=>v.id===marketSelected),qty=Number(marketBuyQty);if(offer&&offer.status==='active'&&!offer.mine&&offer.expiresAt>serverClock()&&Number.isSafeInteger(qty)&&qty>=1&&qty<=offer.qty)void marketTransact('buy',{listing:offer.id,version:offer.version,qty,unitPrice:offer.unitPrice,currency:'coins'});}
 });
+document.addEventListener('pointerdown',()=>{marketPointerDown=true;});
+document.addEventListener('pointerup',()=>{marketPointerDown=false;});
+document.addEventListener('pointercancel',()=>{marketPointerDown=false;});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickMarketUpdates(true);});
+window.addEventListener('online',()=>tickMarketUpdates(true));
+setInterval(tickMarketUpdates,1000);

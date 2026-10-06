@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><base href="/">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#283e32"><meta name="robots" content="noindex">
+<title>Player Market — 6XG Harvest</title><link rel="canonical" href="https://app.6xg.online/market">
+<link rel="icon" type="image/svg+xml" href="/assets/images/6xg-harvest-icon.svg?v=eebab60400">
+<link rel="stylesheet" href="/assets/css/farm.css?v=8475355899"><link rel="stylesheet" href="/assets/css/farm-market.css?v=b23efda237"><link rel="stylesheet" href="/assets/css/market-page.css?v=f3a3c101ba">
+<script src="/assets/js/i18n-catalog.js?v=e5812597d4"></script><script src="/assets/js/farm-expansion-i18n.js?v=db11ce362a"></script><script src="/assets/js/i18n.js?v=08b36e5f75"></script>
+<script defer src="/assets/js/online-config.js?v=470400f0ca"></script><script defer src="/assets/js/account-photo.js?v=9539730a86"></script><script defer src="/assets/js/session-gate.js?v=1b853bcd68"></script>
+<script defer src="/assets/js/farm-engine.js?v=6dfde7f025"></script><script defer src="/assets/js/farm-market.js?v=555974b508"></script><script defer src="/assets/js/cloud-client.js?v=4362ea24f4"></script>
+<script defer src="/assets/js/market-page.js?v=42cffeeac6"></script><script defer src="/assets/js/farm-market-ui.js?v=9ba4fcae48"></script>
+</head><body class="market-page">
+<header class="market-header"><a href="/" class="market-brand" aria-label="6XG Harvest"><img src="/assets/images/6xg-harvest-logo.webp?v=8d149624b5" width="768" height="384" alt="6XG Harvest"></a><nav aria-label="Market navigation"><a href="/" id="marketBack">← Back to farm</a><select data-language-picker aria-label="Language"><option value="en" data-language>EN</option><option value="id" data-language>ID</option></select><button type="button" id="marketAccount">Sign in</button></nav></header>
+<main class="market-main"><section class="market-hero"><div><span id="panelLabel" class="eyebrow">PLAYER MARKET</span><h1 id="panelTitle">From farm to market.</h1><p id="panelCopy">Buy and sell at player-set prices.</p></div><div class="market-connection"><span id="marketConnection" class="market-live" role="status">Connecting…</span><button type="button" class="action soft" id="marketConfirmRetry" hidden>Retry confirmation</button></div></section>
+<section id="marketGate" class="market-gate" aria-live="polite"><h2 id="marketGateTitle">Opening your market…</h2><p id="marketGateCopy">Connecting to your farm account.</p><button type="button" class="action" id="marketRetry" hidden>Try again</button><a class="action" id="marketLogin" hidden>Sign in to trade ↗</a></section>
+<section id="marketContent" class="market-content" hidden aria-label="Player market"><div id="panelBody"></div></section>
+</main><div class="toast" id="toast" hidden role="status"></div><span class="sr-only" id="announcer" aria-live="polite"></span>
+<dialog id="marketAccountDialog"><div class="dialog-head"><h2 id="marketAccountTitle">Your account</h2><button type="button" id="marketAccountClose" aria-label="Close">✕</button></div><p id="marketProfile"></p><a class="action soft" href="/" id="marketProfileLink">Manage profile in farm ↗</a><button type="button" class="action soft" id="marketLogout">Sign out</button></dialog>
+<script>window.BARA_PAGE="market";</script></body></html>
