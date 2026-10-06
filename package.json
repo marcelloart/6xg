@@ -9,7 +9,7 @@
     "test:session": "node tests/account-photo.mjs && node tests/game-session.mjs && node tests/session-bridge.mjs && node tests/cloud.cjs && node tests/farm-accounts.cjs",
     "test": "node tests/farm-fishing-odds.cjs && node tests/farm-angler.mjs && node tests/farm-night-lights.mjs && node tests/friend-photos.mjs && node tests/farm-fishing-auto.mjs && node tests/farm-fishing.cjs && node tests/i18n.cjs && node tests/farm-daylight.cjs && node tests/farm-expansion.cjs && node tests/farm-building-sales.cjs && node tests/farm-weather.mjs && node tests/engine.cjs && node tests/background.cjs && node tests/map.cjs && node tests/cloud.cjs && node tests/accounts.cjs && node tests/rts.cjs && node tests/farm-progression.cjs && node tests/farm-production.cjs && node tests/farm-community.cjs && node tests/farm-community-client.cjs && node tests/farm-actions-client.cjs && node tests/farm.cjs && node tests/farm-layout.cjs && node tests/farm-accounts.cjs && node tests/farm-decor.cjs && node tests/farm-camera.cjs && node tests/farm-pickup.cjs && node tests/farm-audio.cjs && node tests/farm-fishing-scene.mjs && node tests/farm-scene.mjs && node tests/farm-visuals.mjs && node tests/farm-assets.mjs && node tests/farm-animals.mjs && node tests/farm-people.mjs && node tests/farm-residents.cjs",
     "build:3d": "node tools/build-3d.mjs",
-    "test:market": "node --test tests/market-client.cjs tests/market-proxy.mjs"
+    "test:market": "node --test tests/market-client.cjs tests/market-proxy.mjs tests/market-landing.cjs"
   },
   "dependencies": {
     "@privy-io/react-auth": "3.46.0",
