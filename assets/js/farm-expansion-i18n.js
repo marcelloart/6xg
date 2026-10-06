@@ -30,13 +30,13 @@ Object.assign(globalThis.BaraTranslations,{
  "Hargamu.": "Your price.",
  "Pasar pemain mempertemukan hasil kebun dan kebutuhan tetangga. Jual panen, bibit, olahan, hasil ternak, ikan, serta bahan dengan harga dan jumlah yang kamu tentukan.": "The player market connects your farm goods with your neighbours. Sell harvests, seeds, crafted goods, animal products, fish and materials at your chosen price and quantity.",
  "AKTIF SEKARANG": "AVAILABLE NOW",
- "BELUM AKTIF": "NOT ACTIVE",
+ "SEGERA HADIR": "COMING SOON",
  "Koin game": "Game coins",
  "Beli langsung dari pemain lain. Barang dititipkan saat dijual; koin masuk ke penjual setelah transaksi selesai.": "Buy directly from other players. Listed items are reserved; sellers receive coins when the trade completes.",
  "Jumlah sendiri · Tanpa biaya koin": "Custom quantities · No coin fee",
- "Pembayaran dan pencairan penjual akan tersedia setelah layanan pembayaran Indonesia terhubung.": "Payments and seller withdrawals will become available after an Indonesian payment service is connected.",
- "Menunggu layanan pembayaran": "Awaiting payment setup",
- "Transaksi internasional akan tersedia setelah layanan pembayaran dan akun penjual terhubung.": "International transactions will become available after the payment service and seller accounts are connected.",
- "Transaksi crypto akan tersedia setelah layanan pembayaran dan jaringan yang didukung ditentukan.": "Crypto transactions will become available after the payment service and supported network are configured.",
+ "Pembayaran Rupiah dan pencairan untuk penjual sedang disiapkan.": "Rupiah payments and seller withdrawals are coming soon.",
+ "Pilihan baru untuk berdagang": "More ways to trade",
+ "Perdagangan dalam USD sedang disiapkan untuk pemain di seluruh dunia.": "USD trading is coming soon for players around the world.",
+ "Pembayaran crypto sedang disiapkan untuk menghadirkan lebih banyak pilihan transaksi.": "Crypto payments are coming soon, giving you more ways to trade.",
  "Koin game digunakan dalam permainan dan tidak dapat dicairkan sebagai uang. Buka Toko → Pasar pemain untuk berdagang.": "Game coins are used in the game and cannot be withdrawn as money. Open Shop → Player market to trade."
 });
