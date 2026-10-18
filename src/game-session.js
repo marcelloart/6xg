@@ -1,5 +1,5 @@
 import '../assets/js/account-photo.js';
-export async function startGameSession({gameOrigin,userId,twitterPhoto,getAccessToken,fetcher=(...args)=>fetch(...args)}){
+export async function startGameSession({gameOrigin,userId,twitterPhoto,getAccessToken,authSubject,fetcher=(...args)=>fetch(...args)}){
   const token=await getAccessToken();
   if(!token||!userId)throw new Error('Sesi akun belum siap. Silakan coba kembali.');
   const url=new URL('/api/game-session',gameOrigin).href;
@@ -10,6 +10,6 @@ export async function startGameSession({gameOrigin,userId,twitterPhoto,getAccess
   const restored=await fetcher(url,{credentials:'include',cache:'no-store'});
   if(!restored.ok)throw new Error('Sesi game belum tersimpan. Izinkan cookie situs lalu coba kembali.');
   const data=await restored.json();
-  if(data.user?.id!==userId)throw new Error('Akun game belum sesuai. Silakan coba kembali.');
+  if(authSubject?data.authSubject!==authSubject:data.user?.id!==userId)throw new Error('Akun game belum sesuai. Silakan coba kembali.');
   return data;
 }

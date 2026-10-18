@@ -23,7 +23,7 @@ export async function handleGameRequest(request,env,{cloudFetch=fetch}={}){
   if(origin===SITE||origin===APP){headers['Access-Control-Allow-Origin']=origin;headers['Access-Control-Allow-Credentials']='true';}
   const reply=(status,data,extra={})=>{const response=new Response(JSON.stringify(data),{status,headers:{...headers,...extra}});if(extra['Set-Cookie']?.includes('Max-Age=0'))response.headers.append('Set-Cookie',PHOTO_COOKIE+'='+COOKIE_FLAGS+'; Max-Age=0');return response;};
   if(origin&&origin!==SITE&&origin!==APP)return reply(403,{error:'origin_not_allowed'});
-  if(!['/api/game-session','/api/game-session/logout','/api/farm-save','/api/farm-action','/api/farm-friends','/api/farm-visit','/api/farm-market','/api/farm-market-action'].includes(path))return reply(404,{error:'not_found'});
+  if(!['/api/game-session','/api/game-session/logout','/api/auth-link','/api/farm-save','/api/farm-action','/api/farm-friends','/api/farm-visit','/api/farm-market','/api/farm-market-action'].includes(path))return reply(404,{error:'not_found'});
   if(request.method==='OPTIONS')return reply(200,{}, {'Access-Control-Allow-Methods':'GET, POST, PUT, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'600'});
   if(!['GET','POST','PUT'].includes(request.method))return reply(405,{error:'method_not_allowed'});
   if(request.method!=='GET'&&origin!==SITE&&origin!==APP)return reply(403,{error:'origin_required'});
@@ -37,9 +37,15 @@ export async function handleGameRequest(request,env,{cloudFetch=fetch}={}){
   if(path==='/api/farm-save'&&!['GET','PUT'].includes(request.method))return reply(405,{error:'method_not_allowed'});
   if(['/api/farm-friends','/api/farm-visit','/api/farm-market'].includes(path)&&request.method!=='GET')return reply(405,{error:'method_not_allowed'});
   if(['/api/farm-action','/api/farm-market-action'].includes(path)&&request.method!=='POST')return reply(405,{error:'method_not_allowed'});
+  if(path==='/api/auth-link'){
+    if(request.method!=='POST')return reply(405,{error:'method_not_allowed'});
+    const token=request.headers.get('Authorization')?.replace(/^Bearer /,'');
+    if(!validToken(token))return reply(401,{error:'session_required'});
+    try{const send=env.CLOUD_SAVE?(url,init)=>env.CLOUD_SAVE.fetch(url,init):cloudFetch;const remote=await send(CLOUD+path,{method:'POST',redirect:'manual',headers:{Authorization:'Bearer '+token,Origin:APP,'Content-Type':'application/json',...(request.headers.get('CF-Connecting-IP')?{'CF-Connecting-IP':request.headers.get('CF-Connecting-IP')}:{})},body:request.body});if(remote.status>=300&&remote.status<400)return reply(502,{error:'account_link_unavailable'});return new Response(remote.body,{status:remote.status,headers});}catch{return reply(503,{error:'account_link_unavailable'});}
+  }
   const token=create?request.headers.get('Authorization')?.replace(/^Bearer /,''):cookie;
   if(!validToken(token))return reply(401,{error:'session_required'},create?{}:clear);
-  // The existing backend verifies Privy's signature, audience, expiry and user ID.
+  // The backend verifies the configured provider signature, audience, expiry and identity.
   // Bootstrap only reads progress; it cannot initialize or overwrite a farm.
   try{
     // Cloudflare Workers on this account must use the service binding to reach
@@ -57,11 +63,11 @@ export async function handleGameRequest(request,env,{cloudFetch=fetch}={}){
     if(farm){const response=new Response(remote.body,{status:remote.status,headers:{...headers,...(remote.status===401?clear:{})}});if(remote.status===401)response.headers.append('Set-Cookie',PHOTO_COOKIE+'='+COOKIE_FLAGS+'; Max-Age=0');return response;}
     if(!remote.ok)return reply(remote.status,{error:remote.status===401?'session_expired':'storage_unavailable'},remote.status===401?clear:{});
     const data=await remote.json();
-    if(typeof data.userId!=='string'||!data.userId.startsWith('did:privy:'))return reply(502,{error:'invalid_identity'});
+    if(typeof data.userId!=='string'||!(/^(?:did:privy:)[A-Za-z0-9:_-]{1,180}$/.test(data.userId)||/^firebase:[a-z][a-z0-9-]{4,28}[a-z0-9]:[A-Za-z0-9_-]{1,128}$/.test(data.userId)))return reply(502,{error:'invalid_identity'});
     // This URL is cosmetic metadata, never proof of identity or permission.
     // Bind it to the server-verified DID so account switches cannot reuse it.
     const photo=create?await readPicture(request):restoredPicture(pictureCookie,data.userId);
-    const response=reply(200,{user:{id:data.userId,...(photo?{twitter:{profilePictureUrl:photo}}:{})}},create?{'Set-Cookie':COOKIE+'='+token+COOKIE_FLAGS+'; Max-Age=3600'}:{});
+    const response=reply(200,{user:{id:data.userId,...(photo?{twitter:{profilePictureUrl:photo}}:{})},...(data.authSubject?{authSubject:data.authSubject}:{})},create?{'Set-Cookie':COOKIE+'='+token+COOKIE_FLAGS+'; Max-Age=3600'}:{});
     if(create)response.headers.append('Set-Cookie',photo?PHOTO_COOKIE+'='+encodeURIComponent(JSON.stringify({id:data.userId,photo}))+COOKIE_FLAGS+'; Max-Age=3600':PHOTO_COOKIE+'='+COOKIE_FLAGS+'; Max-Age=0');
     return response;
   }catch{return reply(503,{error:'storage_unavailable'});}

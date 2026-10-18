@@ -1,3 +1,4 @@
+import {isAccountId} from './auth-identity.mjs';
 const encoder=new TextEncoder();
 const base64url=bytes=>btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
 export async function digest(value){return base64url(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))));}
@@ -31,7 +32,7 @@ export async function exchangeNative(db,body,now=Date.now()){
 export async function nativeIdentity(db,token,now=Date.now()){
   if(typeof token!=='string'||!/^6xg_native_[A-Za-z0-9_-]{43}$/.test(token)||!db)throw new TypeError('Invalid native session');
   const row=await db.prepare('SELECT user_id FROM native_sessions WHERE token_hash=? AND expires_at>?').bind(await digest(token),now).first();
-  if(!row||!row.user_id.startsWith('did:privy:'))throw new TypeError('Expired native session');
+  if(!row||!isAccountId(row.user_id))throw new TypeError('Expired native session');
   return row.user_id;
 }
 export async function revokeNative(db,token){await db.prepare('DELETE FROM native_sessions WHERE token_hash=?').bind(await digest(token)).run();}

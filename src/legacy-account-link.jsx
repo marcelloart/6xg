@@ -1,0 +1,10 @@
+import React,{useState} from 'react';
+import {PrivyProvider,usePrivy,useLogin} from '@privy-io/react-auth';
+const words=(en,id)=>BaraI18n.language==='en'?en:id;
+function Proof({firebase,cfg,onLinked}){
+ const legacy=usePrivy(),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const {login}=useLogin({onError:()=>setError(words('Sign-in was not completed. Try again.','Login belum selesai. Coba lagi.'))});
+ async function link(){setBusy(true);setError('');try{const token=await firebase.getIdToken(true),legacyToken=await legacy.getAccessToken();const response=await fetch(new URL('/api/auth-link',cfg.gameOrigin),{method:'POST',credentials:'include',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({legacyToken})});const result=await response.json();if(!response.ok)throw Error(result.error==='recent_login_required'?words('Sign out and sign in to Firebase again before linking.','Keluar lalu masuk kembali ke Firebase sebelum menghubungkan akun.'):words('These accounts could not be linked. Existing progress was preserved.','Akun belum dapat dihubungkan. Progres yang sudah ada tetap tersimpan.'));await onLinked(result);}catch(e){setError(e.message);}finally{setBusy(false);}}
+ return <section className="firebase-migration"><p>{words('Verify the original account that owns your farm. Your Firebase account will then open that same farm.','Verifikasi akun lama pemilik kebunmu. Setelah itu akun Firebase akan membuka kebun yang sama.')}</p>{legacy.authenticated?<button className="primary" disabled={busy} onClick={link}>{words('Link these accounts','Hubungkan kedua akun')}</button>:<button className="primary" disabled={!legacy.ready||busy} onClick={()=>login()}>{words('Verify my original account','Verifikasi akun lama')}</button>}{error&&<p role="alert">{error}</p>}</section>;
+}
+export function LegacyAccountLink(props){return <PrivyProvider appId={props.cfg.privyAppId} config={{loginMethods:['google','twitter','wallet','email'],embeddedWallets:{ethereum:{createOnLogin:'off'},solana:{createOnLogin:'off'}}}}><Proof {...props}/></PrivyProvider>;}

@@ -1,4 +1,4 @@
-import {importSPKI, jwtVerify} from 'jose';
+import {authenticateIdentity,authConfigured,verifyFirebase,verifyPrivy,linkLegacyAccount} from './auth-identity.mjs';
 import {integer, validateSave} from './save.mjs';
 import {loadFarm, runFarmAction, parseAction} from './farm-actions.mjs';
 
@@ -8,7 +8,6 @@ import {authorizeNative,exchangeNative,nativeIdentity,revokeNative} from './nati
 
 const MAX_BODY = 49152;
 const requests = new Map();
-let cachedKey;
 // Bounded, per-isolate abuse throttle; this does not claim to be a global quota.
 function rateAllowed(identity) {
   const minute = Math.floor(Date.now() / 60000);
@@ -22,17 +21,9 @@ function rateAllowed(identity) {
   return count <= 120;
 }
 
-async function authenticate(header, env) {
-  if (!header.startsWith('Bearer ') || header.length > 16384) throw new TypeError('Invalid token');
-  if(header.slice(7).startsWith('6xg_native_'))return nativeIdentity(env.DB,header.slice(7));
-  const pem = env.PRIVY_VERIFICATION_KEY.replaceAll('\\n', '\n');
-  if (!cachedKey || cachedKey.pem !== pem) cachedKey = {pem, key: importSPKI(pem, 'ES256')};
-  const {payload} = await jwtVerify(header.slice(7), await cachedKey.key, {
-    algorithms: ['ES256'], issuer: 'privy.io', audience: env.PRIVY_APP_ID,
-    requiredClaims: ['exp', 'iat', 'iss', 'aud', 'sub', 'sid']
-  });
-  if (typeof payload.sub !== 'string' || !payload.sub.startsWith('did:privy:') || payload.sub.length > 200 || typeof payload.sid !== 'string' || !payload.sid || !integer(payload.iat, 0, Math.floor(Date.now() / 1000))) throw new TypeError('Invalid subject or session');
-  return payload.sub;
+async function authenticate(header,env){
+ if(typeof header==='string'&&header.startsWith('Bearer 6xg_native_'))return nativeIdentity(env.DB,header.slice(7));
+ return (await authenticateIdentity(header,env)).accountId;
 }
 
 async function readBody(request) {
@@ -71,8 +62,18 @@ export default {
       try { storage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'saves').first();
         farmStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'farm_saves').first();
         marketStorage = !!await env.DB?.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').bind('table', 'market_listings').first(); } catch {}
-      const authConfigured = !!(env.PRIVY_APP_ID && env.PRIVY_VERIFICATION_KEY);
-      return reply(storage && farmStorage && authConfigured ? 200 : 503, {ok: storage && farmStorage && authConfigured, authConfigured, storage, farmStorage, farmSaveVersion: 10, buildingSales: true, fishing: true, pierUpgrades: true, sharedAvatars: true, marketplace: marketStorage, paymentCurrencies: ["coins","idr","usd","crypto"], realMoneyPayments: false, riverSpecies: 9, fishingOddsVersion: 3, fishingOdds: globalThis.BaraFarm.FISHING_ODDS});
+      const configured = authConfigured(env);
+      return reply(storage && farmStorage && configured ? 200 : 503, {ok: storage && farmStorage && configured, authConfigured:configured, storage, farmStorage, farmSaveVersion: 10, buildingSales: true, fishing: true, pierUpgrades: true, sharedAvatars: true, marketplace: marketStorage, paymentCurrencies: ["coins","idr","usd","crypto"], realMoneyPayments: false, riverSpecies: 9, fishingOddsVersion: 3, fishingOdds: globalThis.BaraFarm.FISHING_ODDS});
+    }
+    if(path==='/api/auth-link'){
+      if(request.method==='OPTIONS'){headers['Access-Control-Allow-Methods']='POST, OPTIONS';headers['Access-Control-Allow-Headers']='Authorization, Content-Type';return reply(200,{});}
+      if(request.method!=='POST')return reply(405,{error:'method_not_allowed'});
+      if(!origins.includes(origin))return reply(403,{error:'origin_required'});
+      if(!env.DB||!authConfigured(env))return reply(503,{error:'auth_not_configured'});
+      if(!rateAllowed('link:'+(request.headers.get('cf-connecting-ip')||'unknown')))return reply(429,{error:'rate_limit'});
+      let body;try{body=await readBody(request);if(!body||Array.isArray(body)||Object.keys(body).length!==1||typeof body.legacyToken!=='string'||body.legacyToken.length>16384)throw Error();}catch{return reply(400,{error:'invalid_account_link'});}
+      let firebase,legacy;try{const header=request.headers.get('Authorization')||'';if(!header.startsWith('Bearer '))throw Error();firebase=await verifyFirebase(header.slice(7),env);legacy=await verifyPrivy(body.legacyToken,env);}catch{return reply(401,{error:'invalid_account_proof'});}
+      try{const result=await linkLegacyAccount(env,firebase,legacy);return reply(result.status,result.data);}catch{return reply(503,{error:'account_link_unavailable'});}
     }
     const native=['/api/native-authorize','/api/native-exchange','/api/native-logout'].includes(path);
     if (!native&&!['/api/save', '/api/farm-save', '/api/farm-action','/api/farm-friends','/api/farm-visit','/api/farm-market','/api/farm-market-action'].includes(path)) return reply(404, {error: 'not_found'});
@@ -108,10 +109,10 @@ export default {
     const market=['/api/farm-market','/api/farm-market-action'].includes(path);
     if(social&&request.method!=='GET')return reply(405,{error:'method_not_allowed'});
     if (path === '/api/farm-action'||path==='/api/farm-market-action' ? request.method !== 'POST' : path==='/api/farm-market'?request.method!=='GET':!['GET', 'PUT'].includes(request.method)) return reply(405, {error: 'method_not_allowed'});
-    if (!env.PRIVY_APP_ID || !env.PRIVY_VERIFICATION_KEY) return reply(503, {error: 'auth_not_configured'});
+    if (!authConfigured(env)) return reply(503, {error: 'auth_not_configured'});
     if (!rateAllowed('ip:' + (request.headers.get('cf-connecting-ip') || 'unknown'))) return reply(429, {error: 'rate_limit'});
-    let uid;
-    try { uid = await authenticate(request.headers.get('authorization') || '', env); }
+    let uid,authSubject;
+    try { const header=request.headers.get('authorization')||'';if(header.startsWith('Bearer 6xg_native_'))uid=await authenticate(header,env);else{const identity=await authenticateIdentity(header,env);uid=identity.accountId;authSubject=identity.subject;} }
     catch { return reply(401, {error: 'invalid_token'}); }
     if (!rateAllowed('user:' + uid)) return reply(429, {error: 'rate_limit'});
     if (!env.DB) return reply(503, {error: 'storage_unavailable'});
@@ -124,7 +125,7 @@ export default {
     if(social){try{const result=await socialData(env.DB,uid,path==='/api/farm-visit'?(new URL(request.url).searchParams.get('code')||''):null);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}}
     if(farm){
       if(request.method==='PUT')return reply(409,{error:'authoritative_actions_required',message:'Perbarui game untuk menggunakan transaksi server.'});
-      if(request.method==='GET'){try{return reply(200,await loadFarm(env.DB,uid));}catch{return reply(503,{error:'storage_unavailable'});}}
+      if(request.method==='GET'){try{return reply(200,{...await loadFarm(env.DB,uid),...(authSubject?.startsWith('firebase:')?{authSubject}:{})});}catch{return reply(503,{error:'storage_unavailable'});}}
       if(!origins.includes(origin))return reply(403,{error:'origin_required'});
       let action;try{action=parseAction(await readBody(request));}catch(error){return reply(error instanceof RangeError?413:400,{error:'invalid_action'});}
       try{const result=await runFarmAction(env.DB,uid,action);return reply(result.status,result.data);}catch{return reply(503,{error:'storage_unavailable'});}

@@ -5,7 +5,7 @@ let authLoading=null;
 function openAccountDialog(){
   document.getElementById('accountDialog').showModal();
   if(!authLoading){
-    authLoading=import(new URL(window.BARA_AUTH_ENTRY,document.baseURI).href)
+    authLoading=import(new URL(window.BARA_FIREBASE?.enabled?window.BARA_FIREBASE_ENTRY:window.BARA_AUTH_ENTRY,document.baseURI).href)
       .then(module=>module.mountAuth())
       .catch(()=>{
         authLoading=null;window.HarvestLoading?.fail();
@@ -15,5 +15,5 @@ function openAccountDialog(){
 }
 document.getElementById('accountButton').addEventListener('click',openAccountDialog);
 document.addEventListener('bara:account-open',openAccountDialog);
-const restore=()=>{if(!authLoading)authLoading=import(new URL(window.BARA_AUTH_ENTRY,document.baseURI).href).then(module=>module.mountAuth()).catch(()=>{authLoading=null;window.HarvestLoading?.fail();});};
+const restore=()=>{if(!authLoading)authLoading=import(new URL(window.BARA_FIREBASE?.enabled?window.BARA_FIREBASE_ENTRY:window.BARA_AUTH_ENTRY,document.baseURI).href).then(module=>module.mountAuth()).catch(()=>{authLoading=null;window.HarvestLoading?.fail();});};
 if(window.BARA_PAGE==='game')restore();else if('requestIdleCallback'in window)requestIdleCallback(restore,{timeout:2000});else setTimeout(restore,500);
