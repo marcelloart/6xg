@@ -12,7 +12,7 @@
     "test:market": "node --test tests/market-client.cjs tests/market-proxy.mjs tests/market-landing.cjs tests/market-live.cjs tests/market-page.cjs",
     "test:loading": "node --test tests/game-loading.cjs",
     "build:firebase": "node tools/build-firebase-auth.mjs",
-    "test:firebase": "node --test tests/firebase-session.mjs && node --test cloudflare/test/firebase-auth.mjs"
+    "test:firebase": "node --test tests/auth-choice.cjs tests/firebase-session.mjs && node --test cloudflare/test/firebase-auth.mjs"
   },
   "dependencies": {
     "@privy-io/react-auth": "3.46.0",

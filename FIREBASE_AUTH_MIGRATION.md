@@ -1,6 +1,6 @@
-# Firebase Authentication migration
+# Dual sign-in: Privy and Firebase
 
-Status: implementation prepared; production activation requires the owner's Firebase project. The production configuration remains disabled until that project and both authentication flows are verified.
+Status: dual-provider implementation prepared; production activation requires the owner's Firebase project. The production configuration remains disabled until that project and both authentication flows are verified.
 
 ## Cost and scope
 Use base Firebase Authentication on Spark for Google, X/Twitter and email/password. Do not enable billing, phone/SMS login or upgrade to Identity Platform automatically. Firebase still has operational quotas. The optional Identity Platform upgrade changes free limits (Spark 3,000 daily active users; Blaze free tier 50,000 monthly active users). No unlimited service promise is made.
@@ -27,3 +27,12 @@ Game sessions retain Secure, HttpOnly, host-only cookies. The browser compares t
 Keep the old bundle and provider verification until all players have migrated. Turning enabled=false restores the old login UI; it does not delete links, farms or any Firebase users. Old and new identities remain isolated. The account owner must complete project authorization and provider credentials; no account/project details are fabricated.
 
 Validation commands: node --test tests/firebase-session.mjs; node --test cloudflare/test/firebase-auth.mjs (from repository root after resolving its package dependencies); npm run test:session; npm run test:market; node tools/build-firebase-auth.mjs; npm run build:game; backend build and test suite.
+
+## Dual-provider behavior
+When Firebase is enabled, the landing offers Privy and Firebase together. Privy retains Google, X, email and crypto wallet login. Firebase offers configured Google, verified email/password and X providers. A new visitor chooses before either SDK starts; subsequent visits restore only the chosen provider. Provider names in the URL or local storage are preferences and never authorize farm access.
+
+Switching providers clears the existing game-origin cookie first and then reloads the central landing with only allowlisted auth, next=game and return=market parameters. A failed cookie clear leaves the original selection unchanged. The two SDKs never own the same page at once. Logout carries a provider hint so the central site signs out of the correct provider.
+
+Both providers remain available after account linking; the same original canonical farm key is returned only after both accounts have been verified. Accounts with the same email are not automatically combined. Both providers retain their own pricing and operational quotas: offering Firebase does not increase Privy's free allowance. Users who select Privy still use Privy authentication.
+
+The shared game adapter restores either kind of signed cookie without loading a login SDK. It labels the session according to the server-verified provider, including Firebase sessions mapped to an original Privy farm key. Disabling Firebase is a UI rollback and temporarily removes access for Firebase-only accounts until re-enabled; it never deletes their progress.
